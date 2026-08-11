@@ -1,0 +1,722 @@
+@import "tailwindcss";
+
+/* Self-hosted Satoshi — not on npm, pulled from Fontshare (free, commercial OK).
+   DESIGN.md §5.1 asks for the variable cut; Fontshare's CSS API does not expose
+   one, so this is the static per-weight set (400/500/700/900). Flagged as a
+   Phase 10 audit item: full font payload across all three families is ~188KB
+   against the doc's <=110KB target — revisit subsetting/weight trimming then. */
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/satoshi-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/satoshi-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/satoshi-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/satoshi-900.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Instrument Serif 400/400i + IBM Plex Mono 400/500 — @fontsource, latin
+   subset only, one CSS file per weight/style so unused cuts stay out of the
+   bundle (DESIGN.md §5.1). */
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/instrument-serif/400-italic.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+/* ============================================================
+   DESIGN.md §15.4 — verbatim. Colour, radius, ease and shadow
+   tokens only. Do not add tokens to this block; extensions that
+   aren't colour/radius/ease/shadow live in the :root block below.
+   ============================================================ */
+@theme {
+  --color-ink-950: #070c1c;
+  --color-ink-900: #0b1329;
+  --color-ink-800: #101b3a;
+  --color-ink-700: #16264f;
+  --color-ink-600: #1c2c5b;
+  --color-ink-500: #2a3e75;
+  --color-ink-400: #46598e;
+  --color-ink-300: #7a88af;
+  --color-ink-200: #b4bdd2;
+  --color-ink-100: #dde2ec;
+  --color-ink-50: #f0f2f7;
+
+  --color-ember-700: #9e3108;
+  --color-ember-600: #c43d0a;
+  --color-ember-500: #e85a16;
+  --color-ember-400: #f26522;
+  --color-ember-300: #fb8c1e;
+  --color-ember-200: #ffb067;
+  --color-ember-100: #ffdcbd;
+  --color-ember-50: #fff3e8;
+
+  --color-canvas: #fbf9f5;
+  --color-canvas-alt: #f5f1ea;
+  --color-canvas-deep: #ede7dc;
+
+  --color-success: #1f8a5b;
+  --color-warning: #b87a0a;
+  --color-danger: #c4342b;
+  --color-info: #2a5fa8;
+  --color-whatsapp: #25d366;
+
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-in: cubic-bezier(0.55, 0.06, 0.68, 0.19);
+
+  --shadow-xs: 0 1px 2px rgba(28, 44, 91, 0.06);
+  --shadow-sm: 0 2px 8px rgba(28, 44, 91, 0.07);
+  --shadow-md: 0 8px 24px -6px rgba(28, 44, 91, 0.1);
+  --shadow-lg: 0 20px 48px -12px rgba(28, 44, 91, 0.14);
+  --shadow-ember: 0 8px 28px -6px rgba(242, 101, 34, 0.35);
+  --shadow-whatsapp: 0 8px 28px -6px rgba(37, 211, 102, 0.45);
+
+  /* --------------------------------------------------------
+     Fluid type scale — DESIGN.md §5.2. Tailwind v4's paired
+     --text-{name}--line-height / --letter-spacing / --font-weight
+     variables bundle into a single `text-{name}` utility.
+     radius-full is intentionally absent: Tailwind's `rounded-full`
+     is a built-in static utility (border-radius: 9999px), not
+     theme-driven, so no token is needed for it.
+     -------------------------------------------------------- */
+  --text-display-xl: clamp(3rem, 1.1rem + 6.4vw, 5.5rem);
+  --text-display-xl--line-height: 0.95;
+  --text-display-xl--letter-spacing: -0.035em;
+  --text-display-xl--font-weight: 900;
+
+  --text-display-lg: clamp(2.5rem, 1.3rem + 4vw, 4rem);
+  --text-display-lg--line-height: 1;
+  --text-display-lg--letter-spacing: -0.03em;
+  --text-display-lg--font-weight: 700;
+
+  --text-h1: clamp(2.25rem, 1.5rem + 2.6vw, 3.25rem);
+  --text-h1--line-height: 1.08;
+  --text-h1--letter-spacing: -0.025em;
+  --text-h1--font-weight: 700;
+
+  --text-h2: clamp(1.875rem, 1.3rem + 1.9vw, 2.5rem);
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.02em;
+  --text-h2--font-weight: 700;
+
+  --text-h3: clamp(1.375rem, 1.15rem + 0.7vw, 1.625rem);
+  --text-h3--line-height: 1.25;
+  --text-h3--letter-spacing: -0.015em;
+  --text-h3--font-weight: 700;
+
+  --text-h4: 1.125rem;
+  --text-h4--line-height: 1.35;
+  --text-h4--letter-spacing: -0.01em;
+  --text-h4--font-weight: 500;
+
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.65;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.7;
+
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.6;
+
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--line-height: 1.2;
+  --text-eyebrow--letter-spacing: 0.14em;
+  --text-eyebrow--font-weight: 500;
+
+  --text-stat: clamp(2.5rem, 1.5rem + 3vw, 3.75rem);
+  --text-stat--line-height: 1;
+  --text-stat--letter-spacing: -0.03em;
+  --text-stat--font-weight: 900;
+
+  --text-quote: clamp(1.5rem, 1.1rem + 1.5vw, 2.125rem);
+  --text-quote--line-height: 1.4;
+  --text-quote--letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   Supplementary tokens sourced from DESIGN.md §7.1, §7.2 and §9.1.
+   Kept out of @theme deliberately: durations and gradients aren't
+   meant to spawn free-use utility classes (DESIGN.md §16 — scarcity
+   is the point, especially for the gradient whitelist in §7.1).
+   Consume via var(--dur-fast) / var(--gradient-ember) directly.
+   ============================================================ */
+:root {
+  /* Header geometry — DESIGN.md §10.1 (84px at rest, 64px condensed). The
+     header is FIXED and transparent over the page's opening section, so the
+     first section of every page must clear --header-h itself. Never add top
+     padding to <main> for this: that exposes the body background behind the
+     transparent header and the nav's canvas-coloured text goes invisible on
+     it. Use .page-top (below) on the opening section. */
+  --header-h: 84px;
+  --header-h-condensed: 64px;
+
+  --dur-instant: 120ms;
+  --dur-fast: 180ms;
+  --dur-base: 280ms;
+  --dur-slow: 420ms;
+  --dur-slower: 700ms;
+
+  --gradient-ember: linear-gradient(135deg, #f26522 0%, #fb8c1e 100%);
+  --gradient-deep: radial-gradient(
+    120% 90% at 50% -10%,
+    #16264f 0%,
+    #0b1329 45%,
+    #070c1c 100%
+  );
+}
+
+/* ============================================================
+   Base layer — DESIGN.md §17 build order item 1, §5.3 rules.
+   ============================================================ */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-canvas);
+  color: var(--color-ink-500);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-sans);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* DESIGN.md §7.4 — 3% grain overlay, dark surfaces only. Static, never
+   animated. Apply the `.grain` class to a `position: relative` ancestor. */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Default 3.5% (§7.4) everywhere; the ember CTA band (§11.11) asks for a
+     lighter 2% specifically, set via inline `--grain-opacity` rather than a
+     second class, since it's the one place the number differs. */
+  opacity: var(--grain-opacity, 0.035);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   Surface system — DESIGN.md §4.6. Section sets `data-surface` plus its own
+   bg/text Tailwind classes; these attribute-scoped rules supply the accent
+   and border colours (and heading colour) that vary per surface, so any
+   descendant can read var(--surface-accent) / var(--surface-border) without
+   prop-drilling or a React context.
+   ============================================================ */
+[data-surface="light"],
+[data-surface="light-alt"] {
+  --surface-accent: var(--color-ember-600);
+  --surface-border: var(--color-ink-100);
+}
+[data-surface="light"] h1,
+[data-surface="light"] h2,
+[data-surface="light"] h3,
+[data-surface="light"] h4,
+[data-surface="light-alt"] h1,
+[data-surface="light-alt"] h2,
+[data-surface="light-alt"] h3,
+[data-surface="light-alt"] h4 {
+  color: var(--color-ink-600);
+}
+
+[data-surface="dark"] {
+  --surface-accent: var(--color-ember-300);
+  --surface-border: var(--color-ink-700);
+}
+[data-surface="deep"] {
+  --surface-accent: var(--color-ember-300);
+  --surface-border: var(--color-ink-800);
+}
+[data-surface="dark"] h1,
+[data-surface="dark"] h2,
+[data-surface="dark"] h3,
+[data-surface="dark"] h4,
+[data-surface="deep"] h1,
+[data-surface="deep"] h2,
+[data-surface="deep"] h3,
+[data-surface="deep"] h4 {
+  color: var(--color-canvas);
+}
+
+[data-surface="ember"] {
+  --surface-accent: var(--color-ink-950);
+  --surface-border: var(--color-ember-500);
+}
+[data-surface="ember"] h1,
+[data-surface="ember"] h2,
+[data-surface="ember"] h3,
+[data-surface="ember"] h4 {
+  color: var(--color-ink-950);
+}
+
+/* Opening section of a page: clears the fixed transparent header and adds its
+   own breathing room. Phase 5's PageHero primitive should wrap this so
+   templates never hand-roll the offset. */
+.page-top {
+  padding-top: calc(var(--header-h) + 40px);
+}
+
+/* Fluid section padding — DESIGN.md §6.1. Dark/deep get one step more. */
+.section-pad {
+  padding-block: clamp(72px, 9vw, 144px);
+}
+.section-pad-deep {
+  padding-block: clamp(80px, 10vw, 160px);
+}
+
+/* ============================================================
+   Button — DESIGN.md §9.3, §12.1. Primary hover lift + glow is plain
+   Tailwind (applied in Button.jsx); the arc-sweep band is easiest to
+   express as a real CSS transition on a pseudo-element.
+   ============================================================ */
+.btn-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.btn-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 60%
+  );
+  transform: translateX(-120%);
+  transition: transform var(--dur-base) var(--ease-out);
+  pointer-events: none;
+}
+.btn-sweep:hover::after {
+  transform: translateX(120%);
+}
+
+/* ============================================================
+   Chip — DESIGN.md §7.3, §9.4. Overdue glow pulses twice then stops;
+   an infinite pulse reads as nagging. The reduced-motion floor above
+   already collapses this to a single frame when the user asks for it.
+   ============================================================ */
+@keyframes chip-pulse-twice {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(242, 101, 34, 0);
+  }
+  25%,
+  75% {
+    box-shadow: 0 0 0 4px rgba(242, 101, 34, 0.25);
+  }
+}
+.chip-pulse {
+  animation: chip-pulse-twice 900ms var(--ease-out) 2;
+}
+
+/* ============================================================
+   Floating WhatsApp FAB — glass/3D surface. The animated glow rings
+   moved to motion (FloatingWhatsApp.jsx handles the breathing pulse,
+   entrance and hover/tap spring) so this class only carries the
+   static surface: a radial highlight lifted toward the upper-left
+   over a base that darkens toward the bottom-right, reading as a
+   glossy sphere rather than a flat tinted circle. The edge is inset
+   shadows, not a border — a thin lit rim at the top, a soft dark rim
+   at the bottom, each fading to transparent rather than sitting as a
+   hard outline, which is what actually sells the 3D read.
+   ============================================================ */
+.whatsapp-fab {
+  background:
+    radial-gradient(
+      circle at 32% 24%,
+      color-mix(in srgb, var(--color-canvas) 65%, transparent) 0%,
+      transparent 52%
+    ),
+    linear-gradient(
+      155deg,
+      var(--color-whatsapp) 0%,
+      color-mix(in srgb, var(--color-whatsapp) 45%, var(--color-ink-950)) 100%
+    );
+  box-shadow:
+    inset 0 1px 1px color-mix(in srgb, var(--color-canvas) 50%, transparent),
+    inset 0 -3px 5px color-mix(in srgb, var(--color-ink-950) 40%, transparent),
+    var(--shadow-whatsapp);
+}
+
+/* ============================================================
+   Image treatment — IMAGE-PLAN.md §8.5. saturate/contrast are baked into
+   the exported asset at shoot time (not here — a CSS filter on a large
+   image repaints every scroll frame), the navy tint stays a cheap
+   composited overlay so it's adjustable without re-exporting anything.
+   `.to-figure--arc` is an approximate corner cut, same status as
+   ArcGlyph's paths: swap for the real logo-derived geometry per
+   DESIGN.md §18 once the source SVG is available.
+   ============================================================ */
+.to-figure {
+  border-radius: var(--radius-sm);
+}
+.to-figure::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--color-ink-600);
+  opacity: 0.1;
+  mix-blend-mode: multiply;
+}
+/* Arc cut: SVG clipPath from Figure.jsx (cubic path, objectBoundingBox).
+   Keeps the previous ~78%→22% top-right bite with rounded cut junctions
+   and outer corners. Class is the hook for DESIGN.md §13's ember stroke. */
+
+/* ============================================================
+   Arc Field — DESIGN.md §8.2, the hero's five-layer animated background.
+   Structure in src/components/hero/ArcField.jsx, cursor loop in
+   src/hooks/useBloom.js.
+
+   §8.2 is given verbatim in raw rgba(); re-expressed here against the tokens
+   per CLAUDE.md's no-raw-hex rule. The mapping is exact:
+     #070C1C -> ink-950   #0B1329 -> ink-900   #16264F -> ink-700
+     rgba(180,189,210,a) -> ink-200 at a       (grid hairlines)
+     rgba(242,101,34,a)  -> ember-400 at a     (ring A body)
+     rgba(251,140,30,a)  -> ember-300 at a     (ring A crest, ring B, bloom)
+     rgba(7,12,28,.72)   -> ink-950 at 72%     (vignette)
+   .arcfield__base's gradient is byte-identical to §7.2's --gradient-deep, so
+   it consumes that token directly rather than restating it.
+   ============================================================ */
+.arcfield {
+  background: var(--color-ink-950);
+}
+
+/* L1 — ambient depth */
+.arcfield__base {
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-deep);
+}
+
+/* L2 — ledger grid, slow diagonal drift */
+.arcfield__grid {
+  position: absolute;
+  inset: -72px;
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-ink-200) 7%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-ink-200) 7%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(70% 58% at 50% 42%, #000 0%, transparent 76%);
+  mask-image: radial-gradient(70% 58% at 50% 42%, #000 0%, transparent 76%);
+  animation: arc-drift 44s linear infinite;
+  will-change: transform;
+}
+@keyframes arc-drift {
+  to {
+    transform: translate3d(-72px, -72px, 0);
+  }
+}
+
+/* L3 — the Arc: two counter-rotating conic rings */
+.arcfield__ring {
+  position: absolute;
+  left: 50%;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  translate: -50% 0;
+  filter: blur(70px);
+  will-change: transform;
+}
+.arcfield__ring--a {
+  width: min(1100px, 125vw);
+  top: -36%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--color-ember-400) 0%, transparent) 38deg,
+    color-mix(in srgb, var(--color-ember-400) 55%, transparent) 128deg,
+    color-mix(in srgb, var(--color-ember-300) 78%, transparent) 176deg,
+    color-mix(in srgb, var(--color-ember-400) 26%, transparent) 224deg,
+    transparent 302deg
+  );
+  -webkit-mask: radial-gradient(
+    circle,
+    transparent 55%,
+    #000 56%,
+    #000 73%,
+    transparent 74%
+  );
+  mask: radial-gradient(circle, transparent 55%, #000 56%, #000 73%, transparent 74%);
+  opacity: 0.58;
+  animation: arc-spin 34s linear infinite;
+}
+.arcfield__ring--b {
+  width: min(620px, 80vw);
+  top: -6%;
+  background: conic-gradient(
+    from 200deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--color-ember-300) 50%, transparent) 58deg,
+    transparent 148deg
+  );
+  -webkit-mask: radial-gradient(
+    circle,
+    transparent 61%,
+    #000 62%,
+    #000 79%,
+    transparent 80%
+  );
+  mask: radial-gradient(circle, transparent 61%, #000 62%, #000 79%, transparent 80%);
+  opacity: 0.4;
+  animation: arc-spin 52s linear infinite reverse;
+}
+@keyframes arc-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* L4 — cursor bloom, lerped in JS by useBloom */
+.arcfield__bloom {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  left: 0;
+  top: 0;
+  margin: -260px 0 0 -260px;
+  border-radius: 9999px;
+  opacity: 0.3;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-ember-300) 34%, transparent) 0%,
+    transparent 65%
+  );
+  filter: blur(48px);
+  will-change: transform;
+  transform: translate3d(50vw, 40vh, 0);
+}
+
+/* L5 — vignette, seats the content */
+.arcfield__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    100% 70% at 50% 45%,
+    transparent 40%,
+    color-mix(in srgb, var(--color-ink-950) 72%, transparent) 100%
+  );
+}
+
+/* Phone — the arc IS the brand mark, so it has to read here too. §8.2's
+   original answer was to hide the rings outright below md, because two live
+   1100px rings at blur(70px) rotating forever is genuinely expensive on
+   mid-range Android. Hiding them also cost the phone hero its one piece of
+   brand identity, so this renders the arc but removes what made it costly:
+     · ONE ring, not two — a single arc is the composition on a narrow screen,
+       and it keeps orange under §4's ~12%-of-viewport ceiling.
+     · `animation: none` — static, so the big blurred layer is composited once
+       and never recomposited per frame. Frozen near the reduced-motion angle,
+       which §8.2 already established as a well-composed resting position.
+     · blur(46px) rather than 70px, on a smaller element.
+   Geometry is re-expressed in vh: `top` is a percentage of the hero's own
+   height, and on a ~1170px-tall mobile hero the original `-42%` puts the ring
+   ~490px above the viewport, i.e. invisible — which is the other half of why
+   the arc never showed on phones. The cursor bloom stays off; there is no
+   cursor, and useBloom carries the same 768px breakpoint so its loop never
+   starts either. */
+@media (max-width: 767px) {
+  .arcfield__ring {
+    animation: none;
+    filter: blur(46px);
+  }
+  /* Two things govern where the arc actually lands, and both are easy to get
+     wrong:
+     1. ROTATION. The conic runs `from 0deg` with its bright band at
+        128deg–224deg, peaking at 176deg — i.e. at the BOTTOM of the ring.
+        The ring is centred above the viewport, so only the bottom of the
+        annulus is ever on screen and the rotation must leave the bright band
+        pointing down. §8.2's reduced-motion angle of 156deg swings it to
+        ~332deg (up-left), completely off screen — that is why a ring with
+        `display:block` still rendered as nothing at all.
+     2. THE MASK RADIUS IS NOT THE ELEMENT RADIUS. `radial-gradient(circle,
+        ...)` with no size defaults to farthest-corner, so on a square element
+        the 56%/73% stops resolve against the half-DIAGONAL (0.707 × width),
+        not the half-width. The visible band therefore sits at 0.396 × width
+        to 0.516 × width from the centre — ~40% further out than the naive
+        reading, which is what put the arc across the CTA pair on the first
+        attempt instead of behind the headline.
+     Solving `centre + 0.396W = 180` and `centre + 0.516W = 300` for a band
+     across the headline block gives W ≈ 1000px and centre ≈ -216px, hence the
+     values below. A soft orange wash behind the CTA pair is specifically what
+     this avoids: it muddies the secondary button's transparent fill. */
+  .arcfield__ring--a {
+    width: 267vw;
+    top: -88vh;
+    rotate: 6deg;
+    opacity: 0.46;
+  }
+  .arcfield__ring--b {
+    display: none;
+  }
+  .arcfield__bloom {
+    display: none;
+  }
+}
+
+/* Tablet — both rings animate as specified, but the same `top: -42%` problem
+   applies less severely on a taller-than-wide viewport, so ring A is nudged
+   down into frame and the ledger grid tightened a step. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .arcfield__ring--a {
+    width: 150vw;
+    top: -18vh;
+  }
+  .arcfield__ring--b {
+    width: 92vw;
+    top: 4vh;
+  }
+}
+
+/* Reduced motion — the arcs freeze at composed angles rather than vanishing,
+   so the hero reads as a designed static image, not a broken animation
+   (DESIGN.md §9.6). `animation: none` survives the global floor below: that
+   floor only forces animation-DURATION, and a name of `none` means the
+   frozen `rotate` declarations win. */
+@media (prefers-reduced-motion: reduce) {
+  .arcfield__grid,
+  .arcfield__ring {
+    animation: none;
+  }
+  .arcfield__ring--a {
+    rotate: 156deg;
+  }
+  .arcfield__ring--b {
+    rotate: 24deg;
+  }
+  .arcfield__bloom {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Hero — DESIGN.md §11.2, §9.4. The floating deadline card's 6px idle float
+   on a 7s loop (ease-in-out approximates the sine) and the scroll
+   affordance's slow chevron bounce. Both are pure transform animations, so
+   the global reduced-motion floor collapses each to its 100% keyframe — which
+   is translate 0 for both, i.e. the resting composition. Nothing to special-
+   case in JS.
+   ============================================================ */
+@keyframes hero-card-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
+  }
+}
+.hero-card-float {
+  animation: hero-card-float 7s var(--ease-inout) infinite;
+}
+
+/* §11.2 "inner top highlight" — a 1px light edge along the card's top, the
+   cheap trick that stops a dark card reading as a flat hole.
+
+   Translucent, NOT glassmorphic. DESIGN.md §7.5 reserves `backdrop-filter`
+   for the sticky nav alone ("Not on cards"), so these cards get a
+   semi-transparent ink-800 fill instead: the Arc Field's arc and ledger grid
+   read through them, which buys the layered depth glass would have, while
+   §7.5 stays unbroken and two large blur surfaces stay off the mobile
+   compositor. The fill is deliberately opaque enough (86%) that body copy on
+   top still clears AA against whatever the arc does behind it. */
+.hero-card {
+  background: color-mix(in srgb, var(--color-ink-800) 86%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-ink-100) 20%, transparent),
+    0 24px 60px -24px color-mix(in srgb, var(--color-ink-950) 90%, transparent);
+}
+
+@keyframes hero-chevron-bounce {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 4px, 0);
+  }
+}
+.hero-chevron {
+  animation: hero-chevron-bounce 2.4s var(--ease-inout) infinite;
+}
+
+/* ============================================================
+   Trust strip — DESIGN.md §9.3 "Logo marquee". `translateX(-50%)` is exact
+   because TrustStrip.jsx renders the track twice back-to-back: at the
+   halfway point the second (duplicate) copy sits exactly where the first
+   started, so the loop point is invisible. Only a distance transform, so it
+   composites without triggering the reduced-motion floor's opacity/scale
+   assumptions — that floor still collapses the 40s duration to ~0, which is
+   why TrustStrip renders a static wrapped grid instead of relying on this
+   animation to "stop" under reduced motion.
+   ============================================================ */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* DESIGN.md §9.6 — global reduced-motion floor. Component-level JS handling
+   (skip bloom loop, freeze arcs, render counter end-values, static marquee)
+   still needs to happen per-component; this is the CSS backstop. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
