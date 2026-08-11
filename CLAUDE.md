@@ -340,6 +340,367 @@ consecutive repeats, zero console errors.
   `git diff` / recently-touched files before assuming the last-seen state was a
   deliberate design decision.
 
+## Homepage refinement — stat motion + dark-section depth (11-08-2026)
+NOT a phase. A standalone polish pass on the finished Phase 5 homepage; keep it
+out of BUILD-PLAN.md's sequence. Scope was Hero's stat row plus the three dark
+sections (WhatWeDo, HowWeWork, DscBand). CtaBand, Testimonial and the hero
+composition itself were deliberately untouched.
+
+- **`Reveal` now accepts a FUNCTION child** — `<Reveal>{(inView) => ...}</Reveal>`
+  — so a group whose members animate their own contents can hang off the one
+  IntersectionObserver the container already needs. `HeroStats` runs four tiles
+  off a single observer this way. Plain-node children are unchanged; this is
+  purely additive. `Counter` gained matching `play`/`delay` props: pass `play`
+  and the caller's trigger drives it, omit it and it keeps its own observer.
+  A `hasRun` ref makes the driven path one-shot, which `once: true` gave the
+  standalone path for free.
+- **`Scramble` (new, `components/motion/`)** is the word-tile counterpart to
+  `Counter` — a decode reveal for stat values that aren't numbers. Two things
+  in it are load-bearing and non-obvious:
+  1. **Unsettled characters re-roll every ~55ms, not every frame.** At 60fps the
+     glyph churn is a strobe the eye reads as noise rather than as characters.
+     It also collapses ~30 React renders into ~18, since the string only
+     actually changes on a settle step or a re-roll tick (guarded by a ref).
+  2. **Only `[a-z0-9]` scramble.** Spaces, commas and hyphens hold position, so
+     "Salem, TN" keeps its 5+2 silhouette while decoding instead of churning
+     into a block of junk.
+- **`.value-sizer` (theme.css) reserves the final string's width via a
+  PSEUDO-element, and the pseudo is the whole point.** Both animated treatments
+  change width mid-flight (Counter's digit count grows 1→3, sliding the trailing
+  "+" for the full 1.2s; Scramble's random glyphs are different widths in a
+  proportional face). The obvious fix — an `opacity-0` ghost span — works for
+  layout but puts a SECOND copy of every value in the DOM: `innerText` read
+  "250+ 250+", and so would any crawler. Caught by dumping `innerText` during
+  verification, not by looking at it. Pseudo-element `content: attr(data-value)`
+  holds the box without entering the text content.
+- **`.card-dark` in theme.css is the SINGLE definition of the dark-card
+  treatment**, consumed by both `<Card surface="dark">` and DscBand's
+  hand-rolled product `<Link>`s. Change it in one place or neither. The wash is
+  a static `color-mix` gradient (5% ember into ink-800 → ink-950-mixed corner)
+  so the card has a light direction; the hover ring is a pseudo-element whose
+  OPACITY animates, because growing a box-shadow spread repaints the whole
+  border box every frame — six at once on the WhatWeDo grid. §12.2 still holds:
+  the glow is cast outward only, the card surface itself carries no shadow.
+- **Hover motion is `--dur-fast` (180ms), not `--dur-base`.** Hover is the
+  "tens of times a day" tier; 280ms reads as lag when you sweep across a
+  six-card grid. `Card`'s dark branch therefore skips the shared 280ms
+  transition class, which would otherwise win on order and undo this.
+- **Pointer gating was missing and now exists for the dark surface.** The old
+  `hover:-translate-y-1` was ungated, so on touch a tap left the card stuck
+  lifted. `.card-dark`'s hover block sits inside
+  `@media (hover: hover) and (pointer: fine)`. **`Card`'s LIGHT surfaces are
+  still ungated** — out of scope here, fix it when the light templates get a pass.
+- **Press feedback is scoped with `:is(a, button)`.** DscBand's cards ARE links;
+  WhatWeDo's are divs whose inner links are the real targets. Pressing a card
+  that isn't clickable signals something false, so only genuinely-pressable
+  cards get the `:active` scale. Not hover-gated — `:active` is a real press on
+  touch, and it's the only feedback a touch user gets since the ring never fires.
+- **The corner arc's "0→90" draw, and its honest status.** The request was a
+  hover progress animation 0→90 in ember. Implemented as the EXISTING corner
+  crescent (§3.1's one repeated shape) stroking on rather than cross-fading:
+  `pathLength="1"` on the path normalises its geometry to a unit length, so
+  dasharray/dashoffset are 1 → `--card-arc-draw` (0.1) with no measured magic
+  number to drift from the `d`. Set `--card-arc-draw: 0` for a full draw.
+  ⚠️ Two caveats recorded rather than hidden: this is the THIRD simultaneous
+  signal for one hover (lift and ring already complete the feedback), and
+  `stroke-dashoffset` is a paint property where the fade it replaced was
+  composited. Trivial on a 24px SVG, but it's the weakest element of the pass —
+  revisit before copying the pattern to a larger surface.
+- **`ArcGlyph` was silently dropping `style`.** `Card` has always passed
+  `style={{ color: "var(--surface-accent)" }}`, the component never accepted
+  props, so the hover corner arc inherited the card's body-text colour and was
+  never the accent. Now forwards `...props`; verified rendering ember-300.
+- **`ArcRings` (new, `components/ui/`)** generalises CtaBand's ring composition.
+  Position rings in the section's REAL negative space — the first pass put
+  WhatWeDo's bottom-right where the bento grid occludes almost all of it; beside
+  the headline is where they read. Base sizes are deliberately smaller than the
+  md sizes: at 375px a 500px composition offset only -112px spans the entire
+  viewport width and crossed every headline line.
+  - Each instance needs a UNIQUE `gradientId` — `url(#id)` resolves
+    document-wide, not per-`<svg>`, so duplicates silently light from whichever
+    `<defs>` mounted last.
+  - Ladders are per-section and all below CtaBand's 0.07/0.12/0.045, which stays
+    the one loud band.
+- **`.surface-ambient` (theme.css) gives HowWeWork §7.2's ambient radial.**
+  §7.2 is explicit that dark sections "are not flat #0B1329" and should carry a
+  barely-there radial capped at an 8% luminance shift — the homepage's dark
+  sections were all shipping flat, so this is spec compliance, not a new effect.
+  Same three stops as `--gradient-deep` (ink-700 → ink-900 → ink-950); only the
+  radial's centre moved, to -30%, chosen by sweeping offsets and reading
+  rendered pixels. **Applied to HowWeWork only, as asked — WhatWeDo (dark) is
+  still flat and can take the same class with a one-word change.**
+  - ⚠️ **`--gradient-deep` applied as-authored measures ΔL* 10.03%, over §7.2's
+    own 8% cap.** The percentages in a radial are scale-invariant, so that isn't
+    a section-height artefact — §7.2 sets a cap and hands you a token that
+    exceeds it. Same class of spec-internal conflict as Phase 4's §9.5 layer
+    budget. The written cap is honoured here (-30% → 5.33%); the token is left
+    untouched because the hero's `.arcfield__base` depends on it. If the hero is
+    ever re-tuned, that 10% is the number to revisit.
+  - **Measuring a near-black gradient: use CIE ΔL*, not relative luminance.**
+    At these values the relative-luminance shift is 0.59pp, which sounds like
+    nothing and is useless for judging the cap; ΔL* reads 5.33% and is the
+    number that tracks what you actually see. Both are in the verify script.
+  - **Sampling trap that produced two wrong readings before it was caught:**
+    scrolling the section to `block: 'start'` puts its top edge UNDER the fixed
+    header, whose `rgba(7,12,28,.72)` backdrop darkens the sample. It reported
+    ΔL* 2.5% and 3.0% for gradients actually measuring 10% and 12%. Always land
+    the section's top edge ~110px down the viewport before sampling a
+    background. Any future contrast or gradient measurement on a non-opening
+    section needs the same offset.
+- **`.panel-dark` (theme.css) — the Partner programme's right-hand panel.**
+  Note this is the homepage `PartnerProgramme` section; `/partner-with-us`
+  itself is still a `PageStub` with no cards on it at all. The panel was flat
+  `bg-ink-900` with no gradient, border, inset highlight or grain — the flattest
+  surface left on the page. Deliberately a SEPARATE class from `.card-dark`:
+  this is a static content panel, so a hover ring, lift or arc draw would all
+  signal an interaction that doesn't exist. Depth comes from surface quality
+  instead. Wash stops are PURE ink — §7.1 bars the brand gradient from card
+  backgrounds, so the four ember ticks stay the panel's only warm accent.
+  Measured ΔL* 6.94% (within §7.2), text contrast 15.74:1 (h3) and 8.79:1 (body).
+  - **`data-surface="dark"` on the panel is load-bearing, not cosmetic.** It's a
+    dark panel nested in a `light-alt` section, so without it every descendant
+    reading `var(--surface-accent)` / `var(--surface-border)` got the LIGHT
+    values — ember-600 and ink-100. Verified now resolving to ember-300 /
+    ink-700. It also lets `[data-surface="dark"] h3` supply the canvas heading
+    colour, which is what the `!text-white` override was hacking around; that
+    override is gone. **Any dark panel dropped onto a light section needs this
+    attribute** — the surface system is attribute-scoped, not component-scoped.
+  - ⚠️ **Surface-cadence checks must select `section[data-surface]`, not
+    `[data-surface]`.** A nested panel now carries the attribute, so a bare
+    selector reports `div:dark` between light-alt and ember and misreads the
+    cadence (the footer's `footer:deep` was always a similar trap). Scoped to
+    `section[...]` the cadence is unchanged and still has zero consecutive
+    repeats.
+  - `.grain` was missing here entirely, though §7.4 calls grain the
+    "highest-value, lowest-cost anti-generic move" and applies it to all dark
+    surfaces. Added; `.panel-dark` supplies the `position: relative` +
+    `overflow: hidden` that `.grain::after` and the arc rings both need to stay
+    inside the corner radius.
+  - Ring opacities (0.16 / 0.10) are HIGHER than any section ladder and use an
+    ink tint rather than ember. Both are deliberate: it's a ~600px surface, so
+    section-level opacities read as invisible on it, and ink keeps the panel off
+    the homepage's orange budget.
+- ⚠️ **Content duplication, not fixed (it's copy, not code): "What we handle for
+  you" is the heading in TWO places on the homepage** — `Hero.jsx:207` as an
+  `<h2>` in the showcase card over `heroCapabilities` (service scope), and the
+  Partner panel's `<h3>` over DSC partner operations. Two different lists under
+  one identical heading on a single page. The hero one is also an `h2` nested in
+  a card directly under the `h1`, which is a questionable heading hierarchy.
+  Needs a copy decision.
+- **Found: `.grain` was escaping on every hand-rolled homepage section.**
+  `.grain::after` is `position: absolute; inset: 0` and needs a positioned
+  ancestor; WhatWeDo, HowWeWork, DscBand and Testimonial had none, so the
+  overlay resolved against an outer containing block. Fixed for the three in
+  scope (verified: each grain layer's height now matches its own section's).
+  **`Testimonial.jsx` still has it** — harmless while it returns null on empty
+  data, latent the moment real content lands. Root cause: these sections
+  hand-roll `<section>` instead of using `components/layout/Section.jsx`, which
+  already includes `relative`. Prefer `Section` for anything new.
+- **Found, NOT fixed (CtaBand was out of scope): it defines the SAME
+  `linearGradient` id twice** (`cta-arc-fade`, in two `<defs>`), so the second
+  is dead and the DOM has a duplicate id. Its own comment claims it references
+  the gradient rather than redefining it — the comment is right, the code isn't.
+  `arcPath()` is also now duplicated between CtaBand and ArcRings. Migrate
+  CtaBand onto `<ArcRings>` next time it's open; §3.1's "one specific shape"
+  only holds while the definition is genuinely single.
+- **Verification tooling: CDP *can* emulate `prefers-reduced-motion`** via
+  `Emulation.setEmulatedMedia({features:[{name:"prefers-reduced-motion",
+  value:"reduce"}]})`. This supersedes the Phase 4 note that no available tool
+  toggles the media query — the reduced-motion path is now actually testable
+  rather than inferred by injecting rules by hand. Confirmed: stat values are
+  final on the first sample, word tiles render no extra DOM at all, and hover
+  still reaches its end state (durations collapsed to 1e-05s by §9.6's floor).
+- **Measured, not eyeballed:** heading contrast over the rings is 15.61:1
+  (WhatWeDo), 17.51:1 (HowWeWork), 17.07:1 (DscBand) at 375px and 17.5–18.5:1
+  at 1440px — so the rings crossing a headline is an aesthetic question, never a
+  contrast one. Ember coverage per dark section is 0.78% / 0.96% / 0.89%,
+  far under CLAUDE.md's ~12% ceiling. Hero is 5.14%, unchanged by this pass.
+  Scripts used are throwaway; the method (screenshot → decode in-page via
+  canvas → count by hue/saturation, and hide text to sample the worst-case
+  background beneath it) is worth re-deriving for any future contrast claim.
+- **Pre-existing, unrelated to this pass:** at 375px the hero showcase card's
+  "What we handle for you" heading sits over the hero's mobile arc at 4.48:1 —
+  under the 4.5:1 normal-text floor, passing only as large text. Surfaced by the
+  contrast sweep above. Hero was out of scope; worth a look when it's next open.
+
+## Homepage FAQ row + Testimonial move (11-08-2026)
+Both sections now sit above `DriverDownloads`, per request. Part of the same
+standalone refinement pass — not a phase.
+
+- ⛔ **THE TESTIMONIAL SECTION STILL RENDERS NOTHING, AND MUST.**
+  `src/content/testimonials.js` is an empty array by design. CLAUDE.md's
+  non-negotiables list "testimonial" beside fees and client counts as things
+  never to invent, and CONTENT-PLAN.md §6 sets the bar: **two real quotes, with
+  names and consent to publish.** The visual treatment is now built and waiting;
+  the section appears the moment that file has real entries, with no code change
+  in the component or in `home/index.jsx`. Do not populate it to "see how it
+  looks" — a placeholder quote in that file is indistinguishable from a real one
+  to the next reader.
+- **`src/content/faqs/home.js` selects BY REFERENCE and must stay that way.**
+  It holds `{ slug, q }` pointers; `homeFaqs()` resolves each answer out of the
+  written service leaf at call time. Copying answer text into this file would
+  fork it — a CA correction to a leaf would leave the homepage asserting the
+  superseded version indefinitely. Consequence: **adding a homepage FAQ is not a
+  writing task.** Write it in the leaf first, where `_schema.js` validates the
+  word budget and `content:check`'s statutory scanner runs, then point at it.
+  - Matching is on exact question text, not array index, so a leaf's FAQs can be
+    reordered during review without silently swapping what the homepage shows.
+  - Unresolvable pointers are DROPPED, with a loud dev-only console warning —
+    a shorter list beats a blank accordion row.
+  - Selection spans GST / entity choice / DSC / accounting / tenders on purpose,
+    so the row reads as the whole practice. **Nothing is sourced from an
+    income-tax leaf** — those four are unwritten and blocked on BLOCKERS.md §1,
+    so there is no reviewed answer to point at. Do not write one here to fill it.
+- **FAQ SITS BEFORE TESTIMONIAL, and the order is forced, not stylistic.**
+  DscBand is Deep and DESIGN.md §11.1 row 9 fixes Testimonial at Deep, so
+  quote-first would put two Deep sections back to back. A light-alt FAQ between
+  them preserves the alternation. Cadence re-verified in **both** states, since
+  Testimonial renders null: as-authored and as-rendered each have zero
+  consecutive repeats.
+- **The FAQ row deliberately has NO arc rings**, unlike the dark sections. The
+  motif is already on three sections plus the partner panel; adding it to a light
+  section would make it wallpaper, which is DESIGN.md §16's "apply each effect in
+  one place" failing in the same way "icon-in-a-circle everywhere" does. Depth
+  there is typographic — mono row numbers, hairline dividers, a sticky left rail.
+- **Accordion a11y — a real defect found and fixed during verification.**
+  `AnimatePresence` unmounts closed panels, so `aria-controls` on the five closed
+  buttons pointed at ids that were not in the document — a dangling reference.
+  Fixed by setting `aria-controls` only while the panel is mounted; the
+  disclosure pattern makes it optional (`aria-expanded` is the required half).
+  Verified: native `<button type="button">`, `tabIndex 0`, panel is a
+  `role="region"` whose `aria-labelledby` matches its button, single-open
+  enforced, and both Enter and Space activate.
+  - **CDP gotcha that cost a false alarm:** `Input.dispatchKeyEvent` with
+    `type: "rawKeyDown"` does NOT activate a focused button on Enter (Space still
+    works, because Space activates on keyup). It reported Enter as broken when it
+    was not. Use `type: "keyDown"` with `text: "\r"` and both
+    `windowsVirtualKeyCode`/`nativeVirtualKeyCode` — that fires exactly one click.
+  - Note `document.querySelector('[aria-expanded]')` matches the header's mobile
+    nav toggle first. Scope accordion queries to `h3 > button[aria-expanded]`.
+- **`FAQPage` JSON-LD is built from the same resolved array the accordion
+  renders** (CONTENT-PLAN.md §486), so the structured data can never disagree
+  with the visible copy, and all six answers are present regardless of which row
+  is expanded. Verified: 6 questions, all with non-empty answers.
+- **FAB overlap, checked because CLAUDE.md requires it for that button:** at
+  1440px the WhatsApp FAB (`.whatsapp-fab`, x 1360–1416) overlaps whichever
+  accordion row scrolls under it — row 5 at the tested position. It is
+  **cosmetic only**: the toggle is a full-width button, so the FAB covers the
+  plus icon and never the activation target. Measured `rowClickableAtLeft: true`
+  for every in-viewport row at both 1440px and 375px. Inherent to a fixed FAB
+  over scrolling content, not specific to this section — but if the toggle is
+  ever moved to a narrow right-aligned hit area, this becomes a real blocker.
+  Select the FAB by `.whatsapp-fab`; `a[href*="wa.me"]` also matches the
+  in-content WhatsApp links in DscBand and the footer.
+
+## Hero background: DarkVeil shader replaces the Arc Field's rings (11-08-2026)
+NOT a phase. Requested swap of the hero's L3 layer for React Bits' DarkVeil (a
+WebGL shader, `ogl` is now a real dependency). Everything removed is
+**commented out, not deleted** — L2 grid, L3 rings, L4 cursor bloom — so the
+original §8.2 Arc Field is restorable by uncommenting three blocks in
+`theme.css` plus their `<div>`s in `ArcField.jsx`.
+
+- **Current L-stack:** L1 base (`--gradient-deep`, untouched) → L3 `<DarkVeil>`
+  via `.arcfield__veil` → L5 vignette. L2 and L4 are gone.
+- **`mix-blend-mode: screen` on `.arcfield__veil` is what keeps the brand
+  background.** The canvas is fully opaque (its shader hardcodes `alpha=1`), so
+  painted normally it would REPLACE `.arcfield__base`. `screen` means black
+  contributes nothing, so the base gradient shows through the pattern's dark
+  regions and the shader only ADDS light. `.arcfield` now also has
+  `isolation: isolate` — without it that blending reached past the element into
+  whatever was painted behind, which is both wrong and an unscoped blend group.
+
+### Four traps, each cost real time
+1. **`preserveDrawingBuffer` defaults to `false` in ogl.** The canvas looked
+   right in the viewport, but any ASYNCHRONOUS read of it (screenshot tooling,
+   `toDataURL`, html2canvas, an extension) could catch it freshly cleared to
+   black — the browser may clear the back buffer between frames unless told
+   not to. Now `true`. Found by: an out-of-band read returned solid (0,0,0)
+   while a synchronous `readPixels` right after `drawArrays`, on a hand-built
+   copy of the same program, showed real colour.
+2. **`renderer.setSize(w, h)` also writes `canvas.style.width/height` as INLINE
+   styles.** Passing a *scaled* size (for a perf cut) therefore shrinks the
+   canvas's on-screen box to that fraction, pinned top-left — the "half cut"
+   symptom: rich colour in a corner, flat background elsewhere. Inline styles
+   beat `DarkVeil.css`'s `width:100%`, so CSS can never win. **Pass the full
+   container size to `setSize()`; put any resolution cut in `renderer.dpr`,
+   which only multiplies the BUFFER.** `uResolution` is read back from
+   `gl.canvas.width/height` after `setSize()` so it can't drift from what
+   `gl_FragCoord` actually spans.
+3. **`window.resize` is not enough — there's a `ResizeObserver` on the
+   container.** `resize` fires only for viewport changes, never for
+   content-driven layout (font swap, hero image load, React layout pass), any
+   of which changes the hero's height after first measure. Without the observer
+   an early too-small measurement gets locked in permanently — the other half
+   of the inconsistent "sometimes right, sometimes cut" behaviour.
+4. **⚠️ The performance panic was an artefact of my own test setup — disregard
+   any low fps numbers from that pass.** The hero was measured at 2.6fps and
+   the shader blamed, prompting a dpr cap of 1 and `resolutionScale` 0.75.
+   Those readings came from a Chrome launched with `--use-angle=swiftshader`
+   (forced software rasterization, added earlier just to get WebGL running for
+   colour sampling). On the hardware renderer — verified via
+   `WEBGL_debug_renderer_info` as `ANGLE Metal Renderer: Apple M1` — the page
+   holds **60fps at FULL resolution**, and A/B'ing the blur, the isolation and
+   the bloom all showed 60fps regardless. The resolution cut was solving a
+   problem that only existed in the test environment, and it was the direct
+   cause of the reported graininess (dpr-cap 1 × 0.75 on a 2× display stretched
+   each rendered pixel over ~2.7 physical ones). **Always check the WebGL
+   renderer string before drawing a perf conclusion in this repo.**
+
+### The two magic numbers are measured, not chosen
+Both are functions of THIS network's fixed weights — re-derive if the shader
+source ever changes.
+- **`EMBER_HUE_SHIFT = 225`.** `uHueShift` rotates hue in **YIQ** space, not
+  HSL, so it does NOT move in step with HSL degrees — arithmetic based on "the
+  pattern is 262°, ember is 19.3°, so shift 116°" produced GREEN. Found by
+  sweeping 0–360° in a standalone harness, weighted-hue-sampling the real
+  output pixels, and picking the minimum distance to ember-400's ≈19.3°. 225°
+  is a stable basin (217–233° all land within ~2–8°), not a lone spike.
+- **`Y_SCALE = 0.5`, `Y_OFFSET = -0.5`** (added uniforms; they re-frame the UV
+  mapping in `mainImage`, the CPPN weights are untouched). At vendor defaults
+  the pattern's vertical brightness profile is
+  `[27.7, 30.7, 24.3, 10.7, 2.3, 0.5, 0.2, 0.1, 0, 0]` top→bottom — effectively
+  black below 40%, which is why it "showed almost at top". **The vignette was
+  measured and is NOT the cause.** Now `[26.1, 30.1, 30.9, 29.5, 26.4, 20.8,
+  13.7, 7.3, 3.4, 1.5]`: full strength to ~60%, fading through band 7, gone by
+  band 9. That taper point is anchored to the "Explore Services" button, whose
+  bottom edge measured 64–70% of arcfield height across 1600/1920/2560-wide
+  viewports (stat row starts 76–84%), so the effect reaches the CTA pair and
+  falls away before washing behind the stat numbers.
+  - Method for re-sweeping: build a standalone harness with the extracted
+    shader, render at the hero's real aspect, average **several `uTime`
+    phases** (the pattern morphs over time — one frame proves nothing), and
+    score mean brightness per 10% band.
+  - ⚠️ **Mobile is deliberately different and was not tuned to the button.**
+    At 375px the hero is a tall stack, so the button sits at 43% and the
+    profile runs `[50.4, 59.7, 54.5, 41.6, 29.4, 17.7, 7.2, 2.2, 1.4, 1.2]` —
+    brighter at top (a narrow viewport makes `uv.x *= aspect` sample a
+    narrower, brighter slice) and fading by ~70% rather than at the button.
+    Measured acceptable (6.5% ember, 6.94:1 contrast); revisit if it ever
+    needs to match desktop's relationship to the CTA.
+
+### Removed layers, and why
+- **L2 grid** — removed outright per request, no replacement.
+- **L4 cursor bloom** — removed per request. It existed to add ember glow over
+  the L3 rings; the veil supplies a far richer moving ember field, so it was
+  redundant. It was ALSO the source of a translucent RECTANGLE that tracked the
+  cursor on real GPU hardware: `filter: blur(48px)` gives an element its own
+  filter region, and inside a blend group a compositor can rasterise that
+  region and leave its rectangular bounds visible — matching the symptom
+  exactly (hard-edged ~520px square = the bloom's box). **Not reproducible in
+  headless software rendering** — an edge-detection scan across the bloom's
+  boundary found no discontinuity — so it was diagnosed from a user screenshot
+  and fixed by removing the mechanism. If ever restored, drop the blur and
+  widen the gradient's own stops; a radial-gradient fading to transparent is
+  already a smooth falloff, so the blur was never load-bearing. `useBloom`
+  early-returns without `[data-bloom]`, so nothing is left running; its call
+  and import in `Hero.jsx` are commented out to keep the removal legible.
+- `noiseIntensity` dropped 0.045 → 0.014: `uNoise` is per-pixel, per-FRAME
+  jitter (animated film grain), so it read as sizzle and compounded with the
+  low render resolution. `.grain` in theme.css already supplies static texture.
+- Verified after all of it: ember coverage 3.95% @1600, 2.44% @2560, 6.5%
+  @375 (ceiling ~12%); h1 contrast 6.93:1 / 6.93:1 / 6.94:1; 60fps; canvas CSS
+  box exactly matches its container at dpr 1 and 2; no console errors.
+
 ## Writing content — the rules that matter most
 - **Never type a statutory fact into a leaf file.** No rupee amounts, day counts,
   form codes (REG-01, GSTR-3B), penalties or thresholds. Add it to `statutory.js`
@@ -395,26 +756,32 @@ CONTENT-PLAN.md §11: "A prominent floating WhatsApp button sitewide." Built ear
 (Clinton's request, small and self-contained) rather than waiting for Phase 8's
 Contact page. `src/components/layout/FloatingWhatsApp.jsx`, mounted once in
 `RootLayout.jsx` so it's on all 49 routes — not the homepage only.
-- **Bottom-LEFT is Clinton's explicit call**, not a doc default. No position was
-  specified anywhere; bottom-right is the more common convention for this pattern.
-  If asked to "put it back", that means bottom-right, not removing it.
-- Ember (`ember-400` / `ink-950`), not WhatsApp's own green — the palette is
-  deliberately restrained to ink/ember/canvas (DESIGN.md §16), and a green FAB
-  would be the one element on the page from outside that system. Reuses the same
-  `MessageCircle` (lucide) icon Footer.jsx and CtaBand.jsx already use for their
-  own WhatsApp links, rather than a WhatsApp brand mark — same reasoning as
-  TrustStrip's text wordmarks (IMAGE-PLAN.md §7.4: don't render a brand's mark
-  without it being an approved asset).
-- **Found and fixed a real overlap this caused**: the button is `fixed`, 56px +
-  24px inset, so it occupies the viewport's bottom-left 80×80px permanently. Below
-  `sm`, Footer's bottom bar (copyright + legal links + domain) wraps onto two
-  left-aligned lines and the second line landed exactly under the button —
-  confirmed by screenshot, "Privacy Policy" and the domain link were genuinely
-  obscured, not just close. Fixed with `pb-24 sm:pb-6` on that row: reserved CLEAR
-  SPACE below the real content, so scrolling to the true end of the page leaves
-  the last line of text sitting above the button's footprint. The button itself
-  can't yield the space since it doesn't participate in document flow — anything
-  narrow enough to wrap into that corner needs this same treatment.
+- **Current design (superseding the first pass): bottom-RIGHT, WhatsApp's own
+  green (`--color-whatsapp`), tabler's `IconBrandWhatsapp` mark, animated glow
+  rings.** The first pass shipped bottom-left / ember / lucide's generic
+  `MessageCircle`, each a deliberate palette-restraint call recorded in this
+  file's history — Clinton reversed all three afterward. This IS the one
+  deliberate exception to the ink/ember/canvas restraint (DESIGN.md §16):
+  it's the universally recognised WhatsApp affordance, and a brand-colour
+  FAB reads as correct in a way an ember one didn't. `@tabler/icons-react`
+  is now a real dependency (`package.json`) for the brand mark specifically
+  — lucide has no WhatsApp glyph. Icon stays white on the green surface;
+  ink-950 would fail contrast on this hue the way white fails on ember.
+- **The corner move broke the Footer fix that was written for the OLD
+  corner — caught and fixed in this session, not by the person who moved
+  it.** The button is `fixed`, 56px + 24px inset, occupying whichever
+  bottom corner it's in. When it was bottom-left, `pb-24` on the footer's
+  bottom bar (only below `sm`, restored to `pb-6` above it) was enough,
+  because at `sm`+ the bar is one line and the copyright text — not the
+  right-aligned domain link — sits in the bottom-left corner. Moving the
+  button to bottom-right put it exactly where that same one-line layout's
+  `justify-between` right-aligns the domain link, and the `sm:pb-6`
+  reduction stopped protecting anything. Fixed by dropping the breakpoint
+  split entirely — `pb-24` now applies at every width, confirmed via a real
+  browser pass (bounding-box intersection against every footer `<a>`, not
+  eyeballed) with zero overlaps at both 375px and 1440px. **If this button
+  moves corners again, re-run that check before calling it done** — this
+  class of bug won't show up in lint or build, only in a real layout pass.
 
 ## Session discipline
 - One phase per session. Start fresh between phases — see BUILD-PLAN.md §5.

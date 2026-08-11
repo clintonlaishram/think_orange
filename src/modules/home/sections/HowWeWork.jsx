@@ -7,6 +7,7 @@ import {
 } from "motion/react";
 import { Container } from "@/components/layout/Container";
 import { Eyebrow } from "@/components/layout/Eyebrow";
+import { ArcRings } from "@/components/ui/ArcRings";
 
 // Homepage section 6 — CONTENT-PLAN.md §6 row 6, DESIGN.md §11.5 + Pattern D
 // (§9.2). Dark surface. Four steps, emphasising written scope before work
@@ -44,6 +45,12 @@ const NODES = [
 const VIEW_W = 1000;
 const VIEW_H = 160;
 
+// Two rings, both below WhatWeDo's — see the note at the <ArcRings> call.
+const ARC_RINGS = [
+  { r: 168, width: 14, opacity: 0.04 },
+  { r: 132, width: 11, opacity: 0.07 },
+];
+
 export function HowWeWork() {
   const sectionRef = useRef(null);
   const reduceMotion = useReducedMotion();
@@ -57,9 +64,22 @@ export function HowWeWork() {
     <section
       ref={sectionRef}
       data-surface="dark"
-      className="section-pad grain bg-ink-900"
+      // `surface-ambient` supplies §7.2's radial; bg-ink-900 stays as the
+      // fallback colour beneath it.
+      className="section-pad grain surface-ambient relative isolate bg-ink-900"
     >
-      <Container>
+      {/* Quieter than WhatWeDo's ladder and only two rings: this section
+          already owns a prominent ember arc as its FUNCTIONAL element (the
+          scroll-linked progress connector), and a second ember arc system at
+          equal weight would make the two compete for the same reading.
+          Anchored bottom-left, well clear of the connector's band. */}
+      <ArcRings
+        rings={ARC_RINGS}
+        gradientId="howwework-arc-fade"
+        svgClassName="-left-24 -bottom-36 h-[320px] w-[320px] md:-left-40 md:-bottom-48 md:h-[620px] md:w-[620px]"
+      />
+
+      <Container className="relative">
         <Eyebrow>How we work</Eyebrow>
         <h2 className="mt-3 text-h2 max-w-[28ch]">
           Four steps, and a written scope before we touch anything

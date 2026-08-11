@@ -10,6 +10,8 @@ import { validateAll } from "../src/content/services/_schema.js";
 import { serviceLeavesBySlug } from "../src/content/nav.js";
 import { statutory } from "../src/content/statutory.js";
 import { unconfirmedHeroStats } from "../src/content/home-hero.js";
+import { unconfirmedTestimonials } from "../src/content/testimonials.js";
+import { unconfirmedInsights } from "../src/content/insights.js";
 
 const { ok, problems } = validateAll(writtenLeaves);
 
@@ -124,6 +126,31 @@ if (unconfirmed.length > 0) {
   console.log("  ⚠ UNCONFIRMED HERO STATS — must not ship (src/content/home-hero.js):");
   for (const stat of unconfirmed) {
     console.log(`      ${stat.id}: "${stat.value}" (${stat.label}) — placeholder, needs founder sign-off`);
+  }
+  console.log("");
+}
+
+// Same pattern as the hero stats above: dummy content added on explicit
+// request to preview a section's layout, never allowed to go quiet.
+const unconfirmedQuotes = unconfirmedTestimonials();
+if (unconfirmedQuotes.length > 0) {
+  console.log("  ⚠ UNCONFIRMED TESTIMONIAL — must not ship (src/content/testimonials.js):");
+  for (const quote of unconfirmedQuotes) {
+    console.log(`      ${quote.id}: "${quote.name}" — placeholder quote, needs a real, consented testimonial`);
+  }
+  console.log("");
+}
+
+const unconfirmedArticles = unconfirmedInsights();
+if (unconfirmedArticles.length > 0) {
+  console.log(
+    `  ⚠ UNCONFIRMED INSIGHTS (${unconfirmedArticles.length}) — must not ship (src/content/insights.js):`
+  );
+  console.log(
+    "      Every card links to /insights/:slug, which is NOT a real route yet — these 404 if deployed."
+  );
+  for (const article of unconfirmedArticles) {
+    console.log(`      ${article.slug}: "${article.title}"`);
   }
   console.log("");
 }

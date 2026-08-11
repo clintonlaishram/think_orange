@@ -7,7 +7,7 @@ const VARIANTS = {
   neutral: "bg-ink-50 text-ink-500",
   "due-soon": "bg-warning/12 text-warning",
   overdue: "bg-ember-100 text-ember-700",
-  active: "bg-ember-400 text-ink-950",
+  active: "bg-ember-400 text-white",
 };
 
 export function Chip({ variant = "neutral", pulseOnce = false, className, children, ...props }) {

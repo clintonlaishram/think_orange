@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Eyebrow } from "@/components/layout/Eyebrow";
+import { ArcRings } from "@/components/ui/ArcRings";
 import { Card } from "@/components/ui/Card";
 import { Reveal } from "@/components/motion/Reveal";
 import { serviceCategories } from "@/content/nav";
@@ -34,10 +35,42 @@ const SPANS = {
   "loans-finance": "md:col-span-6",
 };
 
+// Background arc ladder. Absolute weight lives here; every value is BELOW
+// CtaBand's (0.07 / 0.12 / 0.045) so this reads as a quiet echo of the one
+// loud ember band rather than a copy of it. Static — the counter-rotating
+// version is the hero's signature and spending it twice would cheapen both.
+const ARC_RINGS = [
+  { r: 176, width: 16, opacity: 0.055 },
+  { r: 140, width: 13, opacity: 0.1 },
+  { r: 104, width: 9, opacity: 0.035 },
+];
+
 export function WhatWeDo() {
   return (
-    <section data-surface="dark" className="section-pad grain bg-ink-900">
-      <Container>
+    // `relative isolate`: relative scopes both the arc rings and — a
+    // pre-existing bug — `.grain`'s absolutely-positioned ::after overlay,
+    // which had no positioned ancestor here and was escaping to the initial
+    // containing block. isolate keeps the rings' z-index local to this section.
+    <section
+      data-surface="dark"
+      className="section-pad grain relative isolate bg-ink-900"
+    >
+      {/* Top-right, not bottom-right: the bento grid fills the bottom of this
+          section, so rings anchored there are almost entirely occluded by
+          cards. The genuine negative space is beside the headline. */}
+      <ArcRings
+        rings={ARC_RINGS}
+        gradientId="whatwedo-arc-fade"
+        // Smaller at base on purpose: at 375px a 500px composition offset only
+        // -112px spans the whole viewport width, so the rings crossed every
+        // line of the headline instead of reading as a corner. Contrast is not
+        // the issue (measured 15.6:1 there) — it just looked busy.
+        svgClassName="-right-24 -top-28 h-[340px] w-[340px] md:-right-36 md:-top-44 md:h-[700px] md:w-[700px]"
+      />
+
+      {/* `relative` lifts the content into the positioned layer so it paints
+          above .arc-rings (z-index 0) — without it the rings sit over the copy. */}
+      <Container className="relative">
         <Reveal>
           <Eyebrow>What we do</Eyebrow>
           <h2 className="mt-3 text-h2 max-w-[24ch]">

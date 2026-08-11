@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/motion/Reveal";
 import { site } from "@/content/nav";
 import { t } from "@/content/turnaround";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 
 // Homepage section 13 — CONTENT-PLAN.md §6 row 13, DESIGN.md §11.11. The
 // single full-orange surface on the whole site (CLAUDE.md non-negotiable:
@@ -213,9 +214,19 @@ export function CtaBand() {
       </svg> */}
 
       <Container className="relative text-center">
-        <Reveal className="mx-auto max-w-[36ch]">
-          <h2 className="text-display-lg text-ink-950">{site.ctaLine}</h2>
-          <p className="mt-4 text-body-lg text-ink-900">{t("enquiryResponseTime")}.</p>
+        <Reveal className="mx-auto">
+          <h2 className="text-display-lg text-ink-950">
+            {site.ctaLine
+              .split(". ")
+              .filter(Boolean)
+              .map((line, i, arr) => (
+                <span key={line} className="block">
+                  {line}
+                  {i < arr.length - 1 ? "." : ""}
+                </span>
+              ))}
+          </h2>
+          <p className="mt-4 lg:mt-6 text-body-lg md:text-xl lg:text-2xl text-ink-900">{t("enquiryResponseTime")}.</p>
         </Reveal>
 
         <Reveal delay={0.12} className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -235,7 +246,7 @@ export function CtaBand() {
             rel="noreferrer noopener"
             className="inline-flex items-center gap-2 rounded-full px-5 py-3.5 text-body font-medium text-ink-950 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-950 focus-visible:ring-offset-2"
           >
-            <MessageCircle className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+            <IconBrandWhatsapp className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             WhatsApp
           </a>
         </Reveal>

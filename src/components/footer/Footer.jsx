@@ -48,7 +48,7 @@ export function Footer() {
             <p className="mt-4 max-w-[34ch] text-body-sm">{site.positioning}</p>
           </div>
 
-          <div className="grid gap-10 grid-cols-2 md:grid-cols-3 lg:grid-cols-3 2xl:grid-cols-[1fr_1fr_1.5fr_1.5fr_1.5fr]">
+          <div className="flex-1 grid gap-10 grid-cols-2 md:grid-cols-3 lg:grid-cols-3 2xl:grid-cols-[1fr_1fr_1.5fr_1.5fr_1.5fr]">
             {/* Brand block */}
 
             {footerColumns.map((column) => (
@@ -113,15 +113,17 @@ export function Footer() {
           </div>
         </div>
 
-        {/* pb-24 on mobile, not py-6 uniformly: below `sm` this row wraps
-            onto two lines (copyright, then the legal links + domain), both
-            left-aligned — landing exactly in the bottom-left 80×80px corner
-            the FloatingWhatsApp button occupies (24px gap + 56px circle).
-            The extra bottom padding is reserved CLEAR SPACE below the real
-            content, so once the page is scrolled to its true end, the last
-            line of text sits above the button's footprint instead of under
-            it — the button is `fixed` and cannot itself yield the space. */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-ink-800 pb-24 pt-6 text-body-sm sm:pb-6">
+        {/* pb-24 at EVERY breakpoint, not just mobile. Below `sm` this row
+            wraps onto two lines (copyright, then legal links + domain), both
+            left-aligned, landing under the FloatingWhatsApp button's corner.
+            From `sm` up the row stays one line with `justify-between`, which
+            right-aligns the domain link — and the button moved to
+            bottom-RIGHT since this padding was first added, so the same
+            corner-collision risk now applies at desktop widths too, just on
+            the opposite side. Rather than track which corner the button is
+            in and match padding to it, reserve the clearance on every
+            breakpoint: `pb-24` is cheap dead space, a hidden link is not. */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-ink-800 pb-24 pt-6 text-body-sm">
           <p>
             © {year} {site.legalName}. All rights reserved.
           </p>

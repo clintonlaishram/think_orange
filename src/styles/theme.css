@@ -87,7 +87,7 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
-
+  --radius-xl: 24px;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-in: cubic-bezier(0.55, 0.06, 0.68, 0.19);
@@ -423,6 +423,13 @@ p {
    ============================================================ */
 .arcfield {
   background: var(--color-ink-950);
+  /* Scopes the blend group. `.arcfield__veil` uses mix-blend-mode: screen, and
+     without isolation here that blending reaches PAST this element into
+     whatever is painted behind it, which is both wrong (the veil is only meant
+     to screen over .arcfield__base) and the kind of unscoped blend group that
+     makes sibling compositing artefacts possible. Cheap and spec-correct
+     either way. */
+  isolation: isolate;
 }
 
 /* L1 — ambient depth */
@@ -432,7 +439,11 @@ p {
   background: var(--gradient-deep);
 }
 
-/* L2 — ledger grid, slow diagonal drift */
+/* L2 — ledger grid, slow diagonal drift.
+   ⚠️ COMMENTED OUT, NOT DELETED, 11-08-2026 — removed per Clinton's request,
+   same session as the L3 ring/veil swap above. Restore by un-commenting this
+   block, the keyframe below it, and the <div className="arcfield__grid" />
+   in ArcField.jsx.
 .arcfield__grid {
   position: absolute;
   inset: -72px;
@@ -458,8 +469,13 @@ p {
     transform: translate3d(-72px, -72px, 0);
   }
 }
+*/
 
-/* L3 — the Arc: two counter-rotating conic rings */
+/* L3 — the Arc: two counter-rotating conic rings.
+   ⚠️ COMMENTED OUT, NOT DELETED, 11-08-2026 — swapped for `.arcfield__veil`
+   (DarkVeil, below) per Clinton's request. Restore by un-commenting this
+   block and the two <div>s in ArcField.jsx, and removing `.arcfield__veil`
+   + the <DarkVeil> import there.
 .arcfield__ring {
   position: absolute;
   left: 50%;
@@ -517,8 +533,52 @@ p {
     rotate: 360deg;
   }
 }
+*/
 
-/* L4 — cursor bloom, lerped in JS by useBloom */
+/* L3 replacement — DarkVeil (React Bits), a WebGL shader layer standing in
+   for the two conic rings above.
+
+   `mix-blend-mode: screen` is the one property doing the actual work of
+   "keep the background the same colour": DarkVeil's canvas is fully opaque
+   (its fragment shader hardcodes alpha=1), so painted normally it would
+   replace `.arcfield__base`'s --gradient-deep outright. `screen` instead
+   lightens what's underneath by the veil's colour — pure black contributes
+   nothing, so `.arcfield__base` shows through unchanged wherever the shader
+   pattern is dark, and only the pattern's bright regions add light on top.
+   That is a genuine blend, not an approximation of one.
+
+   No blur/mask here, unlike the rings — the shader's own warp/noise supply
+   its edges, and DarkVeil.jsx's `hueShift` (not a CSS value — see the
+   comment on `EMBER_HUE_SHIFT` there) is what makes it read as ember rather
+   than blur radius or mask geometry. */
+.arcfield__veil {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+  opacity: 0.75;
+}
+
+/* L4 — cursor bloom, lerped in JS by useBloom.
+   ⚠️ REMOVED, NOT DELETED, 11-08-2026 — per request, same session as the
+   L2 grid removal and the L3 ring/veil swap. Restore by un-commenting this
+   block, the <div className="arcfield__bloom" data-bloom /> in ArcField.jsx,
+   and the useBloom() call in Hero.jsx.
+
+   Two reasons it went, worth keeping on record:
+   1. It was designed to add an ember glow over the L3 rings. The veil that
+      replaced those rings already supplies a much richer moving ember field,
+      so a soft ember blob on top of it was redundant.
+   2. It was the layer producing a visible translucent RECTANGLE that tracked
+      the cursor on real GPU hardware. The mechanism: `filter: blur(48px)`
+      gives an element its own filter region, and inside a blend group (the
+      veil's mix-blend-mode: screen) a compositor can rasterise that region and
+      leave its rectangular bounds visible — matching the reported symptom
+      exactly, a hard-edged ~520px square rather than a soft round glow. If
+      this is ever restored, drop the blur and widen the gradient's own stops
+      instead; a radial-gradient fading to transparent is already a smooth
+      falloff, so the blur was never load-bearing. Note the artefact did NOT
+      reproduce in headless software rendering (an edge scan across the
+      boundary found no discontinuity), so it needs real hardware to verify.
 .arcfield__bloom {
   position: absolute;
   width: 520px;
@@ -537,6 +597,7 @@ p {
   will-change: transform;
   transform: translate3d(50vw, 40vh, 0);
 }
+*/
 
 /* L5 — vignette, seats the content */
 .arcfield__vignette {
@@ -705,6 +766,248 @@ p {
   to {
     transform: translateX(-50%);
   }
+}
+
+/* ============================================================
+   Ambient dark gradient — DESIGN.md §7.2, which is explicit that dark sections
+   "are not flat #0B1329" and should carry a barely-there radial for depth,
+   capped at an 8% luminance shift. The homepage's dark sections were shipping
+   flat, so this is spec compliance rather than a new effect.
+
+   Applied as `background-image`, NOT `background`, so whatever Tailwind bg-*
+   colour the section already sets stays underneath as the fallback. Every stop
+   is opaque, so the gradient fully covers it when it renders.
+
+   Same three stops as --gradient-deep (ink-700 → ink-900 → ink-950) — no new
+   colour is invented. Only the radial's CENTRE moved, from -10% to -30%, and
+   that number was chosen by measurement, not feel. Sweeping the offset and
+   reading the rendered pixels (perceptual ΔL* between the section's top and
+   bottom edge, sampled clear of the fixed header):
+
+     -10%  ΔL* 10.03%   ← --gradient-deep exactly as authored: OVER §7.2's cap
+     -18%  ΔL*  8.39%   over
+     -24%  ΔL*  6.94%   passes, thin margin
+     -30%  ΔL*  5.33%   ← chosen: clearly visible, comfortable margin
+     -46%  ΔL*  2.69%   near-invisible
+
+   ⚠️ Note what that first row means: §7.2 caps ambient gradients at an 8%
+   luminance shift AND supplies --gradient-deep as the token to achieve it, but
+   the token measures 10% on a full-bleed section. The percentages are
+   scale-invariant, so this is not a height artefact — it is a spec-internal
+   conflict, the same class as the §9.5 layer-budget one in Phase 4. The written
+   cap is followed here; the token is left alone since the hero depends on it.
+   ============================================================ */
+.surface-ambient {
+  background-image: radial-gradient(
+    120% 92% at 50% -30%,
+    var(--color-ink-700) 0%,
+    var(--color-ink-900) 46%,
+    var(--color-ink-950) 100%
+  );
+}
+
+/* ============================================================
+   Inset dark panel on a light surface — DESIGN.md §11.1's "navy inset panel",
+   used by the homepage Partner programme row.
+
+   Deliberately NOT .card-dark. That class is for pressable cards and carries a
+   hover ring, a lift and an arc draw; this is a static content panel, so all
+   three would be signalling an interaction that doesn't exist. Depth here comes
+   from surface quality instead: an ambient wash, a border, an inset highlight
+   and grain.
+
+   No drop shadow — §12.2 forbids it on dark surfaces, and "inset" means
+   recessed, so a lift shadow would contradict the brief twice over.
+
+   Every stop is a pure ink token. §7.1 explicitly bars the brand gradient from
+   card backgrounds, so there is no ember in the wash at all; the ember tick
+   icons stay the only warm accent in the panel, which is better hierarchy
+   anyway. Measured ΔL* 6.7%, inside §7.2's 8% cap.
+   ============================================================ */
+.panel-dark {
+  position: relative; /* contains .grain's ::after and the arc rings */
+  overflow: hidden; /* keeps both inside the corner radius */
+  background-image: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--color-ink-700) 55%, var(--color-ink-900)) 0%,
+    var(--color-ink-900) 46%,
+    color-mix(in srgb, var(--color-ink-950) 60%, var(--color-ink-900)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--color-ink-100) 12%, transparent);
+  /* §6.4's light-catch — the single detail that makes a dark panel read as a
+     real object rather than a hole cut in the page. */
+  box-shadow: inset 0 1px 0
+    color-mix(in srgb, var(--color-ink-100) 10%, transparent);
+}
+
+/* ============================================================
+   Animated value sizer — used by Counter and Scramble in the hero stat row.
+
+   Reserves a text box at the FINAL string's width, so a value that changes
+   character by character can never reflow its own tile: Counter's digit count
+   grows 1→3 while counting (which would slide the trailing "+" for the whole
+   1.2s), and Scramble's random glyphs are different widths from the real ones
+   in a proportional face like Satoshi.
+
+   The sizer is a PSEUDO-element rather than an opacity-0 ghost span on
+   purpose. A ghost span holds the box correctly but puts a SECOND copy of
+   every value into the DOM — `innerText` reads "250+ 250+", and so does any
+   crawler or text extractor. Pseudo-element content is not in the text
+   content, so the string exists exactly once.
+   ============================================================ */
+.value-sizer {
+  position: relative;
+  display: inline-block;
+}
+.value-sizer::before {
+  content: attr(data-value);
+  visibility: hidden;
+}
+/* The single child is lifted out of flow onto the reserved box. */
+.value-sizer > * {
+  position: absolute;
+  inset: 0;
+}
+
+/* ============================================================
+   Dark card — the premium treatment, shared by <Card surface="dark"> and
+   DscBand's hand-rolled product <Link>s so the two can never drift apart.
+   One definition, two consumers.
+
+   Constraints this respects, all pre-existing:
+   - DESIGN.md §12.2: dark cards get a border plus an inset top highlight and
+     NEVER a drop shadow. The hover glow below is on a pseudo-element OUTSIDE
+     the card box, so the card itself still carries no shadow.
+   - DESIGN.md §7.5: backdrop-filter stays exclusive to the sticky nav. The
+     wash here is an opaque gradient — translucency-adjacent depth, no blur,
+     and no second large blur surface for the mobile compositor.
+   - CLAUDE.md: no raw hex. Every value is color-mix over an existing token.
+
+   Frequency tier is hover — "tens of times a day" — so the motion is
+   --dur-fast (180ms), not --dur-base. A 280ms hover on a six-card grid reads
+   as lag when you sweep across it.
+   ============================================================ */
+.card-dark {
+  position: relative;
+  /* Static wash: ember-warmed lift at the top-left falling to a cooler
+     ink-950-mixed corner at the bottom-right, so the card has a light
+     direction instead of being one flat fill. 5% ember is under the
+     threshold where it reads as "an orange card" — it reads as warmth. */
+  background-image: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--color-ember-400) 5%, var(--color-ink-800)) 0%,
+    var(--color-ink-800) 44%,
+    color-mix(in srgb, var(--color-ink-950) 42%, var(--color-ink-800)) 100%
+  );
+  border: 1px solid var(--color-ink-700);
+  box-shadow: inset 0 1px 0
+    color-mix(in srgb, var(--color-ink-100) 7%, transparent);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+/* The hover ring is a pseudo-element whose OPACITY animates, rather than a
+   box-shadow or border-color transition on the card itself: opacity is
+   composited, whereas growing a box-shadow spread repaints the card's whole
+   border box every frame — six of them at once on the WhatWeDo grid. */
+.card-dark::before {
+  content: "";
+  position: absolute;
+  inset: -1px; /* sits ON the border, not inside it */
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+  border: 1px solid color-mix(in srgb, var(--color-ember-400) 50%, transparent);
+  /* Outer glow only — nothing is cast INTO the card, so §12.2's
+     no-drop-shadow-on-dark rule still holds for the card surface. */
+  box-shadow: 0 16px 38px -20px
+    color-mix(in srgb, var(--color-ember-500) 42%, transparent);
+}
+
+/* The corner crescent — DESIGN.md §3.1's one repeated shape — STROKES ON
+   rather than cross-fading. This is the "progress" draw: dashoffset runs
+   1 → --card-arc-draw, i.e. 0 → 90% of the arc's length. The final 10% is
+   left undrawn deliberately; on a crescent that already has a 58° gap by
+   design, stopping just short reads as the shape's natural taper, where a
+   fully closed ring reads as a loading spinner that finished. One value to
+   tune if you want the full draw: set --card-arc-draw to 0. */
+.card-dark {
+  --card-arc-draw: 0.1;
+}
+.card-arc {
+  stroke-dasharray: 1; /* unit length — see ArcGlyph's pathLength="1" */
+  stroke-dashoffset: 1;
+  opacity: 0;
+  transition:
+    stroke-dashoffset var(--dur-fast) var(--ease-out),
+    opacity var(--dur-instant) var(--ease-out);
+}
+
+/* Pointer gating is not optional: on touch, a tap fires a false hover and the
+   card stays lifted with its ring lit until you tap elsewhere. Note the
+   pre-existing `hover:-translate-y-1` on <Card> was ungated — this replaces
+   it for the dark surface. */
+@media (hover: hover) and (pointer: fine) {
+  .card-dark:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(
+      in srgb,
+      var(--color-ember-400) 28%,
+      var(--color-ink-700)
+    );
+  }
+  .card-dark:hover::before {
+    opacity: 1;
+  }
+  .card-dark:hover .card-arc {
+    stroke-dashoffset: var(--card-arc-draw);
+    opacity: 1;
+  }
+}
+
+/* Press feedback, but ONLY when the card is itself the click target. DscBand's
+   cards are <a>s; WhatWeDo's are <div>s whose inner links are the real targets,
+   and pressing a card that isn't clickable would signal something false. The
+   :is(a, button) guard is what keeps those two cases apart.
+   Composed with the hover lift rather than replacing it, so a press from the
+   hovered state settles rather than jumping. Not gated behind (hover: hover):
+   :active is a genuine press on touch, and this is the only feedback a touch
+   user gets, since the hover ring never fires for them. */
+.card-dark:is(a, button):active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* Keyboard parity — DscBand's cards are real links, so focus must show the
+   same affordance a mouse gets. Outside the hover query on purpose: a
+   keyboard user on a touch device still needs this. */
+.card-dark:focus-visible::before,
+.card-dark:has(:focus-visible)::before {
+  opacity: 1;
+}
+.card-dark:focus-visible .card-arc,
+.card-dark:has(:focus-visible) .card-arc {
+  stroke-dashoffset: var(--card-arc-draw);
+  opacity: 1;
+}
+
+/* ============================================================
+   Section arc rings — ArcRings.jsx. The rings are inert SVG; this only
+   supplies the clipping frame, so a ring can bleed off an edge without
+   adding a horizontal scrollbar or being clipped by the section's own
+   overflow (which must stay visible — HowWeWork's step labels are
+   absolutely positioned outside their parent's box).
+   ============================================================ */
+.arc-rings {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* Behind content, above the section background. Sections using this must
+     carry `relative isolate` so this never escapes to an outer stacking
+     context. */
+  z-index: 0;
 }
 
 /* DESIGN.md §9.6 — global reduced-motion floor. Component-level JS handling

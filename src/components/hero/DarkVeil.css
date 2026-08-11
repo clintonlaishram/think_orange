@@ -1,0 +1,9 @@
+/* DarkVeil replaces the L3 ring layer inside ArcField. It fills the same box
+   the two rings used to occupy (ArcField's own `absolute inset-0`), so this
+   only needs to be a well-behaved canvas within that box — the position and
+   stacking already come from the wrapper `.arcfield__veil` in theme.css. */
+.darkveil-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

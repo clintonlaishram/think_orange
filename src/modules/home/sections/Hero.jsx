@@ -3,13 +3,15 @@ import { Link } from "react-router-dom";
 import { Check, ChevronDown } from "lucide-react";
 
 import ArcField from "@/components/hero/ArcField";
-import { useBloom } from "@/hooks/useBloom";
+// import { useBloom } from "@/hooks/useBloom"; // cursor bloom removed — see below
 import { Container } from "@/components/layout/Container";
 import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Button } from "@/components/ui/Button";
 import { Figure } from "@/components/ui/Figure";
+import { Counter } from "@/components/motion/Counter";
 import { LineMask } from "@/components/motion/LineMask";
 import { Reveal } from "@/components/motion/Reveal";
+import { Scramble } from "@/components/motion/Scramble";
 import { site } from "@/content/nav";
 import { heroCapabilities, heroStats } from "@/content/home-hero";
 
@@ -37,7 +39,11 @@ const heroImage = {
 
 export function Hero() {
   const heroRef = useRef(null);
-  useBloom(heroRef);
+  // Cursor bloom removed 11-08-2026 — see the note on `.arcfield__bloom` in
+  // theme.css. The hook already early-returns without a [data-bloom] element,
+  // so this is belt-and-braces rather than load-bearing; it keeps the removal
+  // legible. Restore alongside the div and the CSS block.
+  // useBloom(heroRef);
 
   return (
     <section
@@ -254,31 +260,82 @@ function HeroStats() {
     // laptop-height viewport, so 520ms would land as visible lag AFTER it
     // scrolls into view. 200ms still reads as part of the cascade on a tall
     // monitor, where the row IS above the fold at mount.
-    <Reveal delay={0.2} className="mt-1 border-t border-ink-800 pt-6">
-      <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
-        {heroStats.map((stat) => (
-          <div
-            key={stat.id}
-            // Hairlines BETWEEN tiles only. At the 2-column breakpoint a
-            // divider on every tile would also run down the middle of the
-            // row, so it only turns on from sm upward where the row is a
-            // single line of four.
-            //
-            // No left padding on the first tile at any breakpoint: with it,
-            // "250+" sits 16px inboard of the headline's left edge and the
-            // whole row reads as misaligned against the column above it.
-            className="flex flex-col-reverse gap-1.5 pr-4 sm:border-l sm:border-ink-800 sm:pl-6 sm:first:border-l-0 sm:first:pl-0"
-          >
-            <dt className="text-body-sm text-ink-200">{stat.label}</dt>
-            {/* h3 on phone, h2 from sm up. At h2 the word-value tiles wrap
-                mid-word in a 2-column 163px track ("Pan-" / "India"), which
-                reads as broken rather than large. */}
-            <dd className="text-h3 font-black tracking-[-0.02em] text-ember-400 sm:text-h2">
-              {stat.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+    //
+    // Render-prop form: the tiles animate their own values, and they all hang
+    // off THIS Reveal's single IntersectionObserver rather than installing
+    // four more of their own.
+    <Reveal delay={0.5} className="mt-1 border-t border-ink-800 pt-6">
+      {(inView) => (
+        <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
+          {heroStats.map((stat, index) => (
+            <div
+              key={stat.id}
+              // Hairlines BETWEEN tiles only. At the 2-column breakpoint a
+              // divider on every tile would also run down the middle of the
+              // row, so it only turns on from sm upward where the row is a
+              // single line of four.
+              //
+              // No left padding on the first tile at any breakpoint: with it,
+              // "250+" sits 16px inboard of the headline's left edge and the
+              // whole row reads as misaligned against the column above it.
+              className="flex flex-col-reverse gap-1.5 pr-4 sm:border-l sm:border-ink-800 sm:pl-6 sm:first:border-l-0 sm:first:pl-0"
+            >
+              <dt className="text-body-sm text-ink-200">{stat.label}</dt>
+              {/* h3 on phone, h2 from sm up. At h2 the word-value tiles wrap
+                  mid-word in a 2-column 163px track ("Pan-" / "India"), which
+                  reads as broken rather than large. */}
+              <dd className="text-h3 font-black tracking-[-0.02em] text-ember-400 sm:text-h2 line-clamp-1">
+                <StatValue value={stat.value} play={inView} index={index} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
     </Reveal>
+  );
+}
+
+// A leading number with anything trailing it — "250+" → 250 / "+", "1,200"
+// → 1200 / "". Deliberately reads the SHAPE of stat.value rather than keying
+// off stat.id: the two numeric tiles in home-hero.js are unconfirmed
+// placeholders due to be replaced or deleted before launch, so this has to
+// keep working when the content changes underneath it. Anything that doesn't
+// match is treated as a word and decodes instead of counting.
+const NUMERIC = /^(\d[\d,]*)(.*)$/;
+
+// 60ms, matching Stagger's established STEP — the row is one object, so the
+// four tiles resolve in sequence rather than all at once.
+const TILE_STEP = 0.6;
+
+function StatValue({ value, play, index }) {
+  const numeric = NUMERIC.exec(value);
+  const delay = index * TILE_STEP;
+
+  if (!numeric) {
+    return <Scramble text={value} play={play} delay={delay} />;
+  }
+
+  const [, digits, suffix] = numeric;
+  const target = Number(digits.replace(/,/g, ""));
+
+  return (
+    // Same `.value-sizer` treatment Scramble uses, for the same reason:
+    // tabular-nums keeps every digit one width, but the digit COUNT still
+    // grows 1→3 while counting, which would slide the "+" rightward for the
+    // whole 1.2s. tabular-nums is on the sizer itself so the reserved box is
+    // measured at the same digit width the counter will render at.
+    <span className="value-sizer tabular-nums" data-value={`${digits}${suffix}`}>
+      <span>
+        <Counter
+          value={target}
+          play={play}
+          delay={delay}
+          // en-IN so a future five-figure value groups the Indian way
+          // (1,20,000), not 120,000.
+          format={(n) => Math.round(n).toLocaleString("en-IN")}
+        />
+        {suffix}
+      </span>
+    </span>
   );
 }

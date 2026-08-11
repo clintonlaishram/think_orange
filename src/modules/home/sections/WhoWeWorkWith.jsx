@@ -46,7 +46,7 @@ export function WhoWeWorkWith() {
               to="/contact"
               className={
                 "group block rounded-sm border-t border-ink-100 px-1 py-6 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 lg:border-t-0 lg:border-l lg:px-6 lg:py-0 " +
-                (index === 0 ? "lg:border-l-0" : "")
+                (index === 0 ? "lg:border-l-0 lg:pl-0" : "")
               }
             >
               <h3 className="text-h4 text-ink-600">{segment.label}</h3>
