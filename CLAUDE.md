@@ -700,6 +700,117 @@ source ever changes.
 - Verified after all of it: ember coverage 3.95% @1600, 2.44% @2560, 6.5%
   @375 (ceiling ~12%); h1 contrast 6.93:1 / 6.93:1 / 6.94:1; 60fps; canvas CSS
   box exactly matches its container at dpr 1 and 2; no console errors.
+## Phase 6 (T2 Service Leaf + T3 Category Hub) — complete, 11-08-2026
+All 21 service-leaf routes and all 8 category-hub routes (6 practice-area hubs +
+the top-level `/services` variant + `/dsc`, which was already built) now render
+real templates instead of `PageStub`. Zero per-slug conditionals in either
+template — every leaf answers the same structure, every hub uses the same
+count-aware grid; anything that looked like it needed special-casing turned out
+to be a content-file problem instead (see `PendingLeaf` below).
+
+- **`ServiceLeaf.jsx` (T2, CONTENT-PLAN.md §7)** renders 11 sections top to
+  bottom: `PageHero` (compact dark hero — breadcrumb, category eyebrow, H1,
+  lede, CTA), a sticky sub-nav, 2-col overview (8-col prose / 4-col sticky
+  `EnquiryCard`), "Who needs this" (`ArcGlyph` bullets), "What's included"
+  (`CheckCircle2` list), "Documents required" (numbered mono list, grouped by
+  entity type), "How it works" (vertical numbered stepper on a dark surface),
+  "Timeline & fees" (`tabular-nums` table — the fees row is hardcoded copy
+  reading "On request", never sourced from data, since `fees` is always
+  `null`), FAQ `Accordion` + `FAQPage` JSON-LD, related services, `CtaBand`.
+  All data comes from `getServiceContent(slug)`; the template itself never
+  imports a single leaf file by name.
+- **`PageHero.jsx`** (`src/components/layout/PageHero.jsx`) is the shared
+  compact dark hero for T2 and T3, per the Layout contract section above —
+  breadcrumb + eyebrow + H1 + lede + one CTA, full-bleed to `y=0`, `.page-top`
+  padding, `deep` surface. One static corner arc, no animation (that's the
+  homepage hero's signature, per §16 — reused here only as a quieter echo).
+- **Sticky sub-nav scroll-spy** (`SubNav`, inside `ServiceLeaf.jsx`) uses an
+  `IntersectionObserver` with `rootMargin: "-30% 0px -55% 0px"` over the six
+  anchored sections, not scroll-position math. It sticks at `top-16` (64px —
+  `Header.jsx`'s condensed height), and `EnquiryCard`'s sticky wrapper sits at
+  `lg:top-32` (header + sub-nav) so neither fixed element ever overlaps it.
+- **`EnquiryCard.jsx`** (`src/modules/services/EnquiryCard.jsx`) is 4 fields
+  (name, phone, email, message) that compose a pre-filled WhatsApp deep link
+  on submit — the same `site.whatsappHref` pattern Footer/CtaBand/
+  FloatingWhatsApp already use. Deliberately NOT a fake form post: Contact's
+  real EmailJS-backed form is still Phase 8, and CONTENT-PLAN.md §11 itself
+  says most enquiries in this sector arrive by WhatsApp anyway. This makes the
+  card genuinely functional today rather than a placeholder. Swapping it to a
+  real POST later is a change inside this one file, not the surrounding
+  template.
+- **`PendingLeaf`** (inside `ServiceLeaf.jsx`) is what renders for the 4 leaves
+  with no content file yet (`itr-filing`, `tds-compliance`,
+  `tax-planning-advisory`, `personal-finance` — all blocked on BLOCKERS.md §1).
+  Shows only the nav label, breadcrumb, a plain "still being written" message,
+  direct phone/WhatsApp buttons, and — if any exist — sibling leaves in the
+  same category that ARE written, so a visitor to a blocked page isn't
+  stranded. Nothing invented, no fake sections, doesn't crash.
+- **`CategoryHub.jsx` (T3, CONTENT-PLAN.md §8)** renders: `PageHero`, a 7/5
+  intro (prose left, navy inset listing children as links right — same inset
+  pattern as the sub-nav card), the count-aware child grid (see below),
+  category FAQs (`Accordion`), a 3-point "Why ThinkOrange" hairline row,
+  related categories, `CtaBand`. All six practice-area hubs plus the written/
+  unwritten mix are driven entirely by `nav.js` + `getServiceContent` — the
+  component has no awareness of which specific hub it's rendering.
+- **Count-aware grid, exactly per §8 row 3**: 2 children → `sm:grid-cols-2`,
+  3 → adds `lg:grid-cols-3`, 4+ → same 3-col grid with the FIRST card spanning
+  `lg:col-span-2` (a bento treatment, matching the asymmetric card `WhatWeDo`
+  already established on the homepage). Verified at the DOM level, not just
+  eyeballed: on the 7-child Business Setup hub, `private-limited-company`
+  measured 857px wide against 419px for every sibling at a 1440px viewport —
+  exactly 2× minus the gap.
+  - **Real bug caught during this phase**: the grid was originally built with
+    `Stagger` (like every other homepage grid), which wraps each child in its
+    own `motion.div` — THAT wrapper becomes the actual CSS grid item, so a
+    span class placed on the child inside it has zero effect on the grid's
+    track sizing. Fixed by dropping `Stagger` for this one grid and using a
+    plain grid `div` + per-item `Reveal` instead, since `Reveal` forwards
+    `className` straight onto the element it renders and can carry the span
+    itself. Same reason `WhatWeDo`'s bento grid on the homepage does the same
+    thing — worth checking for this pattern any time a bento/spanning grid
+    needs scroll-reveal.
+- **`category-content.js`** (`src/content/services/category-content.js`) is
+  the new practice-area prose layer for all 6 hubs — `heroLede`, `intro`
+  (paragraphs), `faqs`, `whyUs`, `relatedCategories`. Same discipline as every
+  leaf file: no rupee amounts, no day counts, no invented stats.
+- **`ServicesHub.jsx`** is the top-level `/services` T3 variant (§8's own
+  callout: "the sitemap page users actually use"). Lists all 6 categories with
+  every child inline in one page, a "Soon" tag on any leaf with no content
+  file yet, then reuses `WhoWeWorkWith` verbatim (per §8's explicit
+  instruction not to refork it) and `CtaBand`.
+- **`Accordion.jsx`** (`src/components/ui/Accordion.jsx`) is the shared
+  `grid-template-rows: 0fr → 1fr` accordion — same technique `MobileNav`
+  already used, generalised so T2 FAQs, T3 category FAQs and (later) T8's
+  legal-page prose sections share one component instead of three
+  reimplementations. Single-open-panel, full keyboard/ARIA wiring
+  (`aria-expanded`, `aria-controls`, `role="region"`).
+- **Router: no changes needed.** `router.jsx`'s `resolveComponent` already
+  branched on `template` (`T2` → `ServiceLeaf`, `T3` → `CategoryHub`, with
+  `/services` and `/dsc` special-cased to their own top-level components) from
+  earlier scaffolding — it was routing to `PageStub` only because that's what
+  the T2/T3 files exported. All 29 T2/T3 routes lit up automatically once the
+  real components replaced the stubs.
+- **Chip-on-dark gap (flagged after Phase 4) did not need resolving here**:
+  neither template uses `Chip` anywhere. The sub-nav's active state and the
+  "written/unwritten" indicators are plain text/pill treatments on light
+  surfaces, so that gap is still open but still unencountered on a real page —
+  next candidate to check is Phase 7 (T4/T5) or wherever a Chip is next
+  spec'd on a dark surface.
+- **Verification method**: `npm run lint`, `npm run content:check` (17/21
+  leaves, all checks pass), and `npm run build` all clean. Then a
+  puppeteer-core + headless Edge script screenshotted 11 representative
+  routes — one leaf per category (`gst-registration`, `itr-filing` [pending],
+  `private-limited-company`, `bookkeeping`, `gem-registration`,
+  `business-loan`), a hub with all leaves written (`/services/gst`, 4/4), a
+  hub with only one leaf written (`/services/income-tax`, 1/3), a 7-child
+  bento hub (`/services/business-setup`), a 2-child hub
+  (`/services/loans-finance`), and the top-level `/services` hub. Zero
+  console/page errors across all 11. Re-confirms the Phase 4/5-documented
+  gotcha: headless Chrome never fires `Reveal`'s `IntersectionObserver` for
+  content below the fold unless the page has actually scrolled past it first —
+  the verification script now walks the full scroll height in 600px steps
+  before every screenshot, or every `Reveal`-wrapped section (which is most of
+  both templates) captures as permanently blank.
 
 ## Writing content — the rules that matter most
 - **Never type a statutory fact into a leaf file.** No rupee amounts, day counts,
