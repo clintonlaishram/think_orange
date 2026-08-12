@@ -6,8 +6,10 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Container } from "@/components/layout/Container";
 import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Reveal } from "@/components/motion/Reveal";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { homeFaqs } from "@/content/faqs/home";
 import { site } from "@/content/nav";
+import { faqPageJsonLd } from "@/lib/jsonld";
 
 // Homepage FAQ row — CONTENT-PLAN.md §229 / DESIGN.md §758's archetype
 // ("accordion, with FAQPage JSON-LD").
@@ -69,23 +71,12 @@ export function Faqs() {
       </Container>
 
       {/* CONTENT-PLAN.md §486 requires FAQPage JSON-LD wherever FAQs render.
-          Built from the SAME resolved array the accordion renders, so the
-          structured data and the visible copy can never disagree — and every
-          answer is present regardless of which row is expanded. */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: faqs.map((faq) => ({
-              "@type": "Question",
-              name: faq.q,
-              acceptedAnswer: { "@type": "Answer", text: faq.a },
-            })),
-          }),
-        }}
-      />
+          Built from the SAME resolved array the accordion renders (via the
+          one shared faqPageJsonLd builder — src/lib/jsonld.js — rather than
+          a fourth hand-rolled copy), so the structured data and the visible
+          copy can never disagree, and every answer is present regardless of
+          which row is expanded. */}
+      <JsonLd data={faqPageJsonLd(faqs)} />
     </section>
   );
 }
@@ -139,7 +130,7 @@ function FaqAccordion({ faqs }) {
                     eyebrows and deadline counts. Also gives the row a stable
                     left edge to align the answer against. */}
                 <span
-                  className="mt-1 shrink-0 font-mono text-body-sm tabular-nums text-ink-300"
+                  className="mt-1 shrink-0 font-mono text-body-sm tabular-nums text-ink-400"
                   aria-hidden="true"
                 >
                   {String(index + 1).padStart(2, "0")}

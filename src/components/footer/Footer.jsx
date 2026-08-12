@@ -41,7 +41,7 @@ export function Footer() {
             <span className="font-sans text-[19px] font-black tracking-tight text-canvas">
               Think<span className="text-ember-400">Orange</span>
             </span>
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-400">
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-300">
               Consulting Pvt Ltd
             </p>
             <p className="mt-4 text-body-sm text-ember-200">{site.strapline}</p>

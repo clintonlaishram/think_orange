@@ -12,8 +12,10 @@ import { Accordion } from "@/components/ui/Accordion";
 import { Stagger } from "@/components/motion/Stagger";
 import { EnquiryCard } from "@/modules/services/EnquiryCard";
 import { CtaBand } from "@/modules/home/sections/CtaBand";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { findRoute, findBySlug, serviceLeavesBySlug, site } from "@/content/nav";
 import { getServiceContent } from "@/content/services";
+import { serviceJsonLd, faqPageJsonLd } from "@/lib/jsonld";
 import { cn } from "@/lib/cn";
 
 // T2 — CONTENT-PLAN.md §7. The highest-traffic template on the site: 21
@@ -36,6 +38,15 @@ export default function ServiceLeaf({ path }) {
 
   return (
     <>
+      <JsonLd
+        data={serviceJsonLd({
+          name: leaf.title,
+          description: leaf.meta?.description ?? leaf.lede,
+          path,
+          categoryLabel: category?.label,
+        })}
+      />
+
       <PageHero
         path={path}
         eyebrow={category?.label}
@@ -212,7 +223,7 @@ export default function ServiceLeaf({ path }) {
             items={leaf.faqs.map((faq, index) => ({ id: index, question: faq.q, answer: faq.a }))}
           />
         </Container>
-        <FaqJsonLd faqs={leaf.faqs} />
+        <JsonLd data={faqPageJsonLd(leaf.faqs)} />
       </Section>
 
       <RelatedServices related={leaf.related} currentSlug={leaf.slug} />
@@ -282,21 +293,6 @@ function SubNav({ sections }) {
       </Container>
     </div>
   );
-}
-
-function FaqJsonLd({ faqs }) {
-  if (!faqs?.length) return null;
-  const json = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.q,
-      acceptedAnswer: { "@type": "Answer", text: faq.a },
-    })),
-  };
-  // Structured data, not user content — safe to inject directly.
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }} />;
 }
 
 function RelatedServices({ related, currentSlug }) {

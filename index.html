@@ -4,11 +4,39 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Phase 9 (BUILD-PLAN.md): everything between the two markers below is
+         the fallback for `npm run dev` AND the exact block
+         scripts/prerender.mjs replaces wholesale for each of the 49 routes
+         (see buildHeadBlock() there, which mirrors src/lib/seo.js's
+         resolveSeo() output) — a single string-replace between two HTML
+         comments, deliberately not per-tag regex, so a future tag added here
+         doesn't need a matching regex added there. Values below are the
+         homepage's own, kept real (not "TODO") so a dev-mode load or an
+         unprerendered fallback never ships a placeholder tag. -->
+    <!-- SEO:START -->
     <title>ThinkOrange Consulting | GST, Income Tax & Compliance Advisory — Salem</title>
     <meta
       name="description"
       content="ThinkOrange Consulting Private Limited — GST, income tax, business setup, accounting & audit, government tenders, and Digital Signature Certificates. Salem, Tamil Nadu, serving clients pan-India."
     />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://thinkorange.in/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ThinkOrange" />
+    <meta property="og:title" content="ThinkOrange Consulting | GST, Income Tax & Compliance Advisory — Salem" />
+    <meta
+      property="og:description"
+      content="ThinkOrange Consulting Private Limited — GST, income tax, business setup, accounting & audit, government tenders, and Digital Signature Certificates. Salem, Tamil Nadu, serving clients pan-India."
+    />
+    <meta property="og:url" content="https://thinkorange.in/" />
+    <meta property="og:image" content="https://thinkorange.in/images/home/home-hero.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ThinkOrange Consulting | GST, Income Tax & Compliance Advisory — Salem" />
+    <meta
+      name="twitter:description"
+      content="ThinkOrange Consulting Private Limited — GST, income tax, business setup, accounting & audit, government tenders, and Digital Signature Certificates. Salem, Tamil Nadu, serving clients pan-India."
+    />
+    <!-- SEO:END -->
   </head>
   <body>
     <div id="root"></div>

@@ -38,7 +38,11 @@ export function WhyThinkOrange() {
           {differentiators.map((item, index) => (
             <Reveal key={item.title} delay={index * 0.06} className="flex gap-6">
               <span
-                className="shrink-0 font-mono text-stat font-black leading-none text-ember-400"
+                // ember-500, not ember-400: §4.5 clears ember-400 on `canvas`
+                // for large display only (3.06:1), and this section is
+                // canvas-alt, where it drops to 2.8:1 — under the 3.0 floor
+                // even as large text. ember-500 measures ~3.5:1 here.
+                className="shrink-0 font-mono text-stat font-black leading-none text-ember-500"
                 aria-hidden="true"
               >
                 {String(index + 1).padStart(2, "0")}

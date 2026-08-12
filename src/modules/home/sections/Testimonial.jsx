@@ -110,7 +110,12 @@ export function Testimonial() {
                 <figure className="flex flex-col items-center">
                   <motion.span
                     aria-hidden="true"
-                    className="block font-serif text-[clamp(3.5rem,8vw,6rem)] leading-[0.6] text-ember-400/45"
+                    // Italic, not roman: this decorative quote glyph was the
+                    // only thing on the site pulling Instrument Serif's 400
+                    // upright cut (a whole extra 21KB face for one character),
+                    // and DESIGN.md §5.1 names the ITALIC as the signature
+                    // anyway. Phase 10 dropped the roman @font-face with it.
+                    className="block font-serif italic text-[clamp(3.5rem,8vw,6rem)] leading-[0.6] text-ember-400/45"
                     initial={{ transform: "rotate(-8deg)", opacity: 0 }}
                     animate={
                       inView

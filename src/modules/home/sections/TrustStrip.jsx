@@ -79,7 +79,11 @@ function Mark({ label }) {
   // `mr-16` (not the parent's `gap`) is the spacing — see the `track` comment
   // above for why that distinction is load-bearing here, not a style choice.
   return (
-    <span className="mr-16 whitespace-nowrap font-sans text-h4 font-bold text-ink-300 opacity-60 transition-[opacity,color] duration-[var(--dur-base)] hover:text-ember-600 hover:opacity-100">
+    // Phase 10 audit: was `text-ink-300 opacity-60`, which composited to 1.94:1
+    // on canvas — ink-300 is the DARK-surface body token (§4.6) and the 60%
+    // faded it further. ink-500 at 75% keeps the muted-until-hover treatment
+    // and measures 4.95:1.
+    <span className="mr-16 whitespace-nowrap font-sans text-h4 font-bold text-ink-500 opacity-75 transition-[opacity,color] duration-[var(--dur-base)] hover:text-ember-600 hover:opacity-100">
       {label}
     </span>
   );

@@ -80,11 +80,44 @@ export function MobileNav({ className }) {
     if (restoreFocus) triggerRef.current?.focus();
   }, []);
 
-  // Escape closes and returns focus to the trigger.
+  // Escape closes and returns focus to the trigger; Tab is trapped inside.
+  //
+  // The trap is what makes `aria-modal="true"` honest. Phase 10 measured focus
+  // escaping the open overlay after 10 tabs onto the page behind it, which is
+  // invisible to a sighted keyboard user (the overlay covers it) and leaves an
+  // AT user reading content the dialog claims to have suppressed. `inert` only
+  // guards the panel while it is CLOSED; it can't guard the rest of the page
+  // while it is open.
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event) => {
-      if (event.key === "Escape") closeMenu({ restoreFocus: true });
+      if (event.key === "Escape") {
+        closeMenu({ restoreFocus: true });
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const panel = panelRef.current;
+      if (!panel) return;
+      // tabIndex >= 0 filters out the panel itself and the collapsed
+      // accordion rows, which are already held at -1 while their section
+      // is shut.
+      const focusables = [
+        ...panel.querySelectorAll("a[href], button, input, select, textarea, [tabindex]"),
+      ].filter((el) => el.tabIndex >= 0 && !el.hasAttribute("disabled"));
+      if (!focusables.length) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && (active === first || active === panel)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
@@ -201,7 +234,7 @@ export function MobileNav({ className }) {
                               {group.label}
                             </Link>
                           ) : (
-                            <span className="block font-mono text-eyebrow uppercase text-ink-400">
+                            <span className="block font-mono text-eyebrow uppercase text-ink-300">
                               {group.label}
                             </span>
                           )}

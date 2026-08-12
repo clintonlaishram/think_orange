@@ -1,12 +1,14 @@
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { breadcrumbsFor } from "@/content/nav";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbListJsonLd } from "@/lib/jsonld";
 import { cn } from "@/lib/cn";
 
 // Derived entirely from nav.js — templates pass only their path.
-// Phase 9 emits matching BreadcrumbList JSON-LD from the same helper
-// (CONTENT-PLAN.md §14.2), so the visible trail and the structured data
-// can never drift apart.
+// Emits matching BreadcrumbList JSON-LD off the SAME `trail` array the
+// visible <ol> renders (CONTENT-PLAN.md §14.2), so the two can never drift —
+// same "select by reference" discipline as the homepage FAQ row.
 export function Breadcrumbs({ path, className }) {
   const trail = breadcrumbsFor(path);
   if (trail.length < 2) return null;
@@ -41,6 +43,7 @@ export function Breadcrumbs({ path, className }) {
           );
         })}
       </ol>
+      <JsonLd data={breadcrumbListJsonLd(trail)} />
     </nav>
   );
 }

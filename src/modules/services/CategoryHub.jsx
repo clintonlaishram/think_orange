@@ -9,9 +9,11 @@ import { Accordion } from "@/components/ui/Accordion";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger } from "@/components/motion/Stagger";
 import { CtaBand } from "@/modules/home/sections/CtaBand";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { serviceCategories } from "@/content/nav";
 import { getServiceContent } from "@/content/services";
 import { getCategoryContent } from "@/content/services/category-content.js";
+import { collectionPageJsonLd } from "@/lib/jsonld";
 import { cn } from "@/lib/cn";
 
 // T3 — CONTENT-PLAN.md §8. One component for all 6 category hubs (the
@@ -29,6 +31,14 @@ export default function CategoryHub({ path }) {
 
   return (
     <>
+      <JsonLd
+        data={collectionPageJsonLd({
+          name: category.label,
+          description: content?.meta?.description ?? content?.heroLede,
+          path,
+        })}
+      />
+
       <PageHero
         path={path}
         eyebrow="Services"
@@ -50,10 +60,23 @@ export default function CategoryHub({ path }) {
                 </div>
               </div>
 
-              {/* Navy inset panel listing children inline — DESIGN.md §8 row 2. */}
+              {/* Navy inset panel listing children inline — DESIGN.md §8 row 2.
+                  `data-surface="dark"` is load-bearing, not decorative: this is
+                  a dark panel inside a light section, and the surface system is
+                  attribute-scoped. Without it `[data-surface="light"] h2`
+                  (specificity 0,1,1) beats `.text-ember-300` (0,1,0) and the
+                  heading rendered ink-600 navy on ink-900 at 1.37:1 — invisible.
+                  Same trap the homepage PartnerProgramme panel hit. */}
               <div className="lg:col-span-5">
-                <div className="rounded-[var(--radius-md)] bg-ink-900 p-6 md:p-8">
-                  <h2 className="font-mono text-eyebrow uppercase text-ember-300">
+                <div
+                  data-surface="dark"
+                  className="rounded-[var(--radius-md)] bg-ink-900 p-6 md:p-8"
+                >
+                  {/* No colour class: `[data-surface="dark"] h2` supplies canvas
+                      and would beat one anyway. Same resolution as the
+                      PartnerProgramme panel — let the surface system own it
+                      rather than fighting the cascade with `!important`. */}
+                  <h2 className="font-mono text-eyebrow uppercase">
                     In this category
                   </h2>
                   <ul className="mt-4">

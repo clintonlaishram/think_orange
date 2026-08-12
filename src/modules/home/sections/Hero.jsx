@@ -26,15 +26,28 @@ const SPRING = { type: "spring", stiffness: 260, damping: 30, mass: 0.9 };
 
 // IMAGE-PLAN.md §4.1: home-hero is T1 (own photography). Until that lands,
 // a T2 contextual desk still-life (no people, no "this is our office" claim)
-// sits in public/images/home/home-hero.jpg. Swap for the T1 shot via the
-// imagetools pipeline when ready:
-//   import heroPicture from "@/assets/home/hero-desk.jpg?w=480;768;1024;1440&format=avif;webp&as=picture";
-//   ...then pass picture={heroPicture} to <Figure> below.
+// stands in. Swap the file for the T1 shot when it arrives — the import below
+// needs no changes.
+//
+// Imported through the imagetools pipeline rather than referenced as a bare
+// /images/ path. Phase 10 measured the raw file as the homepage's LCP element
+// at 5.5s: a single 179KB 1200x1500 JPEG, ~146KB of which is wasted on pixels
+// no viewport displays, served to browsers that have supported AVIF for years.
+// This emits AVIF/WebP at four widths and lets the browser pick.
+//
+// It resolves through public/ ON PURPOSE, which is unusual enough to explain:
+// the same file must ALSO stay reachable at a stable, unhashed absolute URL,
+// because it is the sitewide og:image (src/lib/seo.js) and the LocalBusiness
+// `image` (src/lib/jsonld.js), and social crawlers can't follow a
+// content-hashed asset name. So public/ keeps the verbatim copy for those, and
+// this import produces the optimised derivatives the page actually renders.
+import heroPicture from "../../../../public/images/home/home-hero.jpg?w=384;576;768;1152&format=avif;webp&as=picture";
+
 const heroImage = {
-  src: "/images/home/home-hero.jpg",
-  width: 1200,
-  height: 1500,
   alt: "Laptop, clipboard and pen on a marble desk — compliance workspace mid-task",
+  // Slot is a 5-col of the 1800px container at lg, and capped by max-w-md
+  // below it.
+  sizes: "(min-width: 1024px) 40vw, (min-width: 640px) 28rem, 100vw",
 };
 
 export function Hero() {
@@ -192,9 +205,8 @@ function HeroShowcase() {
     <div className="mx-auto max-w-md pb-14 pr-8 sm:pb-16 sm:pr-10 lg:mx-0 lg:max-w-none lg:pb-20 lg:pr-14">
       <div className="relative">
         <Figure
-          src={heroImage.src}
-          width={heroImage.width}
-          height={heroImage.height}
+          picture={heroPicture}
+          sizes={heroImage.sizes}
           alt={heroImage.alt}
           ratio="1/1"
           arcMask

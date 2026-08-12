@@ -17,7 +17,13 @@ import { cn } from "@/lib/cn";
 // Satisfies the layout contract: full-bleed to y=0 via `.page-top`, dark
 // surface so the fixed transparent header's canvas-coloured text stays
 // legible over it (CLAUDE.md "Layout contract").
-export function PageHero({ path, eyebrow, h1, lede, cta }) {
+//
+// `children` (Phase 7): T5 utility pages need their download buttons
+// "immediately" above the fold (CONTENT-PLAN.md §9) — inside this hero
+// rather than in a separate section below it, and WITHOUT the `cta` link
+// button (T5 is "no marketing chrome"). Optional and additive; T2/T3 don't
+// pass it and are unaffected.
+export function PageHero({ path, eyebrow, h1, lede, cta, children }) {
   return (
     <section
       data-surface="deep"
@@ -53,6 +59,7 @@ export function PageHero({ path, eyebrow, h1, lede, cta }) {
             </Button>
           </div>
         )}
+        {children && <div className="mt-7">{children}</div>}
       </Container>
     </section>
   );

@@ -58,7 +58,7 @@ function PanelColumn({ column, onNavigate }) {
       </ul>
 
       {column.note && (
-        <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink-400">{column.note}</p>
+        <p className="mt-1 font-mono text-[11px] leading-relaxed text-ink-300">{column.note}</p>
       )}
     </div>
   );

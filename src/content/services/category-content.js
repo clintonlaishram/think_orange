@@ -20,6 +20,11 @@
 
 export const categoryContent = {
   gst: {
+    meta: {
+      title: "GST Services in Salem, Tamil Nadu | ThinkOrange Consulting",
+      description:
+        "GST registration, return filing, ITC refunds and notices & litigation — one team handling the whole relationship, from Salem for clients across India.",
+    },
     heroLede:
       "Registration, monthly and annual returns, ITC reconciliation and representation if a notice arrives — GST handled end to end from Salem for businesses across India.",
     intro: [
@@ -53,6 +58,11 @@ export const categoryContent = {
   },
 
   "income-tax": {
+    meta: {
+      title: "Income Tax Services in Salem, Tamil Nadu | ThinkOrange Consulting",
+      description:
+        "ITR filing, TDS compliance and tax planning & advisory for individuals, firms, LLPs and companies, advised against the current law. Salem, Tamil Nadu.",
+    },
     heroLede:
       "Return filing, TDS compliance and tax planning for individuals, firms, LLPs and companies — advised against the law as it currently stands.",
     intro: [
@@ -86,6 +96,11 @@ export const categoryContent = {
   },
 
   "business-setup": {
+    meta: {
+      title: "Business Registration & Incorporation in Salem | ThinkOrange Consulting",
+      description:
+        "Private limited, LLP, OPC, partnership and proprietorship incorporation, plus DPIIT and MSME/Udyam registration — Salem, Tamil Nadu, pan-India clients.",
+    },
     heroLede:
       "Private limited, LLP, OPC, partnership or proprietorship — incorporated correctly the first time, with PAN, TAN and the statutory registrations that follow.",
     intro: [
@@ -119,6 +134,11 @@ export const categoryContent = {
   },
 
   "accounting-audit": {
+    meta: {
+      title: "Accounting & Audit Services in Salem | ThinkOrange Consulting",
+      description:
+        "Monthly bookkeeping on Tally Prime and Zoho Books, internal audit and specialised audit work (stock, channel-finance, concurrent) from Salem, Tamil Nadu.",
+    },
     heroLede:
       "Bookkeeping on Tally Prime or Zoho Books, monthly reconciliation, internal audit and specialised audits — the numbers kept clean all year, not reconstructed at year-end.",
     intro: [
@@ -152,6 +172,11 @@ export const categoryContent = {
   },
 
   "government-tenders": {
+    meta: {
+      title: "Government Tenders & GeM Registration in Salem | ThinkOrange",
+      description:
+        "GeM registration and end-to-end tender documentation support, so a paperwork error never costs you a bid you were otherwise qualified to win.",
+    },
     heroLede:
       "GeM registration and end-to-end tender documentation, so a missed step never costs you a bid you were otherwise qualified to win.",
     intro: [
@@ -185,6 +210,11 @@ export const categoryContent = {
   },
 
   "loans-finance": {
+    meta: {
+      title: "Business Loans & Personal Finance in Salem | ThinkOrange Consulting",
+      description:
+        "CMA data and loan documentation for business finance, plus personal finance planning and structured debt management. Salem, Tamil Nadu.",
+    },
     heroLede:
       "Loan documentation, CMA data and projections for business finance, plus personal planning and structured debt strategies for lasting stability.",
     intro: [

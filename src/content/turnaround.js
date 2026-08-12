@@ -82,6 +82,11 @@ export const turnaround = {
     label: "Our own turnaround to prepare CMA data and projections for a loan application",
     fallback: "Confirm with us",
   },
+  dscIssuanceTurnaround: {
+    value: null,
+    label: "Our own DSC issuance turnaround once documents and video verification are complete",
+    fallback: "Confirm with us",
+  },
 };
 
 /**

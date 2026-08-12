@@ -11,7 +11,12 @@ export function Logo({ className }) {
     <Link
       to="/"
       className={cn("flex items-center gap-2.5 shrink-0", className)}
-      aria-label={`${site.shortName} — home`}
+      // The accessible name must CONTAIN the visible text, or AT users reading
+      // "ThinkOrange Consulting Pvt Ltd" hear a name that doesn't match and
+      // voice control can't target it. `${shortName} — home` alone dropped the
+      // second line and failed axe's label-content-name-mismatch on all 49
+      // routes.
+      aria-label={`${site.shortName} Consulting Pvt Ltd — home`}
     >
       <span
         aria-hidden="true"

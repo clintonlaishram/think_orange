@@ -113,7 +113,11 @@ export function WhatWeDo() {
                     to={category.path}
                     className="mt-5 inline-flex items-center gap-1.5 rounded-sm text-body-sm font-medium text-ember-300 transition-[gap] duration-[var(--dur-fast)] hover:gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
                   >
-                    Learn more
+                    {/* Five "Learn more" links on one page are indistinguishable
+                        in a screen reader's link list, and Lighthouse flags them
+                        under SEO link-text. The visible label stays short; the
+                        accessible name gains the destination. */}
+                    Learn more<span className="sr-only"> about {category.label}</span>
                     <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </Link>
                 )}

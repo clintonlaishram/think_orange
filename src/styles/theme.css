@@ -37,7 +37,11 @@
 /* Instrument Serif 400/400i + IBM Plex Mono 400/500 — @fontsource, latin
    subset only, one CSS file per weight/style so unused cuts stay out of the
    bundle (DESIGN.md §5.1). */
-@import "@fontsource/instrument-serif/400.css";
+/* Italic only. Phase 10 audit: the upright cut was a 21KB face loaded for a
+   single decorative quote glyph in Testimonial, which now uses the italic.
+   DESIGN.md §5.1 calls Instrument Serif *Italic* the signature and limits it
+   to three places, so nothing on the site wants the roman. Restore this import
+   if a genuine upright use ever appears. */
 @import "@fontsource/instrument-serif/400-italic.css";
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/500.css";
@@ -75,6 +79,12 @@
 
   --color-success: #1f8a5b;
   --color-warning: #b87a0a;
+  /* Phase 10 audit addition — the one token not in DESIGN.md §15.4. §12.5's
+     due-soon chip (warning text on a 12% warning tint) measures 3.43:1 and
+     fails §4.5's AA floor. Same hue as `warning`, darkened until it clears
+     4.5:1 on canvas (measures 5.1:1). Lives here rather than :root because
+     Tailwind only generates `text-warning-700` from the @theme block. */
+  --color-warning-700: #8f5d07;
   --color-danger: #c4342b;
   --color-info: #2a5fa8;
   --color-whatsapp: #25d366;

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ChevronDown, Phone } from "lucide-react";
 import {
@@ -109,8 +109,8 @@ export function Header() {
           >
             {primaryNav.map((item) =>
               item.panel ? (
+                <Fragment key={item.panel}>
                 <div
-                  key={item.panel}
                   className="relative"
                   onPointerEnter={() => hoverOpen(item.panel)}
                   onPointerLeave={hoverClose}
@@ -143,6 +143,48 @@ export function Header() {
                     />
                   </button>
                 </div>
+
+                {/* The panel is rendered INSIDE <nav>, immediately after its own
+                    trigger. Both of those matter, and Phase 10 found out why the
+                    hard way when it was a sibling of <nav> instead:
+
+                    1. `navRef` guards the pointerdown-outside handler. With the
+                       panel outside it, pressing the mouse on any panel link
+                       counted as "outside", called close(), and unmounted the
+                       link before the click could land — every link in the mega
+                       menu was silently unclickable.
+                    2. `handleFocusOut` closes when focus leaves <nav>. Tabbing
+                       toward the panel therefore closed it first, so its ~30
+                       links were unreachable by keyboard entirely.
+
+                    Sitting here, tab order is trigger -> panel contents -> next
+                    nav item with no focus management at all, and both handlers
+                    correctly treat the panel as inside the nav. It still
+                    positions against <header> (the nearest positioned ancestor —
+                    <nav> is static), so the full-bleed geometry is unchanged. */}
+                {openKey === item.panel && (
+                  <div
+                    // Gutters track Container's (px-6 / md:px-10 / lg:px-18). The
+                    // panel only renders at lg, so lg:px-18 is the one that
+                    // actually applies — without it the panel sits 32px wider per
+                    // side than the page content it drops out of.
+                    className="absolute inset-x-0 top-full hidden px-6 pt-2 md:px-10 lg:block lg:px-18"
+                    onPointerEnter={() => hoverOpen(item.panel)}
+                    onPointerLeave={hoverClose}
+                  >
+                    <div className="mx-auto max-w-[1800px]">
+                      <MegaPanel
+                        id={`panel-${item.panel}`}
+                        ariaLabel={PANELS[item.panel].ariaLabel}
+                        columns={PANELS[item.panel].columns}
+                        hubPath={item.hubPath}
+                        hubLabel={item.hubLabel}
+                        onNavigate={close}
+                      />
+                    </div>
+                  </div>
+                )}
+                </Fragment>
               ) : (
                 <NavLinkItem
                   key={item.path}
@@ -176,32 +218,6 @@ export function Header() {
 
           <MobileNav className="ml-auto lg:hidden" />
         </div>
-
-        {/* Panels live outside the flex row so they can span the full container
-            width. Rendered (not unmounted) only when open, so focus order stays
-            predictable and there is nothing tabbable while closed. */}
-        {openKey && (
-          <div
-            // Gutters track Container's (px-6 / md:px-10 / lg:px-18). The
-            // panel only renders at lg, so lg:px-18 is the one that actually
-            // applies — without it the panel sits 32px wider per side than the
-            // page content it drops out of.
-            className="absolute inset-x-0 top-full hidden px-6 pt-2 md:px-10 lg:block lg:px-18"
-            onPointerEnter={() => hoverOpen(openKey)}
-            onPointerLeave={hoverClose}
-          >
-            <div className="mx-auto max-w-[1800px]">
-              <MegaPanel
-                id={`panel-${openKey}`}
-                ariaLabel={PANELS[openKey].ariaLabel}
-                columns={PANELS[openKey].columns}
-                hubPath={primaryNav.find((i) => i.panel === openKey).hubPath}
-                hubLabel={primaryNav.find((i) => i.panel === openKey).hubLabel}
-                onNavigate={close}
-              />
-            </div>
-          </div>
-        )}
       </header>
     </>
   );

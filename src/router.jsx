@@ -1,52 +1,42 @@
+/* eslint-disable react-refresh/only-export-components -- this module's export
+   is a route-config array, not a component, so Fast Refresh's component-export
+   rule doesn't apply to the lazy() bindings below. */
+import { lazy } from "react";
 import { allRoutes } from "@/content/nav";
 import { RootLayout } from "@/components/layout/RootLayout";
+import { resolveComponent } from "@/routeComponents";
 
-import Home from "@/modules/home";
-import ServicesHub from "@/modules/services/ServicesHub";
-import CategoryHub from "@/modules/services/CategoryHub";
-import ServiceLeaf from "@/modules/services/ServiceLeaf";
-import DscHub from "@/modules/dsc/DscHub";
-import DscProduct from "@/modules/dsc/DscProduct";
-import UtilityPage from "@/modules/dsc/UtilityPage";
-import About from "@/modules/about";
-import PartnerWithUs from "@/modules/partner-with-us";
-import Contact from "@/modules/contact";
-import LegalPage from "@/modules/legal/LegalPage";
-import NotFound from "@/modules/not-found";
-import KitchenSink from "@/modules/dev/KitchenSink";
-
-// Maps a nav.js route entry to its template component. Kept separate from
-// nav.js so the content layer stays free of React imports — which is what
-// lets Phase 9's build script and the sitemap generator import nav.js in a
-// plain Node context (BUILD-PLAN.md §1).
-function resolveComponent(entry) {
-  switch (entry.template) {
-    case "T1":
-      return Home;
-    case "T2":
-      return ServiceLeaf;
-    case "T3":
-      if (entry.path === "/services") return ServicesHub;
-      if (entry.path === "/dsc") return DscHub;
-      return CategoryHub;
-    case "T4":
-      return DscProduct;
-    case "T5":
-      return UtilityPage;
-    case "T6":
-      return entry.path === "/about" ? About : PartnerWithUs;
-    case "T7":
-      return Contact;
-    case "T8":
-      return LegalPage;
-    case "T9":
-    default:
-      return NotFound;
-  }
-}
+// Every template is lazy — Phase 7's code-splitting fix. Loading them eagerly
+// packs all nine into one chunk, so a driver-download page has to download and
+// execute the homepage's WebGL shader and every Framer Motion homepage section
+// before its own first paint can register.
+//
+// Phase 10 found this had regressed: router.jsx was back to eager imports with
+// a hand-copied resolveComponent switch, and the whole client bundle was a
+// single 905KB chunk. Most likely collateral from the `git stash` that reverted
+// Phase 9's two hydration experiments — it went back past Phase 7's fix too.
+// If a revert ever touches this file again, check `dist/assets/*.js` for one
+// oversized chunk; the build succeeds either way and nothing else flags it.
+const components = {
+  Home: lazy(() => import("@/modules/home")),
+  ServicesHub: lazy(() => import("@/modules/services/ServicesHub")),
+  CategoryHub: lazy(() => import("@/modules/services/CategoryHub")),
+  ServiceLeaf: lazy(() => import("@/modules/services/ServiceLeaf")),
+  DscHub: lazy(() => import("@/modules/dsc/DscHub")),
+  DscProduct: lazy(() => import("@/modules/dsc/DscProduct")),
+  UtilityPage: lazy(() => import("@/modules/dsc/UtilityPage")),
+  About: lazy(() => import("@/modules/about")),
+  PartnerWithUs: lazy(() => import("@/modules/partner-with-us")),
+  Contact: lazy(() => import("@/modules/contact")),
+  LegalPage: lazy(() => import("@/modules/legal/LegalPage")),
+  NotFound: lazy(() => import("@/modules/not-found")),
+};
 
 // Dev-only fixture — deliberately absent from nav.js, so it can never leak
-// into the mega menu, footer sitemap or XML sitemap.
+// into the mega menu, footer sitemap or XML sitemap. Lazy for the same reason:
+// eagerly imported, the kitchen sink's demo of every primitive ships to every
+// real visitor.
+const KitchenSink = lazy(() => import("@/modules/dev/KitchenSink"));
 const devRoutes = [{ path: "/kitchen-sink", element: <KitchenSink /> }];
 
 export const routes = [
@@ -54,7 +44,7 @@ export const routes = [
     element: <RootLayout />,
     children: [
       ...allRoutes.map((entry) => {
-        const Component = resolveComponent(entry);
+        const Component = resolveComponent(entry, components);
         return {
           path: entry.path,
           element: (

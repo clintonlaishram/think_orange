@@ -812,6 +812,157 @@ to be a content-file problem instead (see `PendingLeaf` below).
   before every screenshot, or every `Reveal`-wrapped section (which is most of
   both templates) captures as permanently blank.
 
+## Phase 7 (T4 DSC Product + T5 Utility + DSC hub) — complete, 12-08-2026
+All 11 `/dsc` routes now render real templates: the `/dsc` hub itself (T3, 1),
+4 DSC product pages (T4), and 6 utility pages — the drivers hub, 4 individual
+driver pages, and Documents Required (T5). Router wiring needed no changes;
+`resolveComponent`'s T3/T4/T5 branches already pointed at these files.
+
+- **Correction to the Phase 6 entry above: `/dsc` was NOT already built.**
+  That entry's parenthetical ("+ /dsc, which was already built") was wrong —
+  `DscHub.jsx` was still returning `PageStub` going into this session, and its
+  own top-of-file comment already said so ("built in Phase 7 alongside DSC
+  content"). Built now; the Phase 6 note above is left as-written with this
+  correction rather than silently edited, per this file's own discipline of
+  recording what actually happened.
+- **`DscHub.jsx` (T3 for `/dsc`) is deliberately its own component, not a
+  `CategoryHub` reuse** — `/dsc`'s children are a mix of T4 product pages and
+  a T5 utility subtree, not a uniform list of service leaves, so the *data
+  shape* differs even though the visual grammar (compact hero, count-aware
+  bento grid, FAQ accordion, hairline why-us row, CtaBand) is kept identical
+  to every other T3 hub on purpose. New content file:
+  `src/content/dsc/hub-content.js` (heroLede/intro/faqs/whyUs), same
+  no-invented-facts discipline as `category-content.js` — written generically
+  where a fact-shaped claim was tempting, same as that file's own rule.
+- **`DscProduct.jsx` (T4, 4 routes) is single-column, not the T2 sticky-
+  sidebar layout** — CONTENT-PLAN.md §9 calls this "closer to a product page
+  than a service page, because the buying decision is short," and T4's own
+  section list never mentions a sub-nav or a sticky enquiry card the way T2's
+  does. WhatsApp is the CTA throughout (hero, pricing section, driver
+  support) rather than a multi-field form — reuses `site.whatsappHref` with a
+  per-product pre-filled message, same pattern `EnquiryCard` already
+  established. Zero per-slug branching: one component, 4 routes, driven
+  entirely by `src/content/dsc/products.js` (already written in Phase 3d).
+  `validityOptions: null` (the `buy-tokens` product) correctly skips the
+  whole "Validity & token" section rather than rendering it empty — verified
+  by screenshot, not just by reading the conditional.
+- **`UtilityPage.jsx` (T5, 6 routes) dispatches on WHICH CONTENT COLLECTION a
+  slug resolves against** (drivers hub / `getDriver(slug)` / documents page),
+  never on a specific slug string — same discipline as `ServiceLeaf`'s
+  `PendingLeaf` branch. Three genuinely different content shapes share one
+  file because CONTENT-PLAN.md §9 groups them under one template, not because
+  they're the same shape.
+  - **`/dsc/documents-required` has no content file of its own.** It derives
+    its checklist directly from `dscProducts` (`src/content/dsc/products.js`)
+    grouped by product, cross-linked back to each product's own page — the
+    same "select by reference, don't fork" discipline the homepage FAQ row
+    already established, so a future edit to a product's document list can
+    never leave this page quietly stale.
+  - **Deliberately zero `Reveal`/`Stagger` anywhere in this file.**
+    CONTENT-PLAN.md §9's "no marketing chrome" brief and its LCP < 1.2s target
+    point the same way — a scroll-triggered reveal on a page whose whole job
+    is "get out of the way" buys nothing. T4 and `DscHub` keep the normal
+    scroll-reveal treatment; only T5 goes without.
+  - **Download buttons render inside `PageHero` itself**, not a separate
+    section below it — CONTENT-PLAN.md §9 wants them "immediately" above the
+    fold. `PageHero` gained an optional `children` prop for this (rendered
+    after `lede`/`cta`, additive, T2/T3 don't pass it and are unaffected). T5
+    pages never pass `cta` — only the download-buttons `children` — since a
+    "Talk to an Expert" link would be exactly the marketing chrome the brief
+    rules out here.
+  - **All four drivers' `downloads[]` URLs/versions/file sizes are still
+    `null`, and stay that way.** Researched real vendor sourcing this
+    session rather than guessing: HYP2003 has one unambiguous manufacturer
+    page (`hypersecu.com/downloads`) and Watchdata ProxKey has one unambiguous
+    brand-owned support portal (`support.cryptoplanet.in`), but ePass 2003
+    (FEITIAN) and mToken have **no single canonical official source** — both
+    are distributed under different names by dozens of competing Indian DSC
+    resellers, several of which are direct competitors of ThinkOrange's own
+    DSC business. Linking any one of them would be an undisclosed business
+    call (implicitly endorsing/routing traffic to a competitor), exactly the
+    kind of unconfirmed judgement call `fees: null` and `turnaround.js` exist
+    to defer to Clinton rather than guess. So the null stayed null across all
+    four for consistency, not just the two that were genuinely ambiguous.
+    `UtilityPage` renders the honest state instead of inventing one: a muted
+    "— not yet available" pill in the hero and table row per platform, still
+    keyboard/AT-reachable text, no dead/broken link anywhere. Whoever sources
+    the real files next only has to fill in `drivers.js` — no template change
+    needed.
+  - **The compatibility table's "Supported versions" column is a best-effort
+    match against `supportedOs`**, joining on `download.platform` starting
+    with `entry.os` (case-insensitive) — written this way because
+    `downloads[]`'s platform granularity doesn't always match `supportedOs`'s
+    1:1 (mToken's two `downloads` rows, 32-bit/64-bit, both match its one
+    `supportedOs` entry and correctly show the same version text for both).
+  - **The foot-of-page "quiet ember-bordered card" (CONTENT-PLAN.md §9's
+    "entire commercial mechanism" on every T5 page) drops that section's own
+    example copy — "we issue Class 3 certificates in 24 hours."** That's an
+    unconfirmed turnaround guarantee (CLAUDE.md's non-negotiables list), so
+    it never got typed in as fact. Added `turnaround.dscIssuanceTurnaround`
+    (`value: null`, same pattern as every other entry in that file) and the
+    card renders "Turnaround: Confirm with us" until Clinton confirms a real
+    number — labelled, not embedded mid-sentence, matching how every other
+    `t()` call in the codebase is actually used (a table/step `duration`
+    value, never prose).
+- **Real bug found and fixed, not specific to Phase 7 but blocking it:**
+  `ogl` was listed in `package.json` but missing from `node_modules` at the
+  start of this session — `npm run build` failed outright with "Rolldown
+  failed to resolve import 'ogl'" before any Phase 7 code was even touched.
+  `npm install` fixed it with zero lockfile drift (verified via `git diff
+  package-lock.json` — empty). Unrelated to anything in this phase; flagged
+  here only because it would otherwise look like something Phase 7 broke.
+- ⚠️ **Real, measured gap found against this phase's own done-when
+  criterion, and fixed within scope rather than deferred:** CONTENT-PLAN.md
+  §9's T5 target is LCP < 1.2s on mobile throttling. Measured for real via
+  CDP (`Network.emulateNetworkConditions` + `Emulation.setCPUThrottlingRate:
+  4`, Lighthouse's simulated-mobile profile) against the **production build**
+  served by `vite preview` — measuring against `vite dev` is meaningless here,
+  since dev serves hundreds of unbundled ES modules with no minification and
+  its LCP numbers don't reflect what ships. First pass: `/dsc/drivers/hyp2003`
+  at 2320ms, `/dsc/documents-required` at 1592ms, both over budget, while
+  `/dsc/drivers` (plainer markup) passed at 872ms — same shared JS, different
+  content weight, so the bundle was the bottleneck, not any one template's
+  markup. **Root cause:** `router.jsx` statically imported all nine page
+  templates, so Rolldown packed them into one ~854KB chunk — a T5 page had to
+  download and execute Home's entire WebGL shader (`ogl`/`DarkVeil`) and every
+  Framer Motion homepage section before its own first paint could register.
+  **Fix:** every template in `router.jsx` is now `React.lazy(() =>
+  import(...))`, with one `<Suspense>` boundary added in `RootLayout.jsx`
+  around `<Outlet />` (fallback is a plain `bg-ink-950` block sized
+  `min-h-screen` — not a spinner, and dark so the fixed transparent header's
+  canvas-coloured text stays legible if that fallback is ever actually seen).
+  Main chunk dropped to 466KB; every template now has its own chunk
+  (`UtilityPage` 8KB, `DscProduct` 6KB, `DscHub` 7KB, gzipped smaller still).
+  Re-measured after the fix, reordering URLs to separate a real "first
+  navigation after browser launch" cold-start artifact (~2.3s regardless of
+  URL — confirmed by re-running `/dsc/drivers/hyp2003` both first and later
+  in the same script; only the *first* page of any run paid it) from real
+  page behaviour: all 6 T5 routes land at **1088–1208ms**, under or at the
+  1.2s line. **This is a sitewide fix, not a DSC-specific one** — every other
+  template (T1–T9) now also loads its own chunk lazily; re-verified 12 routes
+  spanning every template family (`/`, `/services`, a T3 hub, a T2 leaf,
+  `/dsc`, both DSC templates, `/about`, `/contact`, a T8 legal page, and a
+  404) all render with zero console/page errors after the change.
+  - Re-measure after Phase 9 (prerendering) lands — it changes the LCP story
+    again, since the LCP element will paint from static HTML before
+    hydration rather than waiting on any JS chunk at all.
+- **Verification method**: `npm run lint` (0 errors/warnings — one new
+  `react-refresh/only-export-components` warning batch from the `lazy()`
+  bindings was silenced with a scoped `eslint-disable` comment in
+  `router.jsx`, since that file's real export is a route-config array, not a
+  component, and the rule's Fast-Refresh concern doesn't apply to it),
+  `npm run content:check` (clean — same three pre-existing unconfirmed-content
+  warnings as every prior phase, unrelated to DSC), `npm run build`, then a
+  puppeteer-core + headless Edge pass: 7 DSC-tree screenshots (scrolling in
+  600px steps first, per the standing `Reveal`/`IntersectionObserver`
+  headless gotcha) confirmed the bento product grid, the conditional
+  validity section, the disabled-download states, and the DSC enquiry strip
+  all render as intended; a separate CDP LCP pass (above) against the
+  production build; and a final 12-route sitewide smoke pass after the
+  router change. All temporary scripts and screenshots were deleted after
+  use — nothing under `scripts/` or a `verify-shots*` directory should remain
+  from this session.
+
 ## Writing content — the rules that matter most
 - **Never type a statutory fact into a leaf file.** No rupee amounts, day counts,
   form codes (REG-01, GSTR-3B), penalties or thresholds. Add it to `statutory.js`
@@ -894,8 +1045,240 @@ Contact page. `src/components/layout/FloatingWhatsApp.jsx`, mounted once in
   moves corners again, re-run that check before calling it done** — this
   class of bug won't show up in lint or build, only in a real layout pass.
 
+## Phase 8 (Editorial, Contact, Legal, 404) — complete, 12-08-2026
+All 5 remaining stub routes now render real templates: `/about` and
+`/partner-with-us` (T6), `/contact` (T7), all 5 `/privacy-policy` etc. legal
+pages (T8, one renderer), and the `*` 404 (T9). FloatingWhatsApp was already
+built (pulled forward, see the section above) — confirmed still sitewide and
+unaffected by this phase's changes.
+
+- **New shared infrastructure, used by both public forms:**
+  `src/lib/emailjs.js` wraps `@emailjs/browser`'s `send()`, reading
+  `VITE_EMAILJS_*` from `.env` (not present in this repo — `.env.example`
+  documents the shape) and exporting `emailjsConfigured`. Callers get an
+  honest rejected promise instead of a crash when it's unset, so Contact and
+  Partner-With-Us currently show a real "email sending isn't set up yet —
+  reach us on WhatsApp" toast rather than pretending to succeed. **Manual
+  setup still needed, cannot be done from code:** create the service +
+  template in the EmailJS dashboard, add a real `.env`, and set the
+  account's own per-key rate limit in the dashboard (CONTENT-PLAN.md §11's
+  "EmailJS's own per-key limits configured" is a dashboard setting).
+  `src/lib/spamGuard.js` is the honeypot + time-gate + localStorage
+  rate-limit hardening CONTENT-PLAN.md §11 asks for around a public,
+  spammable key — `useMountedAt()`, `submittedTooFast()`,
+  `honeypotTripped()`, `isRateLimited()`/`recordSubmission()`. None of it is
+  a real security boundary (inspectable client JS); it raises the cost of
+  casual scripted abuse. **`useMountedAt` reads `Date.now()` inside a
+  `useEffect`, not as `useRef`'s initial value** — `useRef(Date.now())` is
+  flagged by `eslint-plugin-react-hooks`'s new `react-hooks/purity` rule
+  (impure call during render) and would also read wrong under Strict Mode's
+  double-render. Caught by `npm run lint`, not by inspection.
+- **Three new form primitives, siblings to `Input.jsx`:** `Select.jsx`
+  (native `<select>` with `<optgroup>` support — takes `serviceSelectOptions()`'s
+  `groups` shape directly, no Radix needed for something this simple, despite
+  `radix-ui` being a locked dependency in BUILD-PLAN.md's stack that's still
+  never actually been imported anywhere in the codebase), `Textarea.jsx`
+  (generalises the inline textarea `EnquiryCard.jsx` hand-rolled in Phase 6),
+  and `MapEmbed.jsx` (click-to-load Google Maps iframe, used by both `/about`
+  and `/contact` per CONTENT-PLAN.md §10/§11's explicit "lazy-loaded behind a
+  click-to-load placeholder" — queries by `site.location` name, not a street
+  address, since a precise address is still on §1.1's hold list).
+- **Sonner's `<Toaster>` is now mounted once in `RootLayout.jsx`**, sitewide,
+  `position="top-right"` — deliberately NOT bottom-right, which is exactly
+  where `FloatingWhatsApp`'s FAB already lives. `toastOptions.classNames`
+  maps onto design tokens (`bg-white`/`border-ink-100`/`shadow-md`/etc.)
+  rather than Sonner's own inline theme, per CLAUDE.md's no-raw-hex rule.
+- **Contact (`/contact`, T7) is the 5-field form CONTENT-PLAN.md §11 asks
+  for exactly** — name, phone/WhatsApp, email, service required, message,
+  "no more". The service select is built from `serviceSelectOptions()`
+  (nav.js) — the same source of truth every other service-picking surface
+  on the site already uses, so it can never list a service that doesn't
+  exist. Left column shows only what CONTENT-PLAN.md §1 confirms (phone,
+  WhatsApp, email, city/state) — office hours and the full street address
+  are both still on §1.1's hold list and are simply absent, not shown as a
+  placeholder.
+- **Partner-With-Us (`/partner-with-us`, T6) adds a phone field CONTENT-PLAN.md
+  §10 didn't list.** §10's 5 fields (name, firm, city, practice type,
+  expected monthly volume) have no way to reach an applicant back — flagged
+  and fixed here as the minimum viable addition, the same class of gap
+  CONTENT-PLAN.md itself caught in the draft preview's invented commitments.
+  **The "what you get" tiles never state a commission rate, joining fee or
+  processing time** — CONTENT-PLAN.md §10 explicitly flags these as needing
+  confirmation before publishing ("no upfront investment" and "same-day
+  processing" in the draft preview were commitments, not copy). Tiles state
+  THAT each mechanism exists and is confirmed on application, matching the
+  `fees: null` / `turnaround.js` discipline for facts that aren't shaped
+  like a fee or a duration so they don't fit either file directly — see
+  `src/content/partner-with-us.js`'s header comment.
+- **About (`/about`, T6) draws "What we do" straight from `serviceCategories`
+  (nav.js)** rather than a separate content list, so a future category
+  rename can never leave this page's linked list stale. Founding year, team,
+  credentials, client numbers and photography are all absent (§1.1's hold
+  list) — the page is written to read as complete without them, per
+  CONTENT-PLAN.md §10's own instruction, with the "Where we are" card's map
+  slot ready to swap for a real office photo later.
+- **Legal (5 routes, T8) is one renderer + five content files, exactly per
+  CONTENT-PLAN.md §12.** Each file (`src/content/legal/*.js`) currently ships
+  `sections: null` — CONTENT-PLAN.md §12 is explicit that this content "comes
+  from your CA or lawyer, not from this build" and to "ship placeholder pages
+  that say the policy is being finalised rather than publishing AI-drafted
+  text you haven't had reviewed... an unreviewed privacy policy on a site
+  handling PAN and Aadhaar-linked verification is a liability." `LegalPage.jsx`
+  renders an honest `PendingLegal` state (same discipline as `ServiceLeaf`'s
+  `PendingLeaf`) while `sections` is null, and switches to the full renderer —
+  numbered sections, an auto-generated sticky TOC, a `lastUpdated` line, a
+  contact block at the foot — the moment real content lands, with zero
+  further code changes. **Verified end-to-end with temporary sample content**
+  (added to `disclaimer.js`, screenshotted, then reverted before this session
+  ended — nothing under `src/content/legal/` should carry real sections from
+  this verification pass): TOC links generate correctly from the headings,
+  numbering matches section order, and clicking a TOC anchor lands the target
+  heading in view respecting the sticky header's `scroll-mt-32` clearance.
+  `privacy-policy.js`'s header comment records what the real version must
+  disclose once written: enquiry data transits EmailJS, a third party, on
+  every Contact/Partner-With-Us submission.
+- **404 (`*`, T9) is deliberately NOT built on `PageHero`** — that primitive
+  assumes a real `nav.js` entry with a breadcrumb trail and a parent, neither
+  of which means anything for a wildcard path. Hand-rolls the same layout
+  contract instead (dark surface, `.page-top`, `grain`) since the header is
+  fixed and transparent over every route including this one. Quick links to
+  Home/Services/DSC/Contact plus direct phone/WhatsApp buttons — no dead
+  ends.
+- **Verification method:** `npm run lint` (0 errors after the `react-hooks/
+  purity` fix above), `npm run content:check` (clean — same three
+  pre-existing unconfirmed-content warnings from earlier phases, home-hero
+  stats/testimonials/insights, none introduced by this phase and all
+  unrelated to it), `npm run build`, then a puppeteer-core + headless Edge
+  pass: 12 routes spanning every template touched this phase plus a few
+  unrelated ones as a regression check, all rendering with zero console/page
+  errors, correct `<h1>`, the opening section's dark surface, and the FAB
+  present; a dedicated Contact-form pass confirming all 5 real fields render,
+  the honeypot is present but hidden (off-screen, `tabIndex -1`), and an
+  immediate submit is correctly blocked by the time-gate with a toast; a
+  second pass waiting past the time-gate confirming the honest "not
+  configured" toast (no `.env` exists in this repo) instead of a silent
+  failure or a crash; and the legal-page TOC pass described above. All
+  temporary scripts and screenshots were deleted after use — nothing under
+  `scripts/` should remain from this session.
+- **Main JS chunk crept back up to 500.95KB** (from Phase 7's 466KB),
+  crossing Rolldown's 500kB chunk-size warning by under 1KB — `sonner`'s
+  `<Toaster>` is now imported eagerly in `RootLayout.jsx` (not lazy, since
+  it must be mounted before any page's form can toast) plus `@emailjs/
+  browser`, `spamGuard.js` and the two new lazy-loaded page chunks add
+  weight elsewhere. Every page template is still independently lazy-loaded
+  (Phase 7's fix), so this is a shared-chrome cost paid once, not a
+  per-route regression — worth a look at the Phase 10 performance audit if
+  it grows further, not addressed here since it's one shared `<Toaster>`
+  instance doing exactly what Phase 8 needs it to do.
+
+## Phase 9 (Prerendering, SEO, structured data, sitemap) — complete, 12-08-2026
+All 48 crawlable routes now prerender to real static HTML (`dist/<path>/index.html`,
+`dist/index.html` for "/", `dist/404.html` for the wildcard) via a custom React
+Router v7 static-rendering pipeline, plus per-route SEO metadata, sitewide + per-
+template JSON-LD, `sitemap.xml`, and `robots.txt`. `vite-react-ssg` stays ruled out
+(BUILD-PLAN.md §1 — its locked `react-router-dom@^6` peer range conflicts with this
+project's v7 stack); this is a hand-built equivalent using React Router v7's own
+`createStaticHandler`/`createStaticRouter`/`StaticRouterProvider` primitives.
+
+- **Two parallel route configs, one shared resolver.** `src/routeComponents.js`
+ exports `resolveComponent(entry, components)` — the single template-dispatch
+ switch — consumed by BOTH `src/router.jsx` (client, every template
+ `React.lazy`-loaded, Phase 7's code-splitting) and the new `src/router-static.jsx`
+ (SSR, every template imported eagerly — a synchronous `renderToString` pass has
+ no use for code-splitting and Suspense only complicates it). A route resolving
+ to the wrong template in one but not the other is exactly the drift neither
+ file's own build would catch on its own; this is what keeps them from silently
+ diverging.
+- **`src/entry-server.jsx`** is the Node SSR entry: builds a static handler from
+ `router-static.jsx`'s routes, queries it for a given path, and renders the
+ matched tree with `renderToString`. `scripts/prerender.mjs` (wired as `postbuild`,
+ runs automatically after `vite build`) compiles this via
+ `vite build --ssr src/entry-server.jsx --outDir dist-server`, calls `render(path)`
+ once per route from `sitemapPaths()` (nav.js), splices the returned body HTML
+ into `dist/index.html`'s `<div id="root">` and the resolved `<!-- SEO:START -->…
+ <!-- SEO:END -->` block into `<head>`, writes each route to its own file, then
+ deletes `dist-server/` and emits `sitemap.xml` + `robots.txt`. The 404 route is
+ rendered off a literal probe path (`/__prerender_404_probe__`, since `"*"` itself
+ isn't a fetchable URL) but its `<head>` tags still come from `resolveSeo("*")`,
+ the real nav.js key.
+- **`src/lib/seo.js`'s `resolveSeo(path)`** is the ONE function that decides
+ title/description/canonical/robots/OG for every route — called at prerender time
+ (build-time HTML) AND from `RootLayout.jsx` on every client-side navigation
+ (post-hydration `<head>` sync), so the two can never disagree. **Imported
+ DYNAMICALLY in `RootLayout.jsx`, not statically — this is load-bearing, not a
+ style choice.** `seo.js` pulls in the entire content graph sitewide (all 17
+ service leaves, every DSC product/driver, every category, both editorial pages,
+ all 5 legal files) to resolve any route's meta; a static import in
+ `RootLayout` — always-eager, never one of `router.jsx`'s lazy chunks — dragged
+ that whole graph into the MAIN bundle regardless of which single page loaded.
+ Measured before reverting to the dynamic import: main chunk 500KB → 690KB
+ minified. The dynamic import isolates that content graph into its own
+ background-fetched chunk instead (`services-*.js`), never blocking first paint.
+- **`src/lib/jsonld.js` + `src/components/seo/JsonLd.jsx`** are the shared
+ structured-data layer — pure builder functions (`organizationJsonLd`,
+ `localBusinessJsonLd`, `breadcrumbListJsonLd`, `faqPageJsonLd`, `serviceJsonLd`,
+ `collectionPageJsonLd`, `productJsonLd`, `howToJsonLd`) plus one
+ `<JsonLd data={...}>` component that renders `<script type="application/
+ ld+json">` for either a single object or an array. Consolidated THREE separately
+ hand-rolled `FaqJsonLd` implementations (`ServiceLeaf.jsx`, `DscProduct.jsx`,
+ `home/sections/Faqs.jsx`) into this one. Per-route script counts (verified live):
+ 3 sitewide (Organization + LocalBusiness, mounted once in `RootLayout`, plus
+ whatever the page adds) up to 5 on a T2 leaf (+ Service, + FAQPage,
+ + BreadcrumbList).
+ - `Organization`/`LocalBusiness` render on EVERY route via `RootLayout` — even a
+ driver-download page ranking on its own gets the full identity block, not just
+ whatever that one page's own schema adds.
+ - `BreadcrumbList` (`Breadcrumbs.jsx`) is generated off the SAME `trail` array
+ the visible `<ol>` renders — same "select by reference" discipline as the
+ homepage FAQ row, so the two can never drift.
+ - T2 (`ServiceLeaf`) → `Service` + `FAQPage`. T3 (`CategoryHub`/`ServicesHub`/
+ `DscHub`) → `CollectionPage`. T4 (`DscProduct`) → `Product` + `FAQPage`.
+ T5 driver pages (`UtilityPage`) → `HowTo` for the install steps.
+- **Hydration switch (`src/main.jsx`)**: `hydrateRoot` when `#root` already has
+ content (every real production route, now that prerendering exists),
+ `createRoot` fallback for `npm run dev`/an un-prerendered `vite preview` (empty
+ div — `hydrateRoot` against nothing just warns and behaves like a fresh render,
+ no reason to pay even that cost when the case is already known).
+- ⚠️ **Real bug hunted at length this session, then found to be a TEST-HARNESS
+ artifact, not an app bug — worth reading in full before "fixing" this again.**
+ A puppeteer-core + headless Edge hydration pass against `vite preview` showed
+ "Minified React error #418" (hydration mismatch) on every route except `/`.
+ Two successive `React.lazy`/`Suspense` timing "fixes" were built and both had
+ ZERO effect on the outcome — because the real cause had nothing to do with lazy
+ loading at all: **`vite preview`'s static server was silently serving
+ `dist/index.html` (the HOME page) for every nested route** (`/services/gst/
+ registration`, `/about`, etc.), even though the correct
+ `dist/services/gst/registration/index.html` file genuinely existed on disk.
+ Confirmed by fetching the route directly and reading the returned `<title>` —
+ it was Home's title, not the requested page's. The client then tried to
+ hydrate ServiceLeaf's real component tree against Home's markup: a real,
+ enormous mismatch, correctly reported by React, just about the wrong pair of
+ trees. Re-run against a standard static file server (`npx serve dist`, which
+ correctly resolves a directory's `index.html` for a clean URL) and EVERY route
+ hydrates with **zero console/page errors**, including the original ORIGINAL
+ `router.jsx`/`main.jsx` from before either "fix" — both fixes were reverted
+ (`git stash`, not deleted, in case the underlying React.lazy-always-suspends-
+ on-first-hydration-render behaviour they were built around ever becomes a real
+ problem elsewhere). **Lesson for any future verification pass on this repo:
+ never use bare `vite preview` to test a specific nested prerendered route — it
+ will silently serve the wrong page and look exactly like a hydration bug.**
+ Use `npx serve dist` (or an equivalent real static host) instead.
+- **Verification method**: `npm run lint` (0 errors), `npm run content:check`
+ (clean — same pre-existing dummy-testimonial/insight warnings as every prior
+ phase, unrelated to this one), `npm run build` (48 routes + 404.html +
+ sitemap.xml + robots.txt written), then two puppeteer-core + headless Edge
+ passes against `npx serve dist`: an 18-route sweep across every template
+ family confirming zero console/page errors, correct `<title>`/`<h1>`, and
+ JSON-LD script counts matching each template's expected schema set; and a
+ direct byte-level check that every one of the 49 written HTML files (a) has
+ valid, parseable JSON in all 200 of its `<script type="application/ld+json">`
+ blocks sitewide, (b) has a `<title>` and (except `404.html`, deliberately) a
+ `rel="canonical"` link, and (c) never leaks the SSR probe path. All temporary
+ scripts and screenshots were deleted after use — nothing under `scripts/`
+ remains from this session beyond the permanent `prerender.mjs`.
+
 ## Session discipline
 - One phase per session. Start fresh between phases — see BUILD-PLAN.md §5.
 - Load only the plan sections a phase actually needs, not the whole document.
 - Phase 3 (content) batches must stay independent — 4-5 leaf files per session, then
-  a fresh session. Always build the exemplar first and reference it by name.
+ a fresh session. Always build the exemplar first and reference it by name.

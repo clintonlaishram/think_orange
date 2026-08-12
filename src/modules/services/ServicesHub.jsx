@@ -5,8 +5,11 @@ import { Section } from "@/components/layout/Section";
 import { PageHero } from "@/components/layout/PageHero";
 import { WhoWeWorkWith } from "@/modules/home/sections/WhoWeWorkWith";
 import { CtaBand } from "@/modules/home/sections/CtaBand";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { serviceCategories } from "@/content/nav";
 import { getServiceContent } from "@/content/services";
+import { collectionPageJsonLd } from "@/lib/jsonld";
+import { meta } from "@/content/meta";
 
 // Top-level /services — the T3 variant CONTENT-PLAN.md §8 describes: "all
 // six categories with their children listed inline... the sitemap page
@@ -15,6 +18,14 @@ import { getServiceContent } from "@/content/services";
 export default function ServicesHub({ path }) {
   return (
     <>
+      <JsonLd
+        data={collectionPageJsonLd({
+          name: "Services",
+          description: meta["/services"].description,
+          path,
+        })}
+      />
+
       <PageHero
         path={path}
         h1="Services"
@@ -54,7 +65,7 @@ export default function ServicesHub({ path }) {
                       >
                         {child.label}
                         {!getServiceContent(child.slug) && (
-                          <span className="shrink-0 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-300">
+                          <span className="shrink-0 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-400">
                             Soon
                           </span>
                         )}
