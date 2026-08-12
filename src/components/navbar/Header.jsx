@@ -93,8 +93,18 @@ export function Header() {
           "fixed inset-x-0 top-0 z-50 transition-[height,background-color,backdrop-filter,border-color] duration-[var(--dur-base)] ease-[var(--ease-out)]",
           // Glassmorphism appears here and NOWHERE else on the site
           // (DESIGN.md §7.5 — one permitted use).
+          // 0.88, not §7.5's 0.72. Phase 10 sampled the real pixels behind
+          // this bar and found the fill is only as dark as whatever is scrolled
+          // under it: on a light-surfaced page (/contact past the fold) the
+          // effective background measured #4b4e58, dropping the logo sub-label
+          // to 2.36:1 and the ember wordmark to 2.63:1. Canvas-coloured nav
+          // links stayed fine at 7.5:1 — it is only the dim elements that
+          // break, and only in the scrolled state, which is why nothing caught
+          // it before: the transparent state always sits over a dark hero.
+          // 0.88 keeps the blur and the glass read while making the fill dark
+          // enough that page content can no longer lift it out of range.
           scrolled || openKey
-            ? "h-16 border-b border-ink-800 bg-ink-950/[0.72] backdrop-blur-[16px] backdrop-saturate-150"
+            ? "h-16 border-b border-ink-800 bg-ink-950/[0.88] backdrop-blur-[16px] backdrop-saturate-150"
             : "h-[84px] border-b border-transparent bg-transparent",
         )}
       >

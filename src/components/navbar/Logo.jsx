@@ -11,12 +11,20 @@ export function Logo({ className }) {
     <Link
       to="/"
       className={cn("flex items-center gap-2.5 shrink-0", className)}
-      // The accessible name must CONTAIN the visible text, or AT users reading
-      // "ThinkOrange Consulting Pvt Ltd" hear a name that doesn't match and
-      // voice control can't target it. `${shortName} — home` alone dropped the
-      // second line and failed axe's label-content-name-mismatch on all 49
-      // routes.
-      aria-label={`${site.shortName} Consulting Pvt Ltd — home`}
+      // The accessible name must CONTAIN every word rendered inside this link,
+      // or voice-control users can't target what they can see and AT users hear
+      // a name that doesn't match the logo. Two non-obvious parts, both
+      // measured against the real axe rule rather than reasoned about:
+      //
+      //   * "TO" is in here even though the mark below is aria-hidden.
+      //     label-content-name-mismatch compares against SIGHTED visible text
+      //     (axe's `visibleVirtual(node, false)`), not the screen-reader view —
+      //     which is the right call for a rule about voice control, and means
+      //     aria-hidden does not exempt visible letters from it.
+      //   * The word order and spacing have to match the rendered order.
+      //     Below `sm` the wordmark is display:none and the visible text is
+      //     just "TO", so the mark's letters lead.
+      aria-label={`TO ${site.shortName} Consulting Pvt Ltd — home`}
     >
       <span
         aria-hidden="true"
@@ -25,11 +33,23 @@ export function Logo({ className }) {
         TO
         <span className="absolute bottom-1 right-1 h-1.5 w-1.5 rounded-full bg-ember-400" />
       </span>
+      {/* Both of the explicit spaces in this component are load-bearing, not
+          formatting. JSX drops the newline between two sibling elements, so
+          without them the rendered text nodes concatenate to
+          "TOThinkOrangeConsulting Pvt Ltd" — which the aria-label above cannot
+          contain, failing axe's label-content-name-mismatch on every route.
+          Neither space renders: this one sits between two flex items, where
+          whitespace-only text nodes are discarded, and the one below precedes a
+          block-level element. */}{" "}
       <span className="hidden leading-none sm:block">
         <span className="font-sans text-[19px] font-black tracking-tight text-canvas">
           Think<span className="text-ember-400">Orange</span>
         </span>
-        <span className="mt-0.5 block font-mono text-[9px] uppercase tracking-[0.12em] text-ink-300">
+        {" "}
+        {/* ink-200, not ink-300: at 9px this is the dimmest text in the header,
+            and it sits over a translucent bar whose effective background
+            depends on the page scrolled behind it. */}
+        <span className="mt-0.5 block font-mono text-[9px] uppercase tracking-[0.12em] text-ink-200">
           Consulting Pvt Ltd
         </span>
       </span>

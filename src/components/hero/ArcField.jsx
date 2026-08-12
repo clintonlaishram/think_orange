@@ -1,4 +1,18 @@
+import { useIdleMount } from "@/hooks/useIdleMount";
 import DarkVeil from "./DarkVeil";
+
+// DarkVeil is mounted only once the page has gone idle, never on first render.
+//
+// Compiling that fragment shader and starting a full-screen per-pixel rAF loop
+// are both main-thread work, and mounting on first render puts them in the
+// exact window React is hydrating the page in. The two compete and the shader
+// wins, because its loop keeps re-entering. Measured on the homepage under
+// Lighthouse's 4× CPU throttle: 3,420ms total blocking time and 7.7s of script
+// evaluation, against ~0–10ms TBT on every route that doesn't mount this.
+//
+// Nothing about the effect changes — `.arcfield__base` already paints the
+// gradient the veil layers over, and the canvas is absolutely positioned, so
+// there is no layout shift when it arrives and no visible gap before it.
 
 // DESIGN.md §8.1 — five GPU-composited layers, verbatim structure.
 //
@@ -38,15 +52,15 @@ import DarkVeil from "./DarkVeil";
 //       removal reads as deliberate rather than accidental.
 // L1/L5 are untouched.
 export default function ArcField() {
+  const veilReady = useIdleMount();
+
   return (
     <div className="arcfield grain absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
       <div className="arcfield__base" />
       {/* <div className="arcfield__grid" /> */}
       {/* <div className="arcfield__ring arcfield__ring--a" /> */}
       {/* <div className="arcfield__ring arcfield__ring--b" /> */}
-      <div className="arcfield__veil">
-        <DarkVeil />
-      </div>
+      <div className="arcfield__veil">{veilReady ? <DarkVeil /> : null}</div>
       {/* <div className="arcfield__bloom" data-bloom /> */}
       <div className="arcfield__vignette" />
     </div>

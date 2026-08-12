@@ -147,7 +147,13 @@ if (unconfirmedArticles.length > 0) {
     `  ⚠ UNCONFIRMED INSIGHTS (${unconfirmedArticles.length}) — must not ship (src/content/insights.js):`
   );
   console.log(
-    "      Every card links to /insights/:slug, which is NOT a real route yet — these 404 if deployed."
+    "      No /insights/:slug route exists yet. Insights.jsx renders an unconfirmed entry as a"
+  );
+  console.log(
+    "      non-interactive card rather than a Link, so these are NOT dead links — the risk is"
+  );
+  console.log(
+    "      placeholder copy visible on the homepage, not a 404. Verified against dist/ by link audit."
   );
   for (const article of unconfirmedArticles) {
     console.log(`      ${article.slug}: "${article.title}"`);

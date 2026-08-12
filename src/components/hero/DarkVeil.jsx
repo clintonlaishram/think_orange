@@ -182,10 +182,10 @@ export default function DarkVeil({
     const canvas = ref.current;
     const parent = canvas.parentElement;
 
-    // Matches the reduced-motion contract every other ArcField layer follows
-    // (§9.6): render exactly one frame and never start the loop, rather than
-    // animating then freezing — a shader that never ran doesn't cost a
-    // continuous rAF budget on a machine that asked for less motion.
+    // ⚠️ This effect is mount = start. Mounting is deliberately DEFERRED by the
+    // caller (ArcField renders <DarkVeil> only once the page is idle) — see the
+    // long note there for the measurements. Don't "fix" that by mounting this
+    // eagerly.
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // A live WebGL canvas is heavier than the CSS transforms it replaces.
@@ -302,28 +302,71 @@ export default function DarkVeil({
       renderer.render({ scene: mesh });
     };
 
+    // Render on every OTHER rAF tick, not every one. `speed` defaults to
+    // 0.35, so uTime already advances slowly — an ambient drift like this
+    // has no fast-changing detail for a skipped frame to lose, and halving
+    // how often the expensive per-pixel shader actually runs halves this
+    // layer's real-time cost without a visible change to the pattern. Time
+    // still advances by the FULL elapsed wall-clock each call (not by a
+    // fixed step), so the drift speed itself is unaffected — only how often
+    // the canvas is repainted changes.
+    let tick = 0;
+    const loop = () => {
+      tick++;
+      if (tick % 2 === 0) renderOnce(performance.now() - start);
+      frame = requestAnimationFrame(loop);
+    };
+
+    const play = () => {
+      if (frame === null) loop();
+    };
+    const pause = () => {
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+        frame = null;
+      }
+    };
+
+    // Matches the reduced-motion contract every other ArcField layer follows
+    // (§9.6): render exactly one frame and never start the loop, rather than
+    // animating then freezing. Returning early here is deliberate — an earlier
+    // version of this file kept the observers wired and merely skipped the
+    // initial play() call, but IntersectionObserver fires its callback once on
+    // observe(), so `sync()` started the loop anyway and the canvas animated
+    // under `prefers-reduced-motion: reduce`. Caught by the reduced-motion audit
+    // (CDP `Emulation.setEmulatedMedia`), not by reading the code.
     if (reduceMotion) {
       renderOnce(0);
-    } else {
-      // Render on every OTHER rAF tick, not every one. `speed` defaults to
-      // 0.35, so uTime already advances slowly — an ambient drift like this
-      // has no fast-changing detail for a skipped frame to lose, and halving
-      // how often the expensive per-pixel shader actually runs halves this
-      // layer's real-time cost without a visible change to the pattern. Time
-      // still advances by the FULL elapsed wall-clock each call (not by a
-      // fixed step), so the drift speed itself is unaffected — only how often
-      // the canvas is repainted changes.
-      let tick = 0;
-      const loop = () => {
-        tick++;
-        if (tick % 2 === 0) renderOnce(performance.now() - start);
-        frame = requestAnimationFrame(loop);
+      return () => {
+        window.removeEventListener("resize", resize);
+        resizeObserver.disconnect();
       };
-      loop();
     }
 
+    // The hero is ~1100px tall at desktop and deliberately exceeds one screen,
+    // so a reader is off it within a single scroll — and rAF keeps firing for
+    // an element scrolled far out of view. Gate the loop on the hero actually
+    // being on screen, and on the tab being foregrounded. Neither changes what
+    // the effect looks like when you can see it, which is the only time it has
+    // a job to do.
+    let onScreen = true;
+    const sync = () => {
+      if (onScreen && document.visibilityState === "visible") play();
+      else pause();
+    };
+
+    const io = new IntersectionObserver((entries) => {
+      onScreen = entries[0].isIntersecting;
+      sync();
+    });
+    io.observe(parent);
+    document.addEventListener("visibilitychange", sync);
+    sync();
+
     return () => {
-      if (frame !== null) cancelAnimationFrame(frame);
+      pause();
+      io.disconnect();
+      document.removeEventListener("visibilitychange", sync);
       window.removeEventListener("resize", resize);
       resizeObserver.disconnect();
     };

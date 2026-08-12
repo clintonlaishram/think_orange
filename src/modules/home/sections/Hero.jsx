@@ -87,7 +87,19 @@ export function Hero() {
               {/* ---- Left column (7) ------------------------------------ */}
               <div className="lg:col-span-7">
                 <Reveal delay={0} className="mb-6">
-                  <Eyebrow className="!text-xs">GST · Income Tax · DSC · Compliance</Eyebrow>
+                  {/* ember-200, not the surface's default ember-300 accent, and
+                      only here. The DarkVeil shader's brightness profile is
+                      tuned to run at full strength through the top ~60% of the
+                      hero (see DarkVeil.jsx's Y_SCALE note), which is exactly
+                      where this eyebrow sits — so it is the one eyebrow on the
+                      site with a lit ember field behind it rather than flat ink.
+                      Measured by sampling real pixels under the text: ember-300
+                      lands at 3.50:1 @375px and 3.87:1 @1440px against the 4.5:1
+                      floor for 12px text. ember-200 clears it. `!` is needed
+                      because Eyebrow sets colour via an inline style. */}
+                  <Eyebrow className="!text-xs !text-ember-200">
+                    GST · Income Tax · DSC · Compliance
+                  </Eyebrow>
                 </Reveal>
 
                 <h1 className="text-display-xl text-canvas">
@@ -112,9 +124,14 @@ export function Hero() {
                   />
                 </h1>
 
+                {/* ink-100, third of three in this column — see the eyebrow note
+                    above. The rule for the hero's copy column is simply that
+                    ink-200 is not enough over a lit veil: this lede measured
+                    4.48:1 at 375px. The stat labels further down stay ink-200 and
+                    measure 10:1, because the veil has faded out by that height. */}
                 <Reveal
                   delay={0.24}
-                  className="mt-6 max-w-[52ch] text-body-lg text-ink-200"
+                  className="mt-6 max-w-[52ch] text-body-lg text-ink-100"
                 >
                   GST, income tax and company filings handled end to end from{" "}
                   {site.locality}, for clients across India.
@@ -146,9 +163,12 @@ export function Hero() {
                     clients]" here. All three are numeric claims on
                     CONTENT-PLAN.md §1.1's hold list — none are typed in.
                     This renders only the two facts nav.js marks confirmed. */}
+                {/* ink-100 rather than ink-200 for the same reason as the
+                    eyebrow above: measured at 4.43:1 over the lit veil at 375px,
+                    just under the floor. ink-100 measures 7:1 there. */}
                 <Reveal
                   delay={0.24}
-                  className="mt-8 border-t border-ink-800 pt-4 font-mono text-body-sm text-ink-200"
+                  className="mt-8 border-t border-ink-800 pt-4 font-mono text-body-sm text-ink-100"
                 >
                   {site.legalName} · {site.location}
                 </Reveal>

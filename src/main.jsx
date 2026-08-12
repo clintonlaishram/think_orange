@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { routes } from "@/router";
+import { wasPrerendered } from "@/lib/prerendered";
 import "@/styles/theme.css";
 
 const router = createBrowserRouter(routes);
@@ -27,7 +28,10 @@ const app = (
 // scratch on the client. Measured cost: ~500ms of LCP `elementRenderDelay`,
 // i.e. the prerender was paying its full build-time and byte cost while
 // delivering no paint benefit at all.
-if (container.hasChildNodes()) {
+// `wasPrerendered` rather than a second inline check here, so this decision and
+// RootLayout's "skip the first <head> sync" decision can never disagree about
+// whether the page arrived prerendered.
+if (wasPrerendered) {
   hydrateRoot(container, app);
 } else {
   createRoot(container).render(app);

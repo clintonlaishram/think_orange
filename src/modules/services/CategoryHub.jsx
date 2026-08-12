@@ -68,9 +68,15 @@ export default function CategoryHub({ path }) {
                   heading rendered ink-600 navy on ink-900 at 1.37:1 — invisible.
                   Same trap the homepage PartnerProgramme panel hit. */}
               <div className="lg:col-span-5">
+                {/* `grain relative overflow-hidden` together, not separately:
+                    §7.4 puts grain on every dark surface, `.grain::after` is
+                    `position:absolute; inset:0` so it needs a positioned
+                    ancestor or it resolves against an outer containing block,
+                    and without `overflow-hidden` the texture squares off the
+                    panel's own corner radius. */}
                 <div
                   data-surface="dark"
-                  className="rounded-[var(--radius-md)] bg-ink-900 p-6 md:p-8"
+                  className="grain relative overflow-hidden rounded-[var(--radius-md)] bg-ink-900 p-6 md:p-8"
                 >
                   {/* No colour class: `[data-surface="dark"] h2` supplies canvas
                       and would beat one anyway. Same resolution as the

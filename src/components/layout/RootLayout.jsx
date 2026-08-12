@@ -1,10 +1,12 @@
 import { Outlet, useLocation } from "react-router-dom";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { Header } from "@/components/navbar/Header";
 import { Footer } from "@/components/footer/Footer";
 import { FloatingWhatsApp } from "@/components/layout/FloatingWhatsApp";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationJsonLd, localBusinessJsonLd } from "@/lib/jsonld";
+import { useIdleMount } from "@/hooks/useIdleMount";
+import { wasPrerendered } from "@/lib/prerendered";
 import { site } from "@/content/nav";
 
 const ORIGIN = `https://${site.domain}`;
@@ -18,6 +20,37 @@ const ORIGIN = `https://${site.domain}`;
 const Toaster = lazy(() =>
   import("sonner").then((mod) => ({ default: mod.Toaster }))
 );
+
+// ⚠️ The lazy Toaster is gated on `useIdleMount`, NOT wrapped in a bare
+// <Suspense> — and it has to be. RootLayout is in the prerender tree, and
+// `renderToString` cannot resolve a lazy() import: it emits the fallback and
+// marks the boundary unfinished, so hydration reports React error #419 and
+// client-renders the subtree. That showed up in Phase 10 as a console error in
+// Lighthouse's Best Practices audit on the homepage. A flag that starts false
+// renders nothing on the server and nothing on the client's first pass, so the
+// two agree and there is no boundary left open.
+function DeferredToaster() {
+  const ready = useIdleMount();
+  if (!ready) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <Toaster
+        position="top-right"
+        richColors={false}
+        toastOptions={{
+          classNames: {
+            toast: "!bg-white !border !border-ink-100 !shadow-[var(--shadow-md)] !rounded-[var(--radius-sm)]",
+            title: "!text-body !font-medium !text-ink-600",
+            description: "!text-body-sm !text-ink-500",
+            error: "!border-danger",
+            success: "!border-success",
+          },
+        }}
+      />
+    </Suspense>
+  );
+}
 
 function upsertMeta(attr, key, content) {
   if (content == null) return;
@@ -71,7 +104,19 @@ export function RootLayout() {
   // minified. The dynamic import makes seo.js's whole content graph its own
   // chunk instead, fetched once in the background after mount — never
   // blocking first paint, cached for every later in-app navigation.
+  //
+  // And it only RUNS on navigation. Phase 10 measured what running it on the
+  // first render costs: resolving meta for the page already in the document
+  // pulled seo.js's ~175KB content-graph chunk onto the critical path of every
+  // cold load, to compute tags byte-identical to the ones prerender.mjs had
+  // already written into <head>. Skipping the prerendered first pass means that
+  // chunk is not fetched until a visitor actually navigates in-app.
+  const isFirstPass = useRef(true);
   useEffect(() => {
+    const skip = isFirstPass.current && wasPrerendered;
+    isFirstPass.current = false;
+    if (skip) return;
+
     let cancelled = false;
     import("@/lib/seo").then(({ resolveSeo }) => {
       if (cancelled) return;
@@ -130,21 +175,7 @@ export function RootLayout() {
           otherwise stack toasts directly over/behind it. `classNames` maps
           onto design tokens rather than Sonner's own inline theme (CLAUDE.md:
           tokens only, no raw hex). */}
-      <Suspense fallback={null}>
-      <Toaster
-        position="top-right"
-        richColors={false}
-        toastOptions={{
-          classNames: {
-            toast: "!bg-white !border !border-ink-100 !shadow-[var(--shadow-md)] !rounded-[var(--radius-sm)]",
-            title: "!text-body !font-medium !text-ink-600",
-            description: "!text-body-sm !text-ink-500",
-            error: "!border-danger",
-            success: "!border-success",
-          },
-        }}
-      />
-      </Suspense>
+      <DeferredToaster />
     </>
   );
 }

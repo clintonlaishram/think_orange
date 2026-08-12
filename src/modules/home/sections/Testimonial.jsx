@@ -15,6 +15,18 @@ const ARC_RINGS = [
 
 const AUTOPLAY_MS = 3000;
 
+// Derived from `name` rather than stored alongside it, so an edit to a name can
+// never leave the wrong initials sitting next to it.
+function initialsOf(name) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}
+
 export function Testimonial() {
   const count = testimonials.length;
   const [index, setIndex] = useState(0);
@@ -58,9 +70,12 @@ export function Testimonial() {
           {(inView) => (
             <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
               <Eyebrow>What clients say</Eyebrow>
-              <h2 className="mt-3 text-heading-md text-canvas">
-                Trusted by learners and parents
-              </h2>
+              {/* "In their words" states nothing about how many clients there
+                  are or where they are — every version of that sentence is a
+                  claim on CONTENT-PLAN.md §1.1's hold list. (This heading read
+                  "Trusted by learners and parents" until Phase 10, left over
+                  from another project's copy.) */}
+              <h2 className="mt-3 text-heading-md text-canvas">In their words</h2>
 
               <div className="mt-10 flex items-center justify-center gap-3">
                 {testimonials.map((t, i) => {
@@ -79,12 +94,25 @@ export function Testimonial() {
                           : "h-11 w-11 border-ink-800 opacity-50 hover:opacity-80",
                       ].join(" ")}
                     >
-                      <img
-                        src={t.photo}
-                        alt=""
+                      {/* Initials, rendered locally. These were hotlinked
+                          ui-avatars.com images until Phase 10 — the only
+                          third-party origin on the site besides wa.me, and React
+                          emitted a <link rel="preload" as="image"> for all eight
+                          during SSR, so a homepage cold load opened a connection
+                          to another host and pulled eight images before anything
+                          below the fold could paint.
+
+                          Every avatar shares one ink surface rather than getting
+                          its own colour: eight distinct hues would be eight
+                          non-token colours, and the active state already reads
+                          through size and the ember ring (§16 — the palette is
+                          ink, ember and canvas). */}
+                      <span
                         aria-hidden="true"
-                        className="h-full w-full object-cover"
-                      />
+                        className="grid h-full w-full place-items-center bg-ink-800 font-mono text-body-sm text-ink-200"
+                      >
+                        {initialsOf(t.name)}
+                      </span>
                     </button>
                   );
                 })}

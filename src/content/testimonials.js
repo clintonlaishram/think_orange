@@ -5,12 +5,33 @@
 //
 // ⛔⛔ DUMMY PREVIEW DATA BELOW — DO NOT SHIP ⛔⛔
 //
-// Fictional entries, expanded to 8 on Clinton's explicit request (per this
-// chat) so the carousel has enough items to actually feel like a rotation.
-// Still fictional, still `confirmed: false`, still tracked here per
-// CLAUDE.md's non-negotiables — a visible, load-bearing exception each time
-// it's asked for, not a standing precedent. `photo` uses ui-avatars.com
-// initials avatars (no real person's likeness).
+// Fictional entries, kept at 8 on Clinton's explicit request so the carousel has
+// enough items to feel like a rotation. Still fictional, still `confirmed: false`,
+// still tracked here per CLAUDE.md's non-negotiables — a visible, load-bearing
+// exception each time it's asked for, not a standing precedent.
+//
+// ⚠️ THESE ARE NOW MORE DANGEROUS THAN THE VERSION THEY REPLACED, AND THAT IS
+// WORTH SAYING PLAINLY. Until 12-08-2026 the quotes here described a TUTORING
+// platform — "board exams", "JEE aspirant", "Mathematics tutor" — copy from an
+// unrelated project. That made them unmistakably placeholder to anyone who read
+// them. Rewritten for compliance work on request (12-08-2026), they now read as
+// genuine, which is exactly the state CONTENT-PLAN.md §6 calls "dishonest and
+// easy to spot" if it ships. `confirmed: false` and content:check's warning are
+// the only things standing between this file and a false claim on a compliance
+// firm's homepage. Do not remove either.
+//
+// Written under the same constraints as every other content file, which is why
+// none of these quotes mentions a fee, a rupee amount, a day count, a turnaround
+// or a statutory threshold: CLAUDE.md's non-negotiables forbid inventing those
+// anywhere, and a quotation mark around a claim does not make it sourced. A
+// "registered in two days" testimonial would be an invented turnaround guarantee
+// wearing a client's voice.
+//
+// Avatars are NOT stored here. `Testimonial.jsx` derives initials from `name` and
+// renders them on an ink surface. The previous `photo` field hotlinked
+// ui-avatars.com, which made it the only third-party origin on the site besides
+// wa.me and cost the homepage measurable Performance and Total Blocking Time
+// (Phase 10: 80 -> 85 and 652ms -> 486ms once removed).
 //
 // Before launch, do ONE of:
 //   1. Replace each entry with a real, consented testimonial and set
@@ -22,66 +43,58 @@
 export const testimonials = [
   {
     id: "dummy-1",
-    text: "I was nervous about finding someone for my daughter's board exams, but the tutor matching was quick and the sessions actually fit our evenings. Grades went up within a month.",
-    name: "Ananya R.",
-    role: "Parent, Class 10 student",
-    photo: "https://ui-avatars.com/api/?name=Ananya+R&background=2A6F5E&color=fff&size=128",
+    text: "The registration paperwork was handled end to end, and every document they asked for came with a reason attached. I never had to guess what was still pending on my side.",
+    name: "Ananya Raghavan",
+    role: "Proprietor, textile trading",
     confirmed: false,
   },
   {
     id: "dummy-2",
-    text: "Rescheduling used to be a headache with our old tutor. Here I can move a session in two taps and the tutor gets notified instantly. Small thing, but it removed all the friction.",
+    text: "Filing used to be a scramble at my end every month. Now the reconciliation is already done by the time I sit down to look at it, and I only get asked for what is genuinely missing.",
     name: "Rohit Malhotra",
-    role: "Parent, Class 8 student",
-    photo: "https://ui-avatars.com/api/?name=Rohit+Malhotra&background=B85C2E&color=fff&size=128",
+    role: "Owner, auto components",
     confirmed: false,
   },
   {
     id: "dummy-3",
-    text: "As a tutor, the payout tracking alone was worth switching for. I always know what's pending and what's cleared, and parents can see my availability without me texting back and forth.",
+    text: "We received a notice and had no idea how to respond to it. The reply was drafted with our own records behind it, and someone walked me through what it actually meant in plain language.",
     name: "Priya Sen",
-    role: "Mathematics tutor",
-    photo: "https://ui-avatars.com/api/?name=Priya+Sen&background=3C5A99&color=fff&size=128",
+    role: "Director, engineering services",
     confirmed: false,
   },
   {
     id: "dummy-4",
-    text: "We tried three different tutoring apps before this one. It's the only one where the demo class actually got scheduled without five follow-up calls.",
+    text: "Ordered a signing token for our tender filings and it arrived ready to use. The driver instructions matched what I was actually seeing on screen, which has not been my experience elsewhere.",
     name: "Kavita Nair",
-    role: "Parent, Class 6 student",
-    photo: "https://ui-avatars.com/api/?name=Kavita+Nair&background=7A4E9E&color=fff&size=128",
+    role: "Partner, civil contracting",
     confirmed: false,
   },
   {
     id: "dummy-5",
-    text: "I teach across four different families now and the calendar sync means I've stopped double-booking myself. That alone paid for the time I spent setting up my profile.",
+    text: "Incorporating the company was my first time dealing with any of this. They explained what each form was for instead of just sending it over and asking me to sign.",
     name: "Arjun Verma",
-    role: "Physics tutor",
-    photo: "https://ui-avatars.com/api/?name=Arjun+Verma&background=1F6F78&color=fff&size=128",
+    role: "Founder, consumer brand",
     confirmed: false,
   },
   {
     id: "dummy-6",
-    text: "My son is preparing for JEE and needed someone who could handle late-night doubt sessions. Found a tutor within two days and the fee breakdown was clear from the start.",
+    text: "Our books were badly behind. They took the mess exactly as it was, without making me feel foolish about it, and we close the month properly now.",
     name: "Sandeep Kulkarni",
-    role: "Parent, JEE aspirant",
-    photo: "https://ui-avatars.com/api/?name=Sandeep+Kulkarni&background=A84A4A&color=fff&size=128",
+    role: "Managing partner, logistics",
     confirmed: false,
   },
   {
     id: "dummy-7",
-    text: "The verification step made me trust the platform enough to actually let a new tutor into our home. Small detail, but it mattered more than I expected.",
+    text: "The portal registration and the document set for our first tender were sorted together. Knowing in advance which certificates a buyer would actually ask for took the guesswork out of it.",
     name: "Meera Iyer",
-    role: "Parent, Class 4 student",
-    photo: "https://ui-avatars.com/api/?name=Meera+Iyer&background=2E7D5B&color=fff&size=128",
+    role: "Proprietor, office supplies",
     confirmed: false,
   },
   {
     id: "dummy-8",
-    text: "Switched from spreadsheets to this for tracking my students and invoices. Took a week to get used to, now I can't imagine going back.",
+    text: "I route signature and registration work here for my own clients. The status updates arrive without me having to chase anyone for them, which is the part I was really buying.",
     name: "Farhan Sheikh",
-    role: "Chemistry tutor",
-    photo: "https://ui-avatars.com/api/?name=Farhan+Sheikh&background=6B5B3E&color=fff&size=128",
+    role: "Practising accountant",
     confirmed: false,
   },
 ];

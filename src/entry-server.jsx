@@ -12,10 +12,15 @@
 // re-check vite-react-ssg's peer range before repeating this setup on a
 // future v7 upgrade, per BUILD-PLAN.md's original note).
 //
-// `renderToString` (not the streaming APIs) is deliberate and safe here:
-// router-static.jsx's components are all EAGER imports, so nothing in the
-// tree ever suspends on a lazy() boundary — there is nothing for a
-// synchronous render to get wrong. Every browser-only API in the app
+// `renderToString` (not the streaming APIs) is deliberate, and it holds only as
+// long as NOTHING in this tree suspends. router-static.jsx imports every page
+// template eagerly for that reason. It is a standing constraint on the shared
+// chrome too: RootLayout's Sonner import is lazy, and it has to stay behind an
+// after-hydration flag rather than a plain <Suspense>, because renderToString
+// cannot resolve a lazy() import — it emits the fallback, marks the boundary
+// unfinished, and hydration then reports React error #419 and re-renders that
+// subtree on the client. Anything new and lazy in the always-rendered chrome
+// needs the same treatment. Every browser-only API in the app
 // (window/document/matchMedia/IntersectionObserver/ResizeObserver/WebGL) is
 // confined to useEffect bodies, which renderToString never executes, so this
 // stays crash-free without needing a jsdom shim.

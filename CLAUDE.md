@@ -1277,6 +1277,254 @@ project's v7 stack); this is a hand-built equivalent using React Router v7's own
  scripts and screenshots were deleted after use — nothing under `scripts/`
  remains from this session beyond the permanent `prerender.mjs`.
 
+## Phase 10 (Audit: contrast, a11y, performance, §16 judgment pass) — 12-08-2026
+BUILD-PLAN.md §3's final gate. Every audit below was **measured**, not reviewed by
+eye or by reading source: the whole point of this phase is that claims about
+aggregate behaviour ("every icon in a circle", "everything fades up", "orange
+under 12%") cannot be confirmed from any single file. Accessibility, contrast,
+reduced motion, keyboard, link integrity and 11 of §16's 12 tells all pass.
+**Two things do not, and both are content decisions, not code** — see Launch
+blockers at the end of this section.
+
+### Verification harness — read this before re-running anything
+- **`npx serve dist`, never `vite preview`.** Phase 9 already recorded why (bare
+  `vite preview` serves `dist/index.html` for every nested route and looks
+  exactly like a hydration bug). Still true.
+- **Lighthouse needs the HTTP/2 host, not the plain one.** `scripts/_serve-h2.mjs`
+  supplies HTTP/2 + brotli + immutable caching on hashed assets, i.e. a
+  production-shaped host. It takes the port as `argv[2]` and defaults to **4443**,
+  while the Lighthouse scripts default to **4455** — start it as
+  `node scripts/_serve-h2.mjs 4455` or pass the base URL explicitly, or every run
+  reports `ERRORED` and looks like a Lighthouse failure.
+- **Median of 3, minimum.** A single Lighthouse run on a loaded dev machine is
+  not a measurement — the same `/contact` build scored 100 alone and 88 inside a
+  four-route batch purely from CPU contention. `_audit-lighthouse-median.mjs`
+  exists for this.
+- **Always check whether Chrome had a GPU before drawing a perf conclusion.**
+  The headless default passes `--disable-gpu`, which forces the DarkVeil CPPN's
+  per-pixel maths onto the main thread and costs the homepage ~10 Performance
+  points on its own (93 with GPU vs 83–86 without, same build, same throttling).
+  This is the third time this trap has cost this project real time — Phase 4 and
+  the DarkVeil session both recorded it.
+- **A backgrounded `npx serve` leaves an orphaned child holding `dist/`.** Killing
+  the `npx` parent does not kill it, and the next `vite build` fails with
+  `EPERM: operation not permitted, lstat 'dist/about/index.html'` — which reads
+  like a permissions or antivirus problem and is not. Find it with
+  `Get-CimInstance Win32_Process` filtered on a `cursor-sandbox-cache\...\_npx`
+  command line and kill that PID specifically. Do **not** blanket-kill browsers
+  or node.
+
+### Accessibility — 100 on every route audited
+- **`label-content-name-mismatch` on the logo, and why it was real.** axe compares
+  an element's accessible name against its *sighted visible text*, and it counts
+  text inside `aria-hidden` descendants. `Logo.jsx`'s "TO" mark plus the two
+  wordmark spans concatenated to `TOThinkOrangeConsulting Pvt Ltd` — JSX strips
+  the newlines between sibling elements — which no `aria-label` starting
+  "ThinkOrange" could contain. Fixed with explicit `{" "}` text nodes between the
+  siblings and an `aria-label` of ``TO ${site.shortName} Consulting Pvt Ltd —
+  home``. **Adding whitespace between JSX siblings is a semantic change here, not
+  formatting.**
+- **The desktop mega panel was unreachable by keyboard, and the mobile overlay
+  was not trapped.** Both fixed and both re-verified by driving real Tab/Enter/
+  Escape key events: Enter opens the panel, Tab walks into its contents, Escape
+  closes it and returns focus to the trigger; the mobile dialog holds focus for
+  40 consecutive Tabs, locks body scroll, is `inert` while closed (guarding 44
+  focusables so a closed overlay can never be tabbed into), and restores both
+  focus and scroll on Escape.
+  - **`Input.dispatchKeyEvent` with `type: "rawKeyDown"` does not activate a
+    focused button on Enter** — Space appears to work because it activates on
+    keyup. This reported Enter as broken when it was not. Use `type: "keyDown"`
+    with `text: "\r"` and both virtual key codes.
+- Five vague "Learn more" links got specific accessible names (axe `link-text`).
+- Landmarks, single `<main>`, single `<h1>` and focus visibility verified on every
+  sampled route: **0 focusables with no visible focus indicator**.
+
+### Contrast — four independent methods, all clean
+A static resolver alone is not enough on this site, because the elements most at
+risk sit over things CSS cannot resolve: a WebGL canvas, `color-mix` gradients
+(`.card-dark`, `.surface-ambient`), and a translucent fixed header.
+1. **Static** (`_audit-contrast.mjs`) — climbs ancestors for an opaque background.
+   0 failures; 28 cases correctly reported as *unresolvable* and handed to (2).
+2. **Pixel-sampled** (`_audit-contrast-pixels.mjs`) — applies
+   `* { color: transparent !important }`, screenshots, and samples the 95th/5th
+   percentile luminance under each text box. 0 failures across 13 routes, 105
+   instances. Tightest pass 4.7:1.
+3. **Hero, multi-phase** (`_audit-hero-pixels.mjs`) — the veil animates, so one
+   frame proves nothing. Samples 4 animation phases at 375px and 1440px.
+4. **Header** (`_audit-header-pixels.mjs`) — the glass header over whatever
+   scrolls beneath it. Worst case 4.59:1.
+- Fixes: chip variants, missing `data-surface` attributes, `ink-300`/`ink-400`
+  used as body text on dark, header glass opacity, and in the hero specifically
+  **`text-ember-300` → `!text-ember-200`** (eyebrow, was 3.5:1) and
+  **`text-ink-200` → `text-ink-100`** (lede and trust line, was 4.43:1). All three
+  failed only over the *lit* part of the ember arc — which is exactly why the
+  static pass could not see them.
+
+### Performance
+Final, median of 3, simulated mobile (Lantern slow 4G + 4× CPU), production build
+over HTTP/2 + brotli:
+
+| route | perf | a11y | best practices | SEO | TBT |
+|---|---|---|---|---|---|
+| `/services/gst/registration` | **98** | 100 | 100 | 100 | 5ms |
+| `/dsc/drivers/hyp2003` | **98** | 100 | 100 | 100 | 5ms |
+| `/contact` | **98** | 100 | 100 | 100 | 5ms |
+| `/` | **93** with GPU / 83–86 without | 100 | 100 | 100 | 115ms / ~530ms |
+
+- **⚠️ The homepage does not meet the ≥95 gate. Accepted at 93 on Clinton's call
+  (12-08-2026) rather than chased further.** 93 is with hardware rasterization,
+  which is what a real visitor gets; the 83–86 figure is the `--disable-gpu`
+  harness. (Both numbers were taken before the avatar hotlinks came out, which is
+  worth +5 on the software-rendered figure — so treat 93/86 as the floor.) The residual cost is the DarkVeil shader
+  plus fourteen motion-wrapped sections, and LCP is dominated by
+  `elementRenderDelay` (main-thread work), not by the image — its Load Delay and
+  Load Time are both 0ms. Closing the last two points means lazy-mounting
+  below-fold homepage sections, which would put the verified surface cadence and
+  every scroll reveal back in play. Deliberately not attempted inside an audit
+  phase; flagged instead.
+- **SSR error #419, and the hook that fixes that whole class of problem.**
+  `renderToString` cannot resolve a `lazy()` component, so a lazy child inside a
+  bare `<Suspense fallback={null}>` makes the server emit an *unfinished boundary
+  marker*; the client then throws React #419 and client-renders the subtree. This
+  surfaced as a console error in Lighthouse Best Practices. Fix is
+  **`src/hooks/useIdleMount.js`** — a flag that is `false` during SSR and on the
+  client's first pass, flipped by `requestIdleCallback` after `load`. Server and
+  client agree on "render nothing", so no boundary is left open. `Toaster`
+  (`RootLayout`) and `DarkVeil` (`ArcField`) both hang off it. **Gate a deferred
+  lazy subtree on a flag; do not wrap it in a bare Suspense.**
+- **DarkVeil no longer competes with hydration**: idle-mounted, plus an
+  `IntersectionObserver` and a `visibilitychange` listener that pause the rAF loop
+  when the hero is scrolled away or the tab is backgrounded. Homepage TBT was
+  measured as high as 3,420ms before this.
+- **`RootLayout` no longer re-resolves `<head>` on a prerendered first render.**
+  Its own comment already said the sync "only matters once React Router starts
+  handling navigation" — but the effect ran on mount too, pulling `seo.js`'s
+  ~175KB content-graph chunk onto the critical path of every cold load to compute
+  tags byte-identical to the ones `prerender.mjs` had already written. Now gated
+  on **`src/lib/prerendered.js`**, whose `wasPrerendered` is captured at
+  *module-evaluation* time — before `hydrateRoot` runs, while `#root` still holds
+  the server's markup. Read it any later and it always reports true. `main.jsx`
+  consumes the same constant for its hydrate-vs-createRoot choice, so the two
+  decisions cannot disagree. Homepage 91 → 93; the chunk is now fetched on first
+  in-app navigation instead of never being needed. Verified by
+  `_probe-seo-nav.mjs`: cold loads carry correct prerendered tags on 5 routes
+  (exactly one `<title>` and one canonical each), and two successive real link
+  clicks still update title/canonical/OG correctly, with 0 console errors.
+- **`_serve-h2.mjs` was charging Lighthouse ~350ms of fake TTFB** by running
+  brotli quality 11 synchronously per request. Now cached in memory per file. A
+  test host's own cost is easy to mistake for the site's.
+
+### Reduced motion — including a regression this phase introduced and caught
+`Emulation.setEmulatedMedia({features:[{name:"prefers-reduced-motion",value:"reduce"}]})`
+over CDP: 0 CSS animations running, 0 elements stuck mid-opacity, WebGL canvas
+static.
+- **The regression is worth reading, because the code looked correct.** After
+  adding the IntersectionObserver pause/resume to `DarkVeil`, the reduced-motion
+  branch still read `if (reduceMotion) renderOnce(0); else sync();` — which never
+  starts the loop. But **`IntersectionObserver` fires its callback once on
+  `observe()`**, and that callback calls `sync()` → `play()`. So the canvas
+  animated under `prefers-reduced-motion: reduce` anyway. Fixed by returning early
+  from the effect before the observers are wired at all. Only the emulated-media
+  audit caught it; reading the diff did not.
+
+### §16's twelve tells — mechanically checked, 11 pass
+`_audit-design-tells.mjs`, 15 routes × 2 viewports, against the rendered DOM.
+- **Tell 1 needed pixels.** The DarkVeil CPPN pattern is natively violet, so the
+  only honest test is what reaches the screen. Hue census of the hero: violet is
+  8.3% of hued pixels at desktop / 5.8% at mobile, ember 5.6% / 10.1%, and the
+  dominant bucket is **225° (navy)** at desktop, 15° (ember) at mobile. Passes.
+- Tell 4: only Satoshi, IBM Plex Mono and Instrument Serif render anywhere — no
+  Inter/Poppins/Roboto/etc. Tell 5: five distinct radii in use, dominant share
+  50.4%, pill present. Tell 8: **0 of 200** sections are centre-aligned. Tell 9:
+  0 ember box-shadows sitewide. Tell 10: 2.5% of elements carry motion styles,
+  and **0 inside a footer, table or form**. Tell 12: 41 dark surfaces, all
+  grained, none drifting outside its own section.
+- **Fixed under tell 12:** `CategoryHub`'s navy inset panel had no grain at all.
+  It now carries `grain relative overflow-hidden` — all three together, because
+  `.grain::after` is `position:absolute; inset:0` and needs a positioned ancestor,
+  and without `overflow-hidden` the texture squares off the panel's radius. Same
+  root cause as the Phase 5 escaping-grain bug: hand-rolled surfaces instead of
+  `components/layout/Section.jsx`.
+- **Three detector-design traps, recorded because a wrong detector wastes a whole
+  investigation:**
+  1. **Tell 6 over-triggered on pill buttons.** Counting "an `<svg>` whose parent
+     is circular and filled" flagged every `rounded-full` Button and the WhatsApp
+     FAB, reporting 13 on the homepage. A pill containing an icon is §6.3's
+     deliberate radius contrast, not an icon-in-a-circle motif. Excluding
+     `a, button, label, [role=button]` leaves **3** on the worst page.
+  2. **Tell 7 over-triggered on the `/services` sitemap page** — 5 "identical
+     3-card grids" that are actually multi-column lists of plain text links, a
+     different archetype and the correct shape for a directory. Requiring the grid
+     items to be *cards* (own background, border, or ≥12px padding) fixed it.
+  3. **…and then under-triggered, to 1 card grid sitewide,** because `Reveal`
+     wraps each grid item in a bare `motion.div`, so the card's surface sits one
+     level below the grid item. Checking the item *and its first element child*
+     gives the true answer: worst page has **2**, under the tell's threshold of 3.
+- **Tell 11 failed, and was fixed.** Not stock photography — the site's only local
+  image is a licensed, attributed Unsplash desk still-life with no people
+  (`public/images/home/ATTRIBUTION.txt`), which is compliant. The failure was **8
+  hotlinked `ui-avatars.com` images** in the dummy testimonials: the only
+  third-party origin besides `wa.me`, and React emitted a
+  `<link rel="preload" as="image">` for every one of them during SSR, so a
+  homepage cold load opened a connection to another host and fetched eight images
+  before anything below the fold could paint. `Testimonial.jsx` now derives
+  initials from `name` and renders them locally. **All eight share one `ink-800`
+  surface rather than getting a colour each** — eight distinct hues would be eight
+  non-token colours, and the active dot already reads through size plus the ember
+  ring. Verified: 0 image preloads, 0 external requests, initials at 8.99:1,
+  `aria-hidden` on the glyphs with the accessible name on the button.
+
+### Link integrity (new audit, `_audit-links.mjs`)
+Scans `dist/`, not the router: `sitemapPaths()` decides what actually gets a file,
+so a path the router matches but the build never emitted is still a 404 for a
+crawler and for any hard navigation. **4,683 hrefs across 49 files, 0 broken.**
+- `content:check`'s insights warning was **stale and actively misleading** — it
+  claimed every placeholder card "404s if deployed". `Insights.jsx` renders an
+  unconfirmed entry as a non-interactive card rather than a `Link`, so no dead
+  link exists; the real risk is placeholder copy being visible. Warning text
+  corrected, so the next reader does not go hunting a bug that isn't there.
+
+### ⛔ Launch blockers — content decisions, all pre-existing, none introduced here
+1. **`src/content/testimonials.js` — 8 fictional quotes, now MORE dangerous than
+   before, deliberately and on record.** Until this phase the copy described a
+   **tutoring platform** ("board exams", "JEE aspirant", "Mathematics tutor") —
+   leftover from an unrelated project, and `Testimonial.jsx`'s own heading read
+   "Trusted by learners and parents". Rewritten for compliance work on explicit
+   request (12-08-2026), which means they no longer read as placeholder at all.
+   `confirmed: false` and `content:check`'s warning are now the only things
+   between this file and eight false claims on a compliance firm's homepage —
+   **do not remove either.** The rewrite deliberately contains no fee, rupee
+   amount, day count, turnaround or statutory threshold: a "registered in two
+   days" quote is an invented turnaround guarantee wearing a client's voice, and
+   quotation marks do not make a claim sourced. The heading is now "In their
+   words", which asserts nothing about how many clients exist or where they are.
+   Before launch: replace with real consented quotes and set `confirmed: true`,
+   or delete the array — `Testimonial()` renders nothing when empty.
+2. **`src/content/home-hero.js` — `clients: "250+"` and `years: "10+"`,** both
+   `confirmed: false`. `HeroStats` renders whatever survives, so deleting is safe
+   and the row degrades to two tiles.
+3. **`src/content/insights.js` — 4 placeholder articles** and no `/insights` route.
+   Safe (non-interactive cards), but the placeholder titles are visible copy.
+All three print a loud warning on every `npm run content:check`, which
+deliberately does not fail the command — that would be noise during design work.
+
+### Verification method
+`npm run lint` (0 errors), `npm run content:check` (the three unconfirmed-content
+warnings above, no new ones), `npm run build` (48 routes + 404.html + sitemap.xml
++ robots.txt). Then, over `npx serve dist` and `_serve-h2.mjs`: axe-core on every
+sampled route; four contrast passes; keyboard/focus-trap/focus-visibility driven
+by real key events; landmark and heading structure; reduced motion via emulated
+media; Lighthouse median-of-3 on four representative routes plus a GPU-on/GPU-off
+comparison for the homepage; the twelve-tells pass; SEO cold-load and in-app
+navigation probes; and a byte-level link-integrity scan of `dist/`.
+**All `scripts/_*` audit scripts, their self-signed certs and their Lighthouse
+JSON output were deleted after use**, per this repo's standing discipline — only
+`content-check.mjs`, `content-review.mjs` and `prerender.mjs` remain. Every method
+above is documented in enough detail to rebuild the one you need, and the three
+detector traps under §16 are recorded precisely so a rewrite does not repeat them.
+Re-verifying the launch blockers below needs only `npm run content:check` plus one
+Lighthouse median run.
+
 ## Session discipline
 - One phase per session. Start fresh between phases — see BUILD-PLAN.md §5.
 - Load only the plan sections a phase actually needs, not the whole document.
