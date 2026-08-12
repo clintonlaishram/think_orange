@@ -3,6 +3,7 @@ import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { footerColumns, legalPages, site } from "@/content/nav";
 import { Container } from "@/components/layout/Container";
 import { ArcRings } from "@/components/ui/ArcRings";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 
 // The same shape as every other section's arc composition (§3.1), just
 // canvas-toned rather than ember — DESIGN.md §11.12 specifies a plain
@@ -61,7 +62,7 @@ export function Footer() {
         rings={FOOTER_ARC_RINGS}
         gradientId="footer-arc-fade"
         color="var(--color-canvas)"
-        svgClassName="-right-24 top-1/2 h-[560px] w-[560px] -translate-y-1/2"
+        svgClassName="-right-34 rotate-40 bottom-1/8 h-[560px] w-[560px] translate-y-1/2"
       />
 
       {/* Quiet corner echo, top-left — brackets the block against the main
@@ -156,8 +157,8 @@ export function Footer() {
                     rel="noreferrer noopener"
                     className="flex items-start gap-2.5 rounded-sm transition-colors hover:text-ember-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
                   >
-                    <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-ember-400" strokeWidth={1.5} aria-hidden="true" />
-                    WhatsApp
+                    <IconBrandWhatsapp className="mt-0.5 h-4 w-4 shrink-0 text-ember-400" strokeWidth={1.5} aria-hidden="true" />
+                    +91 82482 03045
                   </a>
                 </li>
                 <li>
