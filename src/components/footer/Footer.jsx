@@ -2,6 +2,30 @@ import { Link } from "react-router-dom";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { footerColumns, legalPages, site } from "@/content/nav";
 import { Container } from "@/components/layout/Container";
+import { ArcRings } from "@/components/ui/ArcRings";
+
+// The same shape as every other section's arc composition (§3.1), just
+// canvas-toned rather than ember — DESIGN.md §11.12 specifies a plain
+// `text-canvas` arc here, not the brand gradient, and staying ink/canvas
+// keeps this entirely off the site's orange budget. Three rings replace the
+// single hand-rolled path the footer used before: same technique WhatWeDo/
+// HowWeWork/DscBand/Testimonial/PartnerProgramme/CtaBand all already use, so
+// the footer reads as one more instance of an established motif rather than
+// a new one. Total weight (0.035 + 0.07 + 0.025) lands close to the original
+// single ring's flat 0.08, now expressed as depth instead of one flat stroke.
+const FOOTER_ARC_RINGS = [
+  { r: 176, width: 16, opacity: 0.035 },
+  { r: 140, width: 13, opacity: 0.07 },
+  { r: 104, width: 9, opacity: 0.025 },
+];
+
+// A quieter echo bracketing the opposite corner — CtaBand's "same arc, same
+// handedness, never mirrored" pattern (§3.1), at a scale small enough to sit
+// behind the brand block without competing with it.
+const FOOTER_CORNER_RINGS = [
+  { r: 60, width: 6, opacity: 0.05 },
+  { r: 42, width: 4, opacity: 0.08 },
+];
 
 // DESIGN.md §11.12. Because the nav is deep, the footer IS the site's real
 // sitemap — five columns, generous room. No entrance animation: "footers that
@@ -16,22 +40,50 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer data-surface="deep" className="grain relative overflow-hidden bg-ink-950 text-ink-300">
-      {/* Oversized arc bleeding off the right edge at 8% (DESIGN.md §11.12).
-          Approximate geometry — swap for the real logo arc per §18. */}
-      <svg
+    <footer
+      data-surface="deep"
+      // `relative isolate`: scopes the arc rings' explicit z-index (and
+      // `.grain`'s ::after) to this element, per the same convention every
+      // ArcRings-using section already follows (WhatWeDo, HowWeWork,
+      // DscBand, Testimonial, PartnerProgramme's panel).
+      className="footer-surface surface-ambient grain relative isolate overflow-hidden bg-ink-950 text-ink-300"
+    >
+      {/* Static ledger-hairline grid — a second, non-circular motif (the user
+          asked for "shapes other than circle"). Masked to fade out rather
+          than tile flatly to the corners; centred where the arc bleeds off
+          the right so the two read as one composition. */}
+      <div aria-hidden="true" className="footer-grid" />
+
+      {/* Oversized arc composition bleeding off the right edge (DESIGN.md
+          §11.12). Approximate geometry, same status as every other section's
+          — swap for the real logo-derived arc per §18 once available. */}
+      <ArcRings
+        rings={FOOTER_ARC_RINGS}
+        gradientId="footer-arc-fade"
+        color="var(--color-canvas)"
+        svgClassName="-right-24 top-1/2 h-[560px] w-[560px] -translate-y-1/2"
+      />
+
+      {/* Quiet corner echo, top-left — brackets the block against the main
+          composition rather than leaving one edge doing all the work. */}
+      <ArcRings
+        rings={FOOTER_CORNER_RINGS}
+        gradientId="footer-corner-arc-fade"
+        color="var(--color-canvas)"
+        svgClassName="-left-16 -top-16 h-[220px] w-[220px]"
+      />
+
+      {/* Oversized monogram watermark, low enough in opacity to read as
+          texture rather than a second logo — the "watermark-like effect" at
+          a very different register from the arc/grid pair, purely
+          typographic rather than another circular shape. Sits behind the
+          brand column; `overflow-hidden` on the footer clips the bleed. */}
+      <span
         aria-hidden="true"
-        viewBox="0 0 400 400"
-        className="pointer-events-none absolute -right-24 top-1/2 h-[520px] w-[520px] -translate-y-1/2 text-canvas opacity-[0.08]"
-        fill="none"
+        className="pointer-events-none absolute -bottom-16 -left-6 select-none font-sans text-[13rem] font-black leading-none tracking-tight text-canvas/[0.035] md:text-[16rem]"
       >
-        <path
-          d="M340 200a140 140 0 1 1-66.5-119.2"
-          stroke="currentColor"
-          strokeWidth="18"
-          strokeLinecap="round"
-        />
-      </svg>
+        TO
+      </span>
 
       <Container className="relative">
 
@@ -54,6 +106,16 @@ export function Footer() {
             {footerColumns.map((column) => (
               <nav key={column.heading} aria-label={column.heading}>
                 <h2 className="font-mono text-eyebrow uppercase text-canvas">{column.heading}</h2>
+                {/* The one other whitelisted use of the brand gradient
+                    (DESIGN.md §7.1: "the 2px accent rule beneath section
+                    eyebrows") — same recipe MegaPanel's column indicator
+                    uses, static rather than hover-triggered since a footer
+                    never animates. */}
+                <span
+                  aria-hidden="true"
+                  className="mt-2.5 block h-0.5 w-8 rounded-full"
+                  style={{ background: "var(--gradient-ember)" }}
+                />
                 <ul className="mt-4 space-y-2.5">
                   {column.links.map((link) => (
                     <li key={link.path}>
@@ -72,6 +134,11 @@ export function Footer() {
             {/* Contact + deadline widget */}
             <div>
               <h2 className="font-mono text-eyebrow uppercase text-canvas">Get in touch</h2>
+              <span
+                aria-hidden="true"
+                className="mt-2.5 block h-0.5 w-8 rounded-full"
+                style={{ background: "var(--gradient-ember)" }}
+              />
               <ul className="mt-4 space-y-3 text-body-sm">
                 <li>
                   <a
