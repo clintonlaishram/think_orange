@@ -154,7 +154,7 @@ export function RootLayout() {
           page's opening section, so that section must be full-bleed to y=0 and
           clear the header itself via `.page-top`. Padding <main> instead would
           expose the body background behind the transparent header. */}
-      <main id="main">
+      <main id="main" className="overflow-x-hidden">
         {/* Fallback is a plain dark block, not a spinner — it's on-screen for
             one chunk fetch at most, and the layout contract requires every
             route's opening section to be dark anyway (fixed transparent

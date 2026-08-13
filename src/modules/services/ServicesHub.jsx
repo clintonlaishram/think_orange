@@ -1,23 +1,29 @@
-import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
-import { Container } from "@/components/layout/Container";
-import { Section } from "@/components/layout/Section";
+// import { Link } from "react-router-dom";
+// import { ArrowUpRight } from "lucide-react";
+// import { Container } from "@/components/layout/Container";
+// import { Section } from "@/components/layout/Section";
 import { PageHero } from "@/components/layout/PageHero";
-import { WhoWeWorkWith } from "@/modules/home/sections/WhoWeWorkWith";
-import { CtaBand } from "@/modules/home/sections/CtaBand";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { serviceCategories } from "@/content/nav";
-import { getServiceContent } from "@/content/services";
-import { collectionPageJsonLd } from "@/lib/jsonld";
-import { meta } from "@/content/meta";
+import { ComingSoon } from "@/components/ui/ComingSoon";
+// import { WhoWeWorkWith } from "@/modules/home/sections/WhoWeWorkWith";
+// import { CtaBand } from "@/modules/home/sections/CtaBand";
+// import { JsonLd } from "@/components/seo/JsonLd";
+// import { serviceCategories } from "@/content/nav";
+// import { getServiceContent } from "@/content/services";
+// import { collectionPageJsonLd } from "@/lib/jsonld";
+// import { meta } from "@/content/meta";
 
 // Top-level /services — the T3 variant CONTENT-PLAN.md §8 describes: "all
 // six categories with their children listed inline... the sitemap page
 // users actually use." Reuses WhoWeWorkWith verbatim rather than reforking
 // it, per §8's own instruction to reuse the homepage block.
+//
+// ⚠️ 13-08-2026: client preview request (Clinton) — hero only, then
+// <ComingSoon /> instead of the rest of the body. Everything below is
+// commented out in place, not deleted — see ServiceLeaf.jsx's matching note.
 export default function ServicesHub({ path }) {
   return (
     <>
+      {/*
       <JsonLd
         data={collectionPageJsonLd({
           name: "Services",
@@ -25,6 +31,7 @@ export default function ServicesHub({ path }) {
           path,
         })}
       />
+      */}
 
       <PageHero
         path={path}
@@ -33,6 +40,9 @@ export default function ServicesHub({ path }) {
         cta={{ label: "Talk to an Expert", to: "/contact" }}
       />
 
+      <ComingSoon />
+
+      {/*
       <Section surface="light">
         <Container>
           <div className="space-y-14 md:space-y-16">
@@ -82,6 +92,7 @@ export default function ServicesHub({ path }) {
       <WhoWeWorkWith />
 
       <CtaBand />
+      */}
     </>
   );
 }

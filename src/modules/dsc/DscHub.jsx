@@ -1,20 +1,21 @@
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
-import { Container } from "@/components/layout/Container";
-import { Section } from "@/components/layout/Section";
-import { Eyebrow } from "@/components/layout/Eyebrow";
+// import { Link } from "react-router-dom";
+// import { ArrowRight } from "lucide-react";
+// import { Container } from "@/components/layout/Container";
+// import { Section } from "@/components/layout/Section";
+// import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
-import { Card } from "@/components/ui/Card";
-import { Accordion } from "@/components/ui/Accordion";
-import { Reveal } from "@/components/motion/Reveal";
-import { Stagger } from "@/components/motion/Stagger";
-import { CtaBand } from "@/modules/home/sections/CtaBand";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { dscProducts as dscProductNav, dscDocumentsPage, dscDriversHub } from "@/content/nav";
-import { getDscProduct } from "@/content/dsc/products";
+import { ComingSoon } from "@/components/ui/ComingSoon";
+// import { Card } from "@/components/ui/Card";
+// import { Accordion } from "@/components/ui/Accordion";
+// import { Reveal } from "@/components/motion/Reveal";
+// import { Stagger } from "@/components/motion/Stagger";
+// import { CtaBand } from "@/modules/home/sections/CtaBand";
+// import { JsonLd } from "@/components/seo/JsonLd";
+// import { dscProducts as dscProductNav, dscDocumentsPage, dscDriversHub } from "@/content/nav";
+// import { getDscProduct } from "@/content/dsc/products";
 import { dscHubContent } from "@/content/dsc/hub-content";
-import { collectionPageJsonLd } from "@/lib/jsonld";
-import { cn } from "@/lib/cn";
+// import { collectionPageJsonLd } from "@/lib/jsonld";
+// import { cn } from "@/lib/cn";
 
 // T3 variant for /dsc — CONTENT-PLAN.md §4/§9. Separate from CategoryHub
 // (see that file's own comment) because /dsc's children are a mix of T4
@@ -23,9 +24,14 @@ import { cn } from "@/lib/cn";
 // (compact hero, count-aware bento grid, FAQ accordion, hairline why-us row,
 // CtaBand) deliberately matches CategoryHub so all 8 T3 hubs read as one
 // template family even though this one is its own component.
+//
+// ⚠️ 13-08-2026: client preview request (Clinton) — hero only, then
+// <ComingSoon /> instead of the rest of the body. Everything below is
+// commented out in place, not deleted — see ServiceLeaf.jsx's matching note.
 export default function DscHub({ path }) {
   return (
     <>
+      {/*
       <JsonLd
         data={collectionPageJsonLd({
           name: "Digital Signature Certificates",
@@ -33,6 +39,7 @@ export default function DscHub({ path }) {
           path,
         })}
       />
+      */}
 
       <PageHero
         path={path}
@@ -42,6 +49,9 @@ export default function DscHub({ path }) {
         cta={{ label: "Talk to an Expert", to: "/contact" }}
       />
 
+      <ComingSoon />
+
+      {/*
       <Section surface="light">
         <Container>
           <div className="max-w-[68ch] space-y-5 text-body-lg text-ink-500">
@@ -56,9 +66,6 @@ export default function DscHub({ path }) {
         <Container>
           <Eyebrow>Certificates &amp; tokens</Eyebrow>
           <h2 className="mt-3 text-h2 max-w-[32ch]">Choose the right certificate</h2>
-          {/* Count-aware bento grid, same rule CategoryHub uses for 4+
-              children (CONTENT-PLAN.md §8 row 3) — kept visually identical
-              across every T3 hub even though the data source differs here. */}
           <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {dscProductNav.map((product, index) => {
               const content = getDscProduct(product.slug);
@@ -165,6 +172,7 @@ export default function DscHub({ path }) {
       </Section>
 
       <CtaBand />
+      */}
     </>
   );
 }

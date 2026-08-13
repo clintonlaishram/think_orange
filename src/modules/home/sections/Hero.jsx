@@ -316,7 +316,7 @@ function HeroStats() {
               {/* h3 on phone, h2 from sm up. At h2 the word-value tiles wrap
                   mid-word in a 2-column 163px track ("Pan-" / "India"), which
                   reads as broken rather than large. */}
-              <dd className="text-h3 font-black tracking-[-0.02em] text-ember-400 sm:text-h2 line-clamp-1">
+              <dd className="text-h3 font-black tracking-[-0.02em] text-ember-400 sm:text-h2 truncate">
                 <StatValue value={stat.value} play={inView} index={index} />
               </dd>
             </div>

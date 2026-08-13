@@ -1,22 +1,24 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2, MessageCircle, Phone } from "lucide-react";
+import { ArrowRight, MessageCircle, Phone } from "lucide-react";
+// import { useEffect, useState } from "react";
+// import { CheckCircle2 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
 import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { ArcGlyph } from "@/components/ui/ArcGlyph";
-import { Accordion } from "@/components/ui/Accordion";
-import { Stagger } from "@/components/motion/Stagger";
-import { EnquiryCard } from "@/modules/services/EnquiryCard";
+import { ComingSoon } from "@/components/ui/ComingSoon";
+// import { ArcGlyph } from "@/components/ui/ArcGlyph";
+// import { Accordion } from "@/components/ui/Accordion";
+// import { Stagger } from "@/components/motion/Stagger";
+// import { EnquiryCard } from "@/modules/services/EnquiryCard";
 import { CtaBand } from "@/modules/home/sections/CtaBand";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { findRoute, findBySlug, serviceLeavesBySlug, site } from "@/content/nav";
+// import { JsonLd } from "@/components/seo/JsonLd";
+import { findRoute, serviceLeavesBySlug, site } from "@/content/nav";
 import { getServiceContent } from "@/content/services";
-import { serviceJsonLd, faqPageJsonLd } from "@/lib/jsonld";
-import { cn } from "@/lib/cn";
+// import { serviceJsonLd, faqPageJsonLd } from "@/lib/jsonld";
+// import { cn } from "@/lib/cn";
 
 // T2 — CONTENT-PLAN.md §7. The highest-traffic template on the site: 21
 // routes, one component, zero per-slug branching. Every leaf answers the
@@ -26,6 +28,13 @@ import { cn } from "@/lib/cn";
 // `path` is the only thing the router supplies (see router.jsx's
 // resolveComponent) — the slug is looked up from nav.js's route table so
 // this file never hardcodes a path, matching CLAUDE.md's nav.js discipline.
+//
+// ⚠️ 13-08-2026: client preview request (Clinton) — every route except Home
+// and `/about` shows its real hero, then <ComingSoon /> instead of the rest
+// of the body. All 9 body sections below are commented out in place, not
+// deleted, so uncommenting the main return's JSX restores the full T2
+// template exactly as Phase 6 built it. `SubNav`/`RelatedServices` and their
+// now-unused imports are commented out for the same reason.
 export default function ServiceLeaf({ path }) {
   const route = findRoute(path);
   const slug = route?.slug;
@@ -38,6 +47,7 @@ export default function ServiceLeaf({ path }) {
 
   return (
     <>
+      {/*
       <JsonLd
         data={serviceJsonLd({
           name: leaf.title,
@@ -46,6 +56,7 @@ export default function ServiceLeaf({ path }) {
           categoryLabel: category?.label,
         })}
       />
+      */}
 
       <PageHero
         path={path}
@@ -55,6 +66,9 @@ export default function ServiceLeaf({ path }) {
         cta={{ label: "Talk to an Expert", to: "/contact" }}
       />
 
+      <ComingSoon />
+
+      {/*
       <SubNav sections={SUBNAV_SECTIONS} />
 
       <Section surface="light">
@@ -69,9 +83,6 @@ export default function ServiceLeaf({ path }) {
               </div>
             </div>
             <div className="lg:col-span-4 lg:self-start">
-              {/* top-32 = header condensed (64px) + the sticky sub-nav bar
-                  (~64px) — keeps the card clear of both fixed elements above
-                  it rather than sliding underneath them. */}
               <div className="lg:sticky lg:top-32">
                 <EnquiryCard serviceLabel={leaf.title} />
               </div>
@@ -193,9 +204,6 @@ export default function ServiceLeaf({ path }) {
                     </td>
                   </tr>
                 ))}
-                {/* fees is ALWAYS null on every leaf (CLAUDE.md non-negotiable) —
-                    this row is the one place that fact renders, as a neutral
-                    "On request", never a number. */}
                 <tr className="bg-ink-50/60">
                   <td className="px-5 py-4 text-body-sm font-medium text-ink-600">
                     Professional fees
@@ -227,6 +235,7 @@ export default function ServiceLeaf({ path }) {
       </Section>
 
       <RelatedServices related={leaf.related} currentSlug={leaf.slug} />
+      */}
 
       <CtaBand />
     </>
@@ -235,14 +244,15 @@ export default function ServiceLeaf({ path }) {
 
 // Anchors to sections 4-9 of CONTENT-PLAN.md §7 (Overview, section 3, is not
 // anchored — it's the first thing under the hero, nothing to jump past).
-const SUBNAV_SECTIONS = [
-  { id: "who-needs-this", label: "Who needs this" },
-  { id: "whats-included", label: "What\u2019s included" },
-  { id: "documents-required", label: "Documents required" },
-  { id: "how-it-works", label: "How it works" },
-  { id: "timeline-fees", label: "Timeline & fees" },
-  { id: "faqs", label: "FAQs" },
-];
+// Commented out alongside SubNav below — see the 13-08-2026 note above.
+// const SUBNAV_SECTIONS = [
+//   { id: "who-needs-this", label: "Who needs this" },
+//   { id: "whats-included", label: "What’s included" },
+//   { id: "documents-required", label: "Documents required" },
+//   { id: "how-it-works", label: "How it works" },
+//   { id: "timeline-fees", label: "Timeline & fees" },
+//   { id: "faqs", label: "FAQs" },
+// ];
 
 /**
  * Sticky sub-nav with scroll-spy — CONTENT-PLAN.md §7 row 2. `top-16` (64px)
@@ -250,90 +260,93 @@ const SUBNAV_SECTIONS = [
  * ever becomes sticky after the compact hero has scrolled past, by which
  * point the page is already >80px scrolled and the header has condensed, so
  * the two edges always meet exactly with no gap or overlap.
+ *
+ * Commented out alongside the main body sections (13-08-2026) — nothing to
+ * spy on while ComingSoon replaces them.
  */
-function SubNav({ sections }) {
-  const [activeId, setActiveId] = useState(sections[0]?.id ?? null);
+// function SubNav({ sections }) {
+//   const [activeId, setActiveId] = useState(sections[0]?.id ?? null);
+//
+//   useEffect(() => {
+//     const elements = sections.map(({ id }) => document.getElementById(id)).filter(Boolean);
+//     if (elements.length === 0) return undefined;
+//
+//     const observer = new IntersectionObserver(
+//       (entries) => {
+//         const firstVisible = entries.find((entry) => entry.isIntersecting);
+//         if (firstVisible) setActiveId(firstVisible.target.id);
+//       },
+//       { rootMargin: "-30% 0px -55% 0px", threshold: 0 }
+//     );
+//
+//     elements.forEach((element) => observer.observe(element));
+//     return () => observer.disconnect();
+//   }, [sections]);
+//
+//   return (
+//     <div
+//       data-surface="light"
+//       className="sticky top-16 z-30 border-b border-ink-100 bg-canvas"
+//     >
+//       <Container>
+//         <nav aria-label="On this page" className="flex gap-1 overflow-x-auto py-3">
+//           {sections.map(({ id, label }) => (
+//             <a
+//               key={id}
+//               href={`#${id}`}
+//               className={cn(
+//                 "shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-body-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2",
+//                 activeId === id ? "bg-ember-50 text-ember-700" : "text-ink-500 hover:text-ink-700"
+//               )}
+//             >
+//               {label}
+//             </a>
+//           ))}
+//         </nav>
+//       </Container>
+//     </div>
+//   );
+// }
 
-  useEffect(() => {
-    const elements = sections.map(({ id }) => document.getElementById(id)).filter(Boolean);
-    if (elements.length === 0) return undefined;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const firstVisible = entries.find((entry) => entry.isIntersecting);
-        if (firstVisible) setActiveId(firstVisible.target.id);
-      },
-      { rootMargin: "-30% 0px -55% 0px", threshold: 0 }
-    );
-
-    elements.forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
-  }, [sections]);
-
-  return (
-    <div
-      data-surface="light"
-      className="sticky top-16 z-30 border-b border-ink-100 bg-canvas"
-    >
-      <Container>
-        <nav aria-label="On this page" className="flex gap-1 overflow-x-auto py-3">
-          {sections.map(({ id, label }) => (
-            <a
-              key={id}
-              href={`#${id}`}
-              className={cn(
-                "shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-body-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2",
-                activeId === id ? "bg-ember-50 text-ember-700" : "text-ink-500 hover:text-ink-700"
-              )}
-            >
-              {label}
-            </a>
-          ))}
-        </nav>
-      </Container>
-    </div>
-  );
-}
-
-function RelatedServices({ related, currentSlug }) {
-  const items = (related ?? [])
-    .map((relatedSlug) => findBySlug(relatedSlug))
-    .filter((item) => item && item.slug !== currentSlug);
-
-  if (items.length === 0) return null;
-
-  return (
-    <Section surface="light">
-      <Container>
-        <Eyebrow>Related services</Eyebrow>
-        <h2 className="mt-3 text-h2 max-w-[32ch]">You might also need</h2>
-        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
-          {items.map((item) => {
-            const relatedContent = getServiceContent(item.slug);
-            return (
-              <Link
-                key={item.slug}
-                to={item.path}
-                className="block h-full rounded-[var(--radius-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2"
-              >
-                <Card surface="light" className="h-full">
-                  <h3 className="text-h4 text-ink-600">{item.label}</h3>
-                  {relatedContent?.lede && (
-                    <p className="mt-2 text-body-sm text-ink-500">{relatedContent.lede}</p>
-                  )}
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-body-sm font-medium text-ember-600">
-                    Read more
-                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                  </span>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
-      </Container>
-    </Section>
-  );
-}
+// function RelatedServices({ related, currentSlug }) {
+//   const items = (related ?? [])
+//     .map((relatedSlug) => findBySlug(relatedSlug))
+//     .filter((item) => item && item.slug !== currentSlug);
+//
+//   if (items.length === 0) return null;
+//
+//   return (
+//     <Section surface="light">
+//       <Container>
+//         <Eyebrow>Related services</Eyebrow>
+//         <h2 className="mt-3 text-h2 max-w-[32ch]">You might also need</h2>
+//         <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
+//           {items.map((item) => {
+//             const relatedContent = getServiceContent(item.slug);
+//             return (
+//               <Link
+//                 key={item.slug}
+//                 to={item.path}
+//                 className="block h-full rounded-[var(--radius-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2"
+//               >
+//                 <Card surface="light" className="h-full">
+//                   <h3 className="text-h4 text-ink-600">{item.label}</h3>
+//                   {relatedContent?.lede && (
+//                     <p className="mt-2 text-body-sm text-ink-500">{relatedContent.lede}</p>
+//                   )}
+//                   <span className="mt-4 inline-flex items-center gap-1.5 text-body-sm font-medium text-ember-600">
+//                     Read more
+//                     <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+//                   </span>
+//                 </Card>
+//               </Link>
+//             );
+//           })}
+//         </div>
+//       </Container>
+//     </Section>
+//   );
+// }
 
 /**
  * Graceful fallback for the 4 leaves with no content file yet (itr-filing,
@@ -341,6 +354,11 @@ function RelatedServices({ related, currentSlug }) {
  * BLOCKERS.md §1). Renders only what's genuinely known: the nav label and
  * breadcrumb, plus a direct route to a human and, where possible, sibling
  * services in the same category that ARE written — nothing invented.
+ *
+ * Left as its own hand-rolled coming-soon body (not swapped for the shared
+ * <ComingSoon />) — this one already IS a real hero+coming-soon page and
+ * additionally links out to written sibling leaves, which the generic
+ * component doesn't do.
  */
 function PendingLeaf({ path, label, category }) {
   const writtenSiblings = (category?.children ?? []).filter((child) =>

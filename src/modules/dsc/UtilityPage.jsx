@@ -1,18 +1,21 @@
-import { Link } from "react-router-dom";
-import { Download, MessageCircle, ArrowRight } from "lucide-react";
-import { Container } from "@/components/layout/Container";
-import { Section } from "@/components/layout/Section";
-import { Eyebrow } from "@/components/layout/Eyebrow";
+// import { Link } from "react-router-dom";
+import { Download } from "lucide-react";
+// import { MessageCircle, ArrowRight } from "lucide-react";
+// import { Container } from "@/components/layout/Container";
+// import { Section } from "@/components/layout/Section";
+// import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Accordion } from "@/components/ui/Accordion";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { findRoute, findBySlug, dscDocumentsPage, dscDriversHub, site } from "@/content/nav";
+// import { Card } from "@/components/ui/Card";
+// import { Accordion } from "@/components/ui/Accordion";
+import { ComingSoon } from "@/components/ui/ComingSoon";
+// import { JsonLd } from "@/components/seo/JsonLd";
+import { findRoute, dscDriversHub, dscDocumentsPage } from "@/content/nav";
+// import { findBySlug, site } from "@/content/nav";
 import { getDriver } from "@/content/dsc/drivers";
-import { dscProducts } from "@/content/dsc/products";
-import { t } from "@/content/turnaround";
-import { howToJsonLd } from "@/lib/jsonld";
+// import { dscProducts } from "@/content/dsc/products";
+// import { t } from "@/content/turnaround";
+// import { howToJsonLd } from "@/lib/jsonld";
 
 // T5 — CONTENT-PLAN.md §9, §11.9; DESIGN.md §2.4. Covers 6 routes across
 // three genuinely different content shapes sharing one speed-first grammar:
@@ -22,11 +25,11 @@ import { howToJsonLd } from "@/lib/jsonld";
 // COLLECTION the slug resolves against, never by a specific slug string —
 // same discipline as ServiceLeaf's PendingLeaf branch in T2.
 //
-// Deliberately NO Reveal/Stagger anywhere in this file. CONTENT-PLAN.md §9's
-// LCP < 1.2s target and "no marketing chrome" brief both point the same
-// way — every animation this file would otherwise use is scroll-triggered
-// motion whose whole cost buys nothing on a page whose entire job is "get
-// out of the way".
+// ⚠️ 13-08-2026: client preview request (Clinton) — each of the 3 branches
+// below now renders its hero (with the real download buttons on a driver
+// page, since those live inside PageHero itself), then <ComingSoon />
+// instead of the rest of the body. Everything else is commented out in
+// place, not deleted — see ServiceLeaf.jsx's matching note.
 export default function UtilityPage({ path }) {
   const route = findRoute(path);
   const slug = route?.slug;
@@ -51,6 +54,9 @@ function DriverHub({ path }) {
         lede="Install the right driver for your USB token before signing on any government portal. Pick your token model below."
       />
 
+      <ComingSoon />
+
+      {/*
       <Section surface="light">
         <Container>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -83,6 +89,7 @@ function DriverHub({ path }) {
       </Section>
 
       <DscEnquiryStrip />
+      */}
     </>
   );
 }
@@ -90,6 +97,7 @@ function DriverHub({ path }) {
 function DriverDetail({ path, driver }) {
   return (
     <>
+      {/*
       <JsonLd
         data={howToJsonLd({
           name: `How to install the ${driver.label} driver`,
@@ -98,6 +106,7 @@ function DriverDetail({ path, driver }) {
           path,
         })}
       />
+      */}
 
       <PageHero path={path} eyebrow="Token Driver Downloads" h1={driver.h1} lede={driver.lede}>
         <div className="flex flex-wrap gap-3">
@@ -121,6 +130,9 @@ function DriverDetail({ path, driver }) {
         </div>
       </PageHero>
 
+      <ComingSoon />
+
+      {/*
       <Section id="compatibility" surface="light">
         <Container>
           <Eyebrow>Compatibility</Eyebrow>
@@ -211,6 +223,7 @@ function DriverDetail({ path, driver }) {
       </Section>
 
       <DscEnquiryStrip />
+      */}
     </>
   );
 }
@@ -225,6 +238,9 @@ function DocumentsRequired({ path }) {
         lede="What to have ready before you apply, grouped by certificate type — the same lists shown on each certificate's own page."
       />
 
+      <ComingSoon />
+
+      {/*
       <Section surface="light">
         <Container>
           <div className="space-y-12">
@@ -269,6 +285,7 @@ function DocumentsRequired({ path }) {
       </Section>
 
       <DscEnquiryStrip />
+      */}
     </>
   );
 }
@@ -280,52 +297,48 @@ function DocumentsRequired({ path }) {
  * ember surface here would spend that full-orange moment on six pages
  * instead of the one place DESIGN.md §11.11 reserves it for.
  *
- * NOTE: the source copy for this card in CONTENT-PLAN.md/DESIGN.md reads
- * "we issue Class 3 certificates in 24 hours" — that clause is dropped here.
- * It's an uncomfirmed turnaround guarantee (CLAUDE.md non-negotiables list),
- * so it goes through `t("dscIssuanceTurnaround")` like every other
- * ThinkOrange commitment, rendering "Confirm with us" until Clinton signs
- * off a real number rather than shipping the spec's example figure as fact.
+ * Commented out alongside the rest of this file's body sections (13-08-2026)
+ * — <ComingSoon /> is the one commercial mechanism shown for now.
  */
-function DscEnquiryStrip() {
-  const whatsappHref = `${site.whatsappHref}?text=${encodeURIComponent(
-    "Hi ThinkOrange, I'd like to enquire about a new DSC."
-  )}`;
+// function DscEnquiryStrip() {
+//   const whatsappHref = `${site.whatsappHref}?text=${encodeURIComponent(
+//     "Hi ThinkOrange, I'd like to enquire about a new DSC."
+//   )}`;
+//
+//   return (
+//     <Section surface="light">
+//       <Container>
+//         <div className="flex flex-col items-start gap-4 rounded-[var(--radius-md)] border border-ember-200 bg-ember-50 p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
+//           <div>
+//             <h2 className="text-h4 text-ink-600">Need a new DSC?</h2>
+//             <p className="mt-1.5 max-w-[52ch] text-body-sm text-ink-500">
+//               We issue Class 3 certificates for individuals and organisations, and DGFT
+//               certificates for import-export.
+//             </p>
+//             <p className="mt-1.5 font-mono text-body-sm text-ember-700">
+//               Turnaround: {t("dscIssuanceTurnaround")}
+//             </p>
+//           </div>
+//           <Button
+//             as="a"
+//             href={whatsappHref}
+//             target="_blank"
+//             rel="noreferrer noopener"
+//             variant="secondary"
+//             className="shrink-0"
+//           >
+//             <MessageCircle className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+//             Enquire
+//           </Button>
+//         </div>
+//       </Container>
+//     </Section>
+//   );
+// }
 
-  return (
-    <Section surface="light">
-      <Container>
-        <div className="flex flex-col items-start gap-4 rounded-[var(--radius-md)] border border-ember-200 bg-ember-50 p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
-          <div>
-            <h2 className="text-h4 text-ink-600">Need a new DSC?</h2>
-            <p className="mt-1.5 max-w-[52ch] text-body-sm text-ink-500">
-              We issue Class 3 certificates for individuals and organisations, and DGFT
-              certificates for import-export.
-            </p>
-            <p className="mt-1.5 font-mono text-body-sm text-ember-700">
-              Turnaround: {t("dscIssuanceTurnaround")}
-            </p>
-          </div>
-          <Button
-            as="a"
-            href={whatsappHref}
-            target="_blank"
-            rel="noreferrer noopener"
-            variant="secondary"
-            className="shrink-0"
-          >
-            <MessageCircle className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-            Enquire
-          </Button>
-        </div>
-      </Container>
-    </Section>
-  );
-}
-
-function versionsFor(platform, supportedOs) {
-  const match = (supportedOs ?? []).find((entry) =>
-    platform.toLowerCase().startsWith(entry.os.toLowerCase())
-  );
-  return match?.versions ?? "—";
-}
+// function versionsFor(platform, supportedOs) {
+//   const match = (supportedOs ?? []).find((entry) =>
+//     platform.toLowerCase().startsWith(entry.os.toLowerCase())
+//   );
+//   return match?.versions ?? "—";
+// }

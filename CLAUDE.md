@@ -1525,6 +1525,90 @@ detector traps under §16 are recorded precisely so a rewrite does not repeat th
 Re-verifying the launch blockers below needs only `npm run content:check` plus one
 Lighthouse median run.
 
+## Client preview mode: hero + Coming Soon everywhere except Home/About — 13-08-2026
+NOT a phase. Standalone, reversible request (Clinton): for a client preview, only
+`/` (Home) and `/about` show their real, full pages. Every other route — all 21
+service leaves, all 6 category hubs + `/services`, `/dsc` + its 4 products + its 6
+utility pages, `/partner-with-us`, `/contact`, and all 5 legal pages — renders its
+real `PageHero` (breadcrumb, H1, lede, and any hero-embedded CTA like a DSC
+product's WhatsApp button or a driver page's download buttons), then the new
+shared `<ComingSoon />` component instead of the rest of the body.
+
+- **`src/components/ui/ComingSoon.jsx` (new)** — a small, self-contained Section
+  (Eyebrow + heading + message + phone/WhatsApp buttons via `site`), styled like
+  the honesty-first "still being written" patterns this codebase already had
+  (`ServiceLeaf`'s `PendingLeaf`, `LegalPage`'s old `PendingLegal`). Reused as-is
+  across every affected template rather than forked per template.
+- **Every affected file's original body is commented out in place, not deleted**
+  — same discipline as the DarkVeil hero swap's L2/L4 removal. Uncomment the
+  return's JSX (and the matching imports at the top of each file) to restore the
+  real page instantly. Touched: `ServiceLeaf.jsx`, `CategoryHub.jsx`,
+  `ServicesHub.jsx`, `DscHub.jsx`, `DscProduct.jsx`, `UtilityPage.jsx`,
+  `partner-with-us/index.jsx`, `contact/index.jsx`, `legal/LegalPage.jsx`.
+  `Home` (T1) and `About` (T6's `/about` branch) are untouched.
+- **Per-route JSON-LD is commented out alongside its section** on every one of
+  these routes (Service/CollectionPage/Product/FAQPage/HowTo schema) — structured
+  data shouldn't assert content that isn't actually visible on the page.
+- **`ServiceLeaf`'s `PendingLeaf` (the 4 BLOCKERS.md-blocked leaves) and its
+  `SubNav`/`RelatedServices` helpers were left alone**, not swapped onto the new
+  component — `PendingLeaf` already was a real hero+coming-soon page, and it does
+  one thing `<ComingSoon />` doesn't: link to written sibling leaves.
+- **`LegalPage.jsx` now shows `<ComingSoon />` unconditionally**, even once a
+  policy's `sections` are eventually filled in — the old branch on `page.sections`
+  and the real section/TOC renderer are commented out, not removed, so this
+  reverts the moment real, CA-reviewed legal copy is ready to publish for real.
+- **`UtilityPage.jsx`'s `dscDocumentsPage` dispatch stays live** (its
+  `DocumentsRequired` branch renders hero + `<ComingSoon />`, not `null`) — the
+  route still exists in `nav.js` and must not render a blank page.
+- Verified: `npm run lint` (0 errors), `npm run build` + `postbuild` prerender
+  (48 routes + 404 + sitemap, unchanged counts), and a browser pass across one
+  route per affected template family plus Home and About — hero renders with its
+  real copy, `<ComingSoon />` renders directly below it, phone/WhatsApp buttons
+  work, zero console errors.
+- **To fully restore the site**: uncomment the JSX/imports in the 9 files above
+  (search each for the 13-08-2026 note) and remove the `<ComingSoon />` line each
+  one added.
+
+## Bug fix: mobile nav overlay broke once the header had scrolled — 13-08-2026
+Real bug (Clinton, tested on a phone): the hamburger menu displayed correctly
+when opened from the very top of a page, but opened broken/mispositioned once
+the page had been scrolled even a little first.
+
+- **Root cause**: `Header.jsx` adds `backdrop-blur-[16px]` (a `backdrop-filter`)
+  to `<header>` once `useScrolled(80)` flips true. Per spec, a non-`none`
+  `backdrop-filter` makes an element a new containing block for its
+  `position: fixed` descendants — same rule as `transform`/`filter`.
+  `MobileNav`'s backdrop (`fixed inset-0`) and sliding panel
+  (`fixed inset-y-0 right-0`) were rendered as DOM descendants of `<header>`,
+  so the instant the header picked up that blur, both stopped resolving their
+  "fixed" position against the real viewport and instead resolved against
+  `<header>`'s own ~64px-tall box. Unscrolled (header transparent, no blur) it
+  looked fine; scrolled, it didn't — exactly Clinton's repro.
+- **Fix**: `src/components/navbar/MobileNav.jsx` now renders the backdrop +
+  panel through `createPortal(..., document.body)`, so they're never a
+  descendant of `<header>` and can't be hijacked by its filter state
+  regardless of scroll position. The trigger button stays inline (unaffected,
+  it isn't `fixed`).
+- **`canPortal = typeof document !== "undefined"` guards the portal call** —
+  `document` doesn't exist during Phase 9's Node SSR prerender pass, and
+  calling `createPortal` unconditionally crashed `scripts/prerender.mjs` with
+  `ReferenceError: document is not defined`. Not React state (no
+  `useState`/`useEffect` needed): the answer can't change within one
+  environment's lifetime, and an effect that calls `setState` synchronously on
+  mount just to flip this is exactly what `react-hooks/set-state-in-effect`
+  flags — first attempt at this fix did that and had to be corrected.
+- Verified: `npm run lint` (0 errors), `npm run build` + prerender (48 routes
+  unchanged), and — since headless viewport emulation in this session's
+  browser tool measures `getBoundingClientRect()` inconsistently against
+  `getComputedStyle()` for fixed-position elements (a tooling artifact, not a
+  page bug: `window.innerWidth` itself never matched the requested
+  375px-wide viewport in this pane) — verification used
+  `getComputedStyle(panel)` instead of the rect, simulating the scrolled
+  header state via a direct `window.scrollY` override + dispatched `scroll`
+  event. Confirmed `right: 0px` / `left: 33px` (= viewport width − panel
+  width) resolve correctly post-fix in the simulated-scrolled state, where
+  pre-fix the panel was provably boxed into the header instead.
+
 ## Session discipline
 - One phase per session. Start fresh between phases — see BUILD-PLAN.md §5.
 - Load only the plan sections a phase actually needs, not the whole document.

@@ -1,18 +1,21 @@
-import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2, MessageCircle } from "lucide-react";
-import { Container } from "@/components/layout/Container";
-import { Section } from "@/components/layout/Section";
-import { Eyebrow } from "@/components/layout/Eyebrow";
+// import { Link } from "react-router-dom";
+import { MessageCircle } from "lucide-react";
+// import { ArrowRight, CheckCircle2 } from "lucide-react";
+// import { Container } from "@/components/layout/Container";
+// import { Section } from "@/components/layout/Section";
+// import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
-import { Card } from "@/components/ui/Card";
+// import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Accordion } from "@/components/ui/Accordion";
-import { Stagger } from "@/components/motion/Stagger";
-import { CtaBand } from "@/modules/home/sections/CtaBand";
-import { JsonLd } from "@/components/seo/JsonLd";
-import { findRoute, findBySlug, site } from "@/content/nav";
+import { ComingSoon } from "@/components/ui/ComingSoon";
+// import { Accordion } from "@/components/ui/Accordion";
+// import { Stagger } from "@/components/motion/Stagger";
+// import { CtaBand } from "@/modules/home/sections/CtaBand";
+// import { JsonLd } from "@/components/seo/JsonLd";
+import { findRoute, site } from "@/content/nav";
+// import { findBySlug } from "@/content/nav";
 import { getDscProduct } from "@/content/dsc/products";
-import { productJsonLd, faqPageJsonLd } from "@/lib/jsonld";
+// import { productJsonLd, faqPageJsonLd } from "@/lib/jsonld";
 
 // T4 — CONTENT-PLAN.md §9. 4 routes, one component, zero per-slug branching —
 // same discipline as T2's ServiceLeaf. "Closer to a product page than a
@@ -23,6 +26,11 @@ import { productJsonLd, faqPageJsonLd } from "@/lib/jsonld";
 // Authority note (CONTENT-PLAN.md §9): every DSC page leads with the
 // eMudhra/SignX partnership — it's the strongest verifiable credential and
 // answers the buyer's real question, "is this certificate genuine?"
+//
+// ⚠️ 13-08-2026: client preview request (Clinton) — hero (incl. its WhatsApp
+// CTA + validity note) only, then <ComingSoon /> instead of the rest of the
+// body. Everything below is commented out in place, not deleted — see
+// ServiceLeaf.jsx's matching note.
 export default function DscProduct({ path }) {
   const route = findRoute(path);
   const slug = route?.slug;
@@ -34,6 +42,7 @@ export default function DscProduct({ path }) {
 
   return (
     <>
+      {/*
       <JsonLd
         data={productJsonLd({
           name: product.label,
@@ -41,6 +50,7 @@ export default function DscProduct({ path }) {
           path,
         })}
       />
+      */}
 
       <PageHero
         path={path}
@@ -61,9 +71,12 @@ export default function DscProduct({ path }) {
         </div>
       </PageHero>
 
+      <ComingSoon />
+
+      {/*
       <Section surface="light">
         <Container>
-          <Eyebrow>What it&rsquo;s used for</Eyebrow>
+          <Eyebrow>What&rsquo;s used for</Eyebrow>
           <h2 className="mt-3 text-h2 max-w-[32ch]">Where you&rsquo;ll actually use it</h2>
           <Stagger className="mt-8 grid grid-cols-1 gap-x-10 gap-y-4 md:grid-cols-2">
             {product.usedFor.map((point, index) => (
@@ -176,6 +189,7 @@ export default function DscProduct({ path }) {
       )}
 
       <CtaBand />
+      */}
     </>
   );
 }
@@ -185,32 +199,32 @@ function buildWhatsappHref(productLabel) {
   return `${site.whatsappHref}?text=${encodeURIComponent(text)}`;
 }
 
-function DriverSupport({ driverSlugs }) {
-  const drivers = (driverSlugs ?? []).map((slug) => findBySlug(slug)).filter(Boolean);
-  if (drivers.length === 0) return null;
-
-  return (
-    <Section surface="light-alt">
-      <Container>
-        <Eyebrow>Driver support</Eyebrow>
-        <h2 className="mt-3 text-h2 max-w-[32ch]">Get your token working</h2>
-        <p className="mt-4 max-w-[68ch] text-body text-ink-500">
-          Every certificate ships on a USB token, which needs its own driver installed before
-          your browser or portal can see it.
-        </p>
-        <Stagger className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {drivers.map((driver) => (
-            <Link
-              key={driver.slug}
-              to={driver.path}
-              className="flex min-h-12 items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-ink-100 bg-white px-4 py-3 text-body-sm font-medium text-ink-600 transition-colors hover:border-ember-200 hover:text-ember-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
-            >
-              {driver.label}
-              <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            </Link>
-          ))}
-        </Stagger>
-      </Container>
-    </Section>
-  );
-}
+// function DriverSupport({ driverSlugs }) {
+//   const drivers = (driverSlugs ?? []).map((slug) => findBySlug(slug)).filter(Boolean);
+//   if (drivers.length === 0) return null;
+//
+//   return (
+//     <Section surface="light-alt">
+//       <Container>
+//         <Eyebrow>Driver support</Eyebrow>
+//         <h2 className="mt-3 text-h2 max-w-[32ch]">Get your token working</h2>
+//         <p className="mt-4 max-w-[68ch] text-body text-ink-500">
+//           Every certificate ships on a USB token, which needs its own driver installed before
+//           your browser or portal can see it.
+//         </p>
+//         <Stagger className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+//           {drivers.map((driver) => (
+//             <Link
+//               key={driver.slug}
+//               to={driver.path}
+//               className="flex min-h-12 items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-ink-100 bg-white px-4 py-3 text-body-sm font-medium text-ink-600 transition-colors hover:border-ember-200 hover:text-ember-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
+//             >
+//               {driver.label}
+//               <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+//             </Link>
+//           ))}
+//         </Stagger>
+//       </Container>
+//     </Section>
+//   );
+// }
