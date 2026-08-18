@@ -1,21 +1,30 @@
-// import { Link } from "react-router-dom";
-import { Download } from "lucide-react";
-// import { MessageCircle, ArrowRight } from "lucide-react";
-// import { Container } from "@/components/layout/Container";
-// import { Section } from "@/components/layout/Section";
-// import { Eyebrow } from "@/components/layout/Eyebrow";
+import { Link } from "react-router-dom";
+import { Download, MessageCircle, ArrowRight, Phone } from "lucide-react";
+import { Container } from "@/components/layout/Container";
+import { Section } from "@/components/layout/Section";
+import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
 import { Button } from "@/components/ui/Button";
-// import { Card } from "@/components/ui/Card";
-// import { Accordion } from "@/components/ui/Accordion";
-import { ComingSoon } from "@/components/ui/ComingSoon";
-// import { JsonLd } from "@/components/seo/JsonLd";
-import { findRoute, dscDriversHub, dscDocumentsPage } from "@/content/nav";
-// import { findBySlug, site } from "@/content/nav";
+import { Card } from "@/components/ui/Card";
+import { FaqSection } from "@/components/ui/FaqSection";
+import { SubNav } from "@/components/layout/SubNav";
+import { StepFlow } from "@/components/ui/StepFlow";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  findRoute,
+  findBySlug,
+  dscDocumentsPage,
+  dscDriversHub,
+  dscValidityFaqsPage,
+  dscEsignVsDscPage,
+  site,
+} from "@/content/nav";
 import { getDriver } from "@/content/dsc/drivers";
-// import { dscProducts } from "@/content/dsc/products";
-// import { t } from "@/content/turnaround";
-// import { howToJsonLd } from "@/lib/jsonld";
+import { dscProducts } from "@/content/dsc/products";
+import { dscValidityRenewalContent } from "@/content/dsc/validity-renewal-faqs";
+import { esignOrDscContent } from "@/content/dsc/esign-or-dsc";
+import { t } from "@/content/turnaround";
+import { howToJsonLd, faqPageJsonLd } from "@/lib/jsonld";
 
 // T5 — CONTENT-PLAN.md §9, §11.9; DESIGN.md §2.4. Covers 6 routes across
 // three genuinely different content shapes sharing one speed-first grammar:
@@ -25,11 +34,11 @@ import { getDriver } from "@/content/dsc/drivers";
 // COLLECTION the slug resolves against, never by a specific slug string —
 // same discipline as ServiceLeaf's PendingLeaf branch in T2.
 //
-// ⚠️ 13-08-2026: client preview request (Clinton) — each of the 3 branches
-// below now renders its hero (with the real download buttons on a driver
-// page, since those live inside PageHero itself), then <ComingSoon />
-// instead of the rest of the body. Everything else is commented out in
-// place, not deleted — see ServiceLeaf.jsx's matching note.
+// Deliberately NO Reveal/Stagger anywhere in this file. CONTENT-PLAN.md §9's
+// LCP < 1.2s target and "no marketing chrome" brief both point the same
+// way — every animation this file would otherwise use is scroll-triggered
+// motion whose whole cost buys nothing on a page whose entire job is "get
+// out of the way".
 export default function UtilityPage({ path }) {
   const route = findRoute(path);
   const slug = route?.slug;
@@ -41,7 +50,16 @@ export default function UtilityPage({ path }) {
 
   if (slug === dscDocumentsPage.slug) return <DocumentsRequired path={path} />;
 
-  return null;
+  // 18-08-2026: both written — see MISSING-PAGES.md. Each is its own content
+  // shape (neither is "a list of products" or "a single driver"), so each
+  // gets its own dispatch check and render function, same pattern as the
+  // three shapes above.
+  if (slug === dscValidityFaqsPage.slug) return <ValidityRenewalFaqs path={path} />;
+  if (slug === dscEsignVsDscPage.slug) return <EsignOrDsc path={path} />;
+
+  // Fallback for any future T5 slug added to nav.js with no content shape
+  // written yet. Same discipline as ServiceLeaf's PendingLeaf.
+  return <PendingUtility path={path} label={route?.label} />;
 }
 
 function DriverHub({ path }) {
@@ -54,9 +72,6 @@ function DriverHub({ path }) {
         lede="Install the right driver for your USB token before signing on any government portal. Pick your token model below."
       />
 
-      <ComingSoon />
-
-      {/*
       <Section surface="light">
         <Container>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -89,7 +104,6 @@ function DriverHub({ path }) {
       </Section>
 
       <DscEnquiryStrip />
-      */}
     </>
   );
 }
@@ -97,7 +111,6 @@ function DriverHub({ path }) {
 function DriverDetail({ path, driver }) {
   return (
     <>
-      {/*
       <JsonLd
         data={howToJsonLd({
           name: `How to install the ${driver.label} driver`,
@@ -106,7 +119,6 @@ function DriverDetail({ path, driver }) {
           path,
         })}
       />
-      */}
 
       <PageHero path={path} eyebrow="Token Driver Downloads" h1={driver.h1} lede={driver.lede}>
         <div className="flex flex-wrap gap-3">
@@ -130,9 +142,20 @@ function DriverDetail({ path, driver }) {
         </div>
       </PageHero>
 
-      <ComingSoon />
+      {/* T5's brief (CONTENT-PLAN.md §9) is "no marketing chrome" — a sub-nav
+          is navigation, not chrome, and on a driver page it is the fastest
+          route to the one section a stuck user actually wants. Built from
+          what renders: `troubleshooting` is optional on a driver. */}
+      <SubNav
+        sections={[
+          { id: "compatibility", label: "Compatibility" },
+          { id: "installation", label: "Installation" },
+          ...(driver.troubleshooting?.length > 0
+            ? [{ id: "troubleshooting", label: "Troubleshooting" }]
+            : []),
+        ]}
+      />
 
-      {/*
       <Section id="compatibility" surface="light">
         <Container>
           <Eyebrow>Compatibility</Eyebrow>
@@ -186,44 +209,33 @@ function DriverDetail({ path, driver }) {
       </Section>
 
       <Section id="installation" surface="light-alt">
-        <Container>
-          <Eyebrow>Installation</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[32ch]">
-            {driver.installSteps.length} steps to get it working
-          </h2>
-          <ol className="mt-8 max-w-[68ch] space-y-6">
-            {driver.installSteps.map((step) => (
-              <li key={step.step} className="flex gap-4">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-ember-400 bg-white font-mono text-body-sm text-ember-600">
-                  {step.step}
-                </span>
-                <div>
-                  <h3 className="text-h4 text-ink-600">{step.title}</h3>
-                  <p className="mt-1.5 text-body-sm text-ink-500">{step.desc}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </Container>
+        {/* T5's "no marketing chrome" brief (CONTENT-PLAN.md §9) rules out
+            scroll REVEALS here, and this is not one: nothing is hidden, every
+            step is legible from the moment it renders, and the line only tracks
+            where the reader already is. */}
+        <StepFlow
+          eyebrow="Installation"
+          heading={`${driver.installSteps.length} steps to get it working`}
+          surface="light"
+          steps={driver.installSteps}
+        />
       </Section>
 
       <Section id="troubleshooting" surface="light">
-        <Container>
-          <Eyebrow>Troubleshooting</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[32ch]">If the token isn&rsquo;t working</h2>
-          <Accordion
-            className="mt-8 max-w-[76ch]"
-            items={driver.troubleshooting.map((item, index) => ({
-              id: index,
-              question: item.issue,
-              answer: item.fix,
-            }))}
-          />
-        </Container>
+        <FaqSection
+          eyebrow="Troubleshooting"
+          heading="If the token isn&rsquo;t working"
+          intro="The failures we see most often, and what actually fixes them. Still stuck after these, send us a screenshot."
+          askLabel="Send us a screenshot"
+          items={driver.troubleshooting.map((item, index) => ({
+            id: index,
+            question: item.issue,
+            answer: item.fix,
+          }))}
+        />
       </Section>
 
       <DscEnquiryStrip />
-      */}
     </>
   );
 }
@@ -238,9 +250,6 @@ function DocumentsRequired({ path }) {
         lede="What to have ready before you apply, grouped by certificate type — the same lists shown on each certificate's own page."
       />
 
-      <ComingSoon />
-
-      {/*
       <Section surface="light">
         <Container>
           <div className="space-y-12">
@@ -285,7 +294,261 @@ function DocumentsRequired({ path }) {
       </Section>
 
       <DscEnquiryStrip />
-      */}
+    </>
+  );
+}
+
+function ValidityRenewalFaqs({ path }) {
+  const renewalReissueRoute = findBySlug("dsc-renewal-reissue");
+  const withValidity = dscProducts.filter((product) => product.validityOptions);
+
+  return (
+    <>
+      <PageHero
+        path={path}
+        eyebrow="Digital Signature Certificates"
+        h1={dscValidityFaqsPage.label}
+        lede={dscValidityRenewalContent.heroLede}
+      />
+
+      <SubNav
+        sections={[
+          { id: "validity", label: "Validity by certificate" },
+          { id: "renewal", label: "Renewal & re-issue" },
+          { id: "faqs", label: "FAQs" },
+        ]}
+      />
+
+      <Section id="validity" surface="light">
+        <Container>
+          <Eyebrow>Validity by certificate</Eyebrow>
+          <h2 className="mt-3 text-h2 max-w-[32ch]">How long each certificate lasts</h2>
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {withValidity.map((product) => {
+              const navEntry = findBySlug(product.slug);
+              return (
+                <div
+                  key={product.slug}
+                  className="rounded-[var(--radius-md)] border border-ink-100 bg-white p-5"
+                >
+                  <h3 className="text-h4 text-ink-600">
+                    {navEntry ? (
+                      <Link
+                        to={navEntry.path}
+                        className="rounded-sm transition-colors hover:text-ember-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2"
+                      >
+                        {product.label}
+                      </Link>
+                    ) : (
+                      product.label
+                    )}
+                  </h3>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {product.validityOptions.map((option) => (
+                      <span
+                        key={option}
+                        className="rounded-full border border-ink-100 bg-ink-50 px-3.5 py-1.5 font-mono text-body-sm text-ink-600"
+                      >
+                        {option}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Container>
+      </Section>
+
+      <Section id="renewal" surface="light-alt">
+        <Container>
+          <Eyebrow>Renewal, re-issue &amp; revocation</Eyebrow>
+          <h2 className="mt-3 text-h2 max-w-[32ch]">What actually happens, and when</h2>
+          <div className="mt-6 max-w-[68ch] space-y-4">
+            {dscValidityRenewalContent.renewalGuidance.map((paragraph, index) => (
+              <p key={index} className="text-body text-ink-500">
+                {paragraph}
+              </p>
+            ))}
+            {renewalReissueRoute && (
+              <p className="text-body text-ink-500">
+                Ready to renew or re-issue a certificate?{" "}
+                <Link
+                  to={renewalReissueRoute.path}
+                  className="font-medium text-ember-600 hover:underline underline-offset-4"
+                >
+                  See Renewal &amp; Re-issue
+                </Link>{" "}
+                for the process and documents needed.
+              </p>
+            )}
+          </div>
+        </Container>
+      </Section>
+
+      <Section id="faqs" surface="light">
+        <FaqSection
+          eyebrow="FAQs"
+          heading="Common questions"
+          intro="Validity, renewal timing and what happens if a certificate expires before you get to it."
+          items={dscValidityRenewalContent.faqs.map((faq, index) => ({
+            id: index,
+            question: faq.q,
+            answer: faq.a,
+          }))}
+        />
+        <JsonLd data={faqPageJsonLd(dscValidityRenewalContent.faqs)} />
+      </Section>
+
+      <DscEnquiryStrip />
+    </>
+  );
+}
+
+function EsignOrDsc({ path }) {
+  const esignRoute = findBySlug("aadhaar-esign");
+  const dscRoute = findBySlug("class-3-individual");
+
+  return (
+    <>
+      <PageHero
+        path={path}
+        eyebrow="eSign Solutions"
+        h1={dscEsignVsDscPage.label}
+        lede={esignOrDscContent.heroLede}
+      />
+
+      <SubNav
+        sections={[
+          { id: "comparison", label: "Side by side" },
+          { id: "which-one", label: "Which one do you need" },
+          { id: "faqs", label: "FAQs" },
+        ]}
+      />
+
+      <Section id="comparison" surface="light">
+        <Container>
+          <Eyebrow>Side by side</Eyebrow>
+          <h2 className="mt-3 text-h2 max-w-[32ch]">Where each one actually differs</h2>
+          <div className="mt-8 overflow-x-auto rounded-[var(--radius-md)] border border-ink-100">
+            <table className="w-full min-w-[640px] border-collapse text-left">
+              <thead className="bg-ink-50">
+                <tr>
+                  <th className="px-5 py-3.5 text-body-sm font-medium text-ink-600">Criterion</th>
+                  <th className="px-5 py-3.5 text-body-sm font-medium text-ink-600">Aadhaar eSign</th>
+                  <th className="px-5 py-3.5 text-body-sm font-medium text-ink-600">Class 3 DSC</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-100">
+                {esignOrDscContent.comparisonRows.map((row) => (
+                  <tr key={row.criterion}>
+                    <td className="px-5 py-4 text-body-sm font-medium text-ink-600">{row.criterion}</td>
+                    <td className="px-5 py-4 text-body-sm text-ink-500">{row.esign}</td>
+                    <td className="px-5 py-4 text-body-sm text-ink-500">{row.dsc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Container>
+      </Section>
+
+      <Section id="which-one" surface="light-alt">
+        <Container>
+          <Eyebrow>Which one do you need</Eyebrow>
+          <h2 className="mt-3 text-h2 max-w-[32ch]">A quick way to decide</h2>
+          <ul className="mt-6 max-w-[68ch] space-y-3">
+            {esignOrDscContent.decisionGuide.map((point, index) => (
+              <li key={index} className="flex gap-3 text-body text-ink-500">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ember-500" aria-hidden="true" />
+                {point}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-8 flex flex-wrap gap-4">
+            {esignRoute && (
+              <Button as={Link} to={esignRoute.path} variant="secondary">
+                Aadhaar eSign
+                <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              </Button>
+            )}
+            {dscRoute && (
+              <Button as={Link} to={dscRoute.path} variant="secondary">
+                Class 3 DSC
+                <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              </Button>
+            )}
+          </div>
+        </Container>
+      </Section>
+
+      <Section id="faqs" surface="light">
+        <FaqSection
+          eyebrow="FAQs"
+          heading="Common questions"
+          intro="Which one a portal will actually accept, and when eSign is not a substitute for a Class 3 certificate."
+          items={esignOrDscContent.faqs.map((faq, index) => ({
+            id: index,
+            question: faq.q,
+            answer: faq.a,
+          }))}
+        />
+        <JsonLd data={faqPageJsonLd(esignOrDscContent.faqs)} />
+      </Section>
+
+      <DscEnquiryStrip />
+    </>
+  );
+}
+
+/**
+ * Graceful fallback for a T5 slug that matches none of the three known
+ * content shapes above and has no content of its own — mirrors ServiceLeaf's
+ * `PendingLeaf` and DscProduct's `PendingProduct`. Nothing invented: just the
+ * nav label, a breadcrumb, and a direct route to a human. Unlike the other
+ * T5 views, this one DOES use `Reveal`-free plain markup consistent with the
+ * rest of this file's "no marketing chrome" discipline, but otherwise reads
+ * like a T2 pending page since there's no speed-sensitive content to protect
+ * yet.
+ */
+function PendingUtility({ path, label }) {
+  const whatsappHref = `${site.whatsappHref}?text=${encodeURIComponent(
+    `Hi ThinkOrange, I'd like to ask about ${label ?? "a DSC or eSign service"}.`
+  )}`;
+
+  return (
+    <>
+      <PageHero
+        path={path}
+        eyebrow="Digital Signature Certificates"
+        h1={label ?? "Digital Signatures"}
+        lede="This page is still being written. Message us directly and we'll help you the same way."
+      />
+
+      <Section surface="light">
+        <Container>
+          <div className="max-w-[68ch]">
+            <Eyebrow>Content coming soon</Eyebrow>
+            <h2 className="mt-3 text-h2">We&rsquo;re still writing this page</h2>
+            <p className="mt-4 text-body-lg text-ink-500">
+              Call, WhatsApp or email us and we&rsquo;ll help you the same way we would through
+              the page.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-4">
+              <Button as="a" href={site.phoneHref} variant="secondary">
+                <Phone className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                {site.phoneDisplay}
+              </Button>
+              <Button as="a" href={whatsappHref} target="_blank" rel="noreferrer noopener" variant="secondary">
+                <MessageCircle className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                WhatsApp
+              </Button>
+            </div>
+          </div>
+        </Container>
+      </Section>
+
+      <DscEnquiryStrip />
     </>
   );
 }
@@ -297,48 +560,52 @@ function DocumentsRequired({ path }) {
  * ember surface here would spend that full-orange moment on six pages
  * instead of the one place DESIGN.md §11.11 reserves it for.
  *
- * Commented out alongside the rest of this file's body sections (13-08-2026)
- * — <ComingSoon /> is the one commercial mechanism shown for now.
+ * NOTE: the source copy for this card in CONTENT-PLAN.md/DESIGN.md reads
+ * "we issue Class 3 certificates in 24 hours" — that clause is dropped here.
+ * It's an uncomfirmed turnaround guarantee (CLAUDE.md non-negotiables list),
+ * so it goes through `t("dscIssuanceTurnaround")` like every other
+ * ThinkOrange commitment, rendering "Confirm with us" until Clinton signs
+ * off a real number rather than shipping the spec's example figure as fact.
  */
-// function DscEnquiryStrip() {
-//   const whatsappHref = `${site.whatsappHref}?text=${encodeURIComponent(
-//     "Hi ThinkOrange, I'd like to enquire about a new DSC."
-//   )}`;
-//
-//   return (
-//     <Section surface="light">
-//       <Container>
-//         <div className="flex flex-col items-start gap-4 rounded-[var(--radius-md)] border border-ember-200 bg-ember-50 p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
-//           <div>
-//             <h2 className="text-h4 text-ink-600">Need a new DSC?</h2>
-//             <p className="mt-1.5 max-w-[52ch] text-body-sm text-ink-500">
-//               We issue Class 3 certificates for individuals and organisations, and DGFT
-//               certificates for import-export.
-//             </p>
-//             <p className="mt-1.5 font-mono text-body-sm text-ember-700">
-//               Turnaround: {t("dscIssuanceTurnaround")}
-//             </p>
-//           </div>
-//           <Button
-//             as="a"
-//             href={whatsappHref}
-//             target="_blank"
-//             rel="noreferrer noopener"
-//             variant="secondary"
-//             className="shrink-0"
-//           >
-//             <MessageCircle className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-//             Enquire
-//           </Button>
-//         </div>
-//       </Container>
-//     </Section>
-//   );
-// }
+function DscEnquiryStrip() {
+  const whatsappHref = `${site.whatsappHref}?text=${encodeURIComponent(
+    "Hi ThinkOrange, I'd like to enquire about a new DSC."
+  )}`;
 
-// function versionsFor(platform, supportedOs) {
-//   const match = (supportedOs ?? []).find((entry) =>
-//     platform.toLowerCase().startsWith(entry.os.toLowerCase())
-//   );
-//   return match?.versions ?? "—";
-// }
+  return (
+    <Section surface="light">
+      <Container>
+        <div className="flex flex-col items-start gap-4 rounded-[var(--radius-md)] border border-ember-200 bg-ember-50 p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
+          <div>
+            <h2 className="text-h4 text-ink-600">Need a new DSC?</h2>
+            <p className="mt-1.5 max-w-[52ch] text-body-sm text-ink-500">
+              We issue Class 3 certificates for individuals and organisations, and DGFT
+              certificates for import-export.
+            </p>
+            <p className="mt-1.5 font-mono text-body-sm text-ember-700">
+              Turnaround: {t("dscIssuanceTurnaround")}
+            </p>
+          </div>
+          <Button
+            as="a"
+            href={whatsappHref}
+            target="_blank"
+            rel="noreferrer noopener"
+            variant="secondary"
+            className="shrink-0"
+          >
+            <MessageCircle className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+            Enquire
+          </Button>
+        </div>
+      </Container>
+    </Section>
+  );
+}
+
+function versionsFor(platform, supportedOs) {
+  const match = (supportedOs ?? []).find((entry) =>
+    platform.toLowerCase().startsWith(entry.os.toLowerCase())
+  );
+  return match?.versions ?? "—";
+}

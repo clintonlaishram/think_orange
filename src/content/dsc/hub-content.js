@@ -11,13 +11,13 @@ export const dscHubContent = {
   meta: {
     title: "Digital Signature Certificates (DSC) in Salem | ThinkOrange Consulting",
     description:
-      "Class 3 DSCs for individuals and organisations, DGFT certificates and USB tokens, issued through our eMudhra and SignX partnership. Salem, Tamil Nadu.",
+      "Class 3 DSCs for individuals and organisations, combo (sign + encrypt) certificates, DGFT certificates, renewals, USB tokens and Aadhaar eSign — issued through our eMudhra and SignX partnership. Salem, Tamil Nadu.",
   },
   heroLede:
-    "Class 3 Digital Signature Certificates for individuals and organisations, DGFT certificates for importers and exporters, and USB tokens — issued through our eMudhra and SignX partnership.",
+    "Class 3 Digital Signature Certificates for individuals and organisations, combo certificates for e-tendering, DGFT certificates for importers and exporters, renewals, USB tokens and Aadhaar eSign — issued through our eMudhra and SignX partnership.",
   intro: [
     "A Digital Signature Certificate is what lets you sign legally on the income tax portal, the GST portal, MCA21, e-tendering platforms, EPFO and DGFT/ICEGATE — anywhere a physical signature isn't possible. Getting the wrong class, the wrong validity, or a certificate from an improperly authorised issuer causes more lost time than almost anything else in this line of work.",
-    "We issue every certificate through eMudhra and SignX, both licensed certifying authorities, so genuineness is never a question mark. Choose individual or organisation Class 3, DGFT for import-export, or a standalone token below — or start from Documents Required if you're not sure which certificate you need.",
+    "We issue every certificate through eMudhra and SignX, both licensed certifying authorities, so genuineness is never a question mark. Choose individual or organisation Class 3, a combo certificate if a portal asks for encryption alongside signing, DGFT for import-export, or a renewal if your current certificate is running out. Aadhaar eSign is below that, for contracts that don't need a certificate at all, followed by tokens, document checklists and driver downloads — or start from Documents Required if you're not sure which certificate you need.",
   ],
   faqs: [
     {
@@ -31,6 +31,14 @@ export const dscHubContent = {
     {
       q: "What is the video verification step, and can it be skipped?",
       a: "It's a short recorded call confirming your identity against your submitted documents, required by the Controller of Certifying Authorities for all Class 3 issuance — it cannot be skipped for any certificate type, individual or organisation.",
+    },
+    {
+      q: "What does a combo certificate add over a standard Class 3?",
+      a: "A combo certificate carries both a signing certificate and an encryption certificate on one token, issued together rather than bought twice. You need it where a portal's technical requirements specifically ask for an encryption certificate alongside your signing certificate before a bid can be submitted — common on e-tendering and e-procurement platforms. For income tax, GST and MCA filings a standard Class 3 signing certificate is what's used.",
+    },
+    {
+      q: "Can Aadhaar eSign replace a Digital Signature Certificate?",
+      a: "Not on statutory portals. The income tax portal, the GST portal, MCA21 and e-tendering platforms mandate a Class 3 certificate specifically, and an Aadhaar-based eSign will not be accepted there. eSign is for contracts and agreements — offer letters, NDAs, vendor and client agreements — where the other party accepts an Aadhaar-based signature and nobody wants to wait for a token. See eSign or DSC for a side-by-side comparison.",
     },
     {
       q: "My token isn't being detected — where do I find driver help?",

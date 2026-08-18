@@ -41,6 +41,7 @@ import { aboutContent } from "../content/about.js";
 import { partnerContent } from "../content/partner-with-us.js";
 import { getLegalContent } from "../content/legal/index.js";
 import { meta as standaloneMeta, defaultMeta } from "../content/meta.js";
+import { getInsight } from "../content/insights/index.js";
 import { absoluteUrl } from "./jsonld.js";
 
 const ORIGIN = `https://${site.domain}`;
@@ -113,6 +114,15 @@ export function resolveSeo(path) {
     case "T7":
       m = standaloneMeta["/contact"];
       break;
+
+    case "T10": {
+      if (path === "/insights") m = standaloneMeta["/insights"];
+      else {
+        const article = slug ? getInsight(slug) : undefined;
+        m = article?.meta ?? fallbackFor(route);
+      }
+      break;
+    }
 
     case "T8": {
       const page = getLegalContent(path.replace(/^\//, ""));

@@ -29,6 +29,8 @@ import About from "@/modules/about";
 import PartnerWithUs from "@/modules/partner-with-us";
 import Contact from "@/modules/contact";
 import LegalPage from "@/modules/legal/LegalPage";
+import InsightsIndex from "@/modules/insights";
+import InsightArticle from "@/modules/insights/Article";
 import NotFound from "@/modules/not-found";
 import { allRoutes } from "@/content/nav";
 import { RootLayout } from "@/components/layout/RootLayout";
@@ -46,6 +48,8 @@ const components = {
   PartnerWithUs,
   Contact,
   LegalPage,
+  InsightsIndex,
+  InsightArticle,
   NotFound,
 };
 

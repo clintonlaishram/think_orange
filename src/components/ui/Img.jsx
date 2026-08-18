@@ -48,7 +48,7 @@ export function Img({
 
   return (
     <span
-      className={cn("relative block overflow-hidden bg-ink-50", className)}
+      className={cn("relative block overflow-hidden bg-transparent", className)}
       style={style}
     >
       {placeholderSrc && (

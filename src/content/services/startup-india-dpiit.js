@@ -14,7 +14,7 @@ import { t } from "../turnaround.js";
 
 export default {
   slug: "startup-india-dpiit",
-  category: "business-setup",
+  category: "registrations-licences",
   title: "Startup India (DPIIT)",
   h1: "Startup India (DPIIT) Registration in Salem, Tamil Nadu",
 

@@ -4,6 +4,7 @@ import { footerColumns, legalPages, site } from "@/content/nav";
 import { Container } from "@/components/layout/Container";
 import { ArcRings } from "@/components/ui/ArcRings";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { Logo } from "../navbar/Logo";
 
 // The same shape as every other section's arc composition (§3.1), just
 // canvas-toned rather than ember — DESIGN.md §11.12 specifies a plain
@@ -91,13 +92,12 @@ export function Footer() {
         <div className="pb-12 pt-20 flex flex-col lg:flex-row gap-10 md:gap-16 xl:gap-24">
 
           <div>
-            <span className="font-sans text-[19px] font-black tracking-tight text-canvas">
-              Think<span className="text-ember-400">Orange</span>
-            </span>
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-300">
-              Consulting Pvt Ltd
-            </p>
-            <p className="mt-4 text-body-sm text-ember-200">{site.strapline}</p>
+            <Logo compact={"false"} />
+           
+          <p className="mt-4 whitespace-nowrap text-[9px]  uppercase tracking-[0.08em] text-ink-100 font-medium">
+            Empowering Business | Ensuring Compliance | Driving Growth
+          </p>
+      
             <p className="mt-4 max-w-[34ch] text-body-sm">{site.positioning}</p>
           </div>
 

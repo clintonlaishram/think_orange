@@ -122,6 +122,36 @@ export function serviceJsonLd({ name, description, path, categoryLabel }) {
 /** CollectionPage — T3 category hubs, the top-level /services hub, and /dsc.
  * CONTENT-PLAN.md §14.2 pairs this with BreadcrumbList, which templates
  * already get for free by rendering <Breadcrumbs> via PageHero. */
+/**
+ * BlogPosting for an /insights article (T10). `Article` would also validate,
+ * but BlogPosting is the narrower type and these are dated editorial posts
+ * rather than reference documents.
+ *
+ * No `author` beyond the organisation itself: the articles carry no personal
+ * byline on the page either, and naming an individual here would assert a
+ * person's authorship in structured data that the page never states — the same
+ * reason team names are on CONTENT-PLAN.md §1.1's hold list.
+ *
+ * `dateModified` deliberately mirrors `datePublished` rather than being stamped
+ * at build time: a rebuild is not an edit, and a modification date that moves
+ * every deploy is a false freshness signal.
+ */
+export function articleJsonLd({ headline, description, path, datePublished }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline,
+    description,
+    mainEntityOfPage: { "@type": "WebPage", "@id": absoluteUrl(path) },
+    url: absoluteUrl(path),
+    datePublished,
+    dateModified: datePublished,
+    author: { "@type": "Organization", name: site.legalName, url: absoluteUrl("/") },
+    publisher: { "@type": "Organization", name: site.legalName, url: absoluteUrl("/") },
+    inLanguage: "en-IN",
+  };
+}
+
 export function collectionPageJsonLd({ name, description, path }) {
   return {
     "@context": "https://schema.org",

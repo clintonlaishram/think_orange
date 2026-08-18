@@ -10,7 +10,7 @@ import { t } from "../turnaround.js";
 
 export default {
   slug: "business-loan",
-  category: "loans-finance",
+  category: "tenders-finance",
   title: "Business Loan & Financing",
   h1: "Business Loan & Financing Support in Salem, Tamil Nadu",
 

@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useRef } from "react";
 import { Header } from "@/components/navbar/Header";
 import { Footer } from "@/components/footer/Footer";
 import { FloatingWhatsApp } from "@/components/layout/FloatingWhatsApp";
+import { ScrollNav } from "@/components/layout/ScrollNav";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationJsonLd, localBusinessJsonLd } from "@/lib/jsonld";
 import { useIdleMount } from "@/hooks/useIdleMount";
@@ -82,7 +83,6 @@ function upsertCanonical(href) {
 // the header needs a solid variant for that route, not a hack here.
 export function RootLayout() {
   const { pathname } = useLocation();
-
   // Reset scroll on navigation. React Router does not do this for you, and
   // without it a deep service page opens halfway down.
   useEffect(() => {
@@ -154,7 +154,19 @@ export function RootLayout() {
           page's opening section, so that section must be full-bleed to y=0 and
           clear the header itself via `.page-top`. Padding <main> instead would
           expose the body background behind the transparent header. */}
-      <main id="main" className="overflow-x-hidden">
+      {/* ⛔ `overflow-x-clip`, NEVER `overflow-x-hidden`. This was `hidden`
+          until 19-08-2026 and it silently broke EVERY `position: sticky` on the
+          site — the T2 sub-nav, the enquiry card, and the FAQ/step rails.
+          Per spec, when one axis is not `visible` the other computes to `auto`,
+          so `overflow-x: hidden` gave <main> `overflow-y: auto` and made it a
+          scroll container. A sticky element then sticks to MAIN's scrollport
+          rather than the viewport — and since main is not the thing being
+          scrolled (the document is), it never engages at all. Measured before
+          the fix: the sub-nav scrolled clean off at -1344px instead of parking
+          at 64px. `clip` does the same visual clipping without creating a
+          scroll container, so the horizontal-overflow guard this was here for
+          still holds. */}
+      <main id="main" className="overflow-x-clip">
         {/* Fallback is a plain dark block, not a spinner — it's on-screen for
             one chunk fetch at most, and the layout contract requires every
             route's opening section to be dark anyway (fixed transparent
@@ -175,6 +187,15 @@ export function RootLayout() {
           otherwise stack toasts directly over/behind it. `classNames` maps
           onto design tokens rather than Sonner's own inline theme (CLAUDE.md:
           tokens only, no raw hex). */}
+      {/* ---- Scroll affordance (§11.2) --------------------------------
+          Now its own component: a fixed down/up control that advances one
+          section from the top and returns to the top thereafter. It replaced
+          an inline `position: absolute` button here whose target was
+          `main.nextElementSibling` — the footer — so "next section" jumped the
+          whole page. Deliberately NOT wrapped in Reveal: it is a persistent
+          control, not section content, and an affordance that fades in only
+          after you have scrolled is one that arrives too late to be useful. */}
+      <ScrollNav />
       <DeferredToaster />
     </>
   );

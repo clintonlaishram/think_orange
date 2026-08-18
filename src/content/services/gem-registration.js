@@ -9,7 +9,7 @@ import { t } from "../turnaround.js";
 
 export default {
   slug: "gem-registration",
-  category: "government-tenders",
+  category: "tenders-finance",
   title: "GeM Registration",
   h1: "GeM Registration in Salem, Tamil Nadu",
 

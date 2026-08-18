@@ -99,13 +99,16 @@ export const categoryContent = {
     meta: {
       title: "Business Registration & Incorporation in Salem | ThinkOrange Consulting",
       description:
-        "Private limited, LLP, OPC, partnership and proprietorship incorporation, plus DPIIT and MSME/Udyam registration — Salem, Tamil Nadu, pan-India clients.",
+        "Private limited, LLP, OPC, partnership, proprietorship and trust/society/Section 8 incorporation — Salem, Tamil Nadu, pan-India clients.",
     },
     heroLede:
       "Private limited, LLP, OPC, partnership or proprietorship — incorporated correctly the first time, with PAN, TAN and the statutory registrations that follow.",
     intro: [
       "Choosing a structure is the first decision that shapes almost everything after it — how much personal liability you carry, what you can raise money against, how much you'll file every year, and how a buyer or investor will eventually value the business.",
-      "We incorporate every structure recognised for a growing Indian business: private limited companies, LLPs, One Person Companies, partnership firms and proprietorships, plus the DPIIT and MSME/Udyam registrations that unlock tender preferences and priority lending once you're operating.",
+      // 17-08-2026: dropped this paragraph's DPIIT/MSME clause — both leaves
+      // moved to the new Registrations & Licences category (nav.js), so the
+      // sentence became inaccurate rather than just incomplete.
+      "We incorporate every structure recognised for a growing Indian business: private limited companies, LLPs, One Person Companies, partnership firms and proprietorships, plus trusts, societies and Section 8 companies for non-profit and charitable work.",
     ],
     whyUs: [
       "We tell you which structure actually fits your situation, not the one that's easiest for us to file.",
@@ -125,22 +128,26 @@ export const categoryContent = {
         q: "What is a One Person Company and who is it for?",
         a: "An OPC lets a single founder incorporate with limited liability, without bringing in a second shareholder. See OPC Registration for the current eligibility rules, including a widely-repeated one that no longer applies.",
       },
-      {
-        q: "Is Startup India (DPIIT) recognition worth applying for?",
-        a: "For an eligible early-stage company, yes — it opens tax and compliance benefits and improves standing with investors and government buyers. See Startup India (DPIIT) for current eligibility.",
-      },
     ],
-    relatedCategories: ["accounting-audit", "loans-finance"],
+    // 17-08-2026: dropped the DPIIT FAQ that lived here — that leaf moved to
+    // Registrations & Licences (nav.js), which needs its own FAQ set,
+    // including a DPIIT question, once that hub's content is written. See
+    // MISSING-PAGES.md.
+    relatedCategories: ["registrations-licences", "accounting-audit"],
   },
 
   "accounting-audit": {
+    // 17-08-2026: category relabelled "Accounting, Payroll & Audit" in
+    // nav.js — slug/path unchanged. Only meta/heroLede touched here to add
+    // "payroll" to the summary; intro/whyUs/faqs untouched pending real
+    // content for the three new payroll/ROC leaves (see MISSING-PAGES.md).
     meta: {
-      title: "Accounting & Audit Services in Salem | ThinkOrange Consulting",
+      title: "Accounting, Payroll & Audit Services in Salem | ThinkOrange Consulting",
       description:
-        "Monthly bookkeeping on Tally Prime and Zoho Books, internal audit and specialised audit work (stock, channel-finance, concurrent) from Salem, Tamil Nadu.",
+        "Monthly bookkeeping on Tally Prime and Zoho Books, payroll processing, and internal and specialised audit work — from Salem, Tamil Nadu.",
     },
     heroLede:
-      "Bookkeeping on Tally Prime or Zoho Books, monthly reconciliation, internal audit and specialised audits — the numbers kept clean all year, not reconstructed at year-end.",
+      "Bookkeeping on Tally Prime or Zoho Books, payroll, internal audit and specialised audits — the numbers kept clean all year, not reconstructed at year-end.",
     intro: [
       "Good books are the foundation everything else sits on — your GST returns, your tax return, your loan application and your investor conversations all draw from the same set of numbers, and if those numbers are wrong or late, everything built on them is too.",
       "We handle day-to-day bookkeeping and monthly close for growing businesses, statutory and internal audit for companies that need it, and specialised work — stock audit, channel-finance audit, concurrent audit and due-diligence support — for businesses and CAs who need a second set of hands with genuine audit depth.",
@@ -171,22 +178,32 @@ export const categoryContent = {
     relatedCategories: ["gst", "business-setup"],
   },
 
-  "government-tenders": {
+  // 17-08-2026: merged from the previous separate "government-tenders" and
+  // "loans-finance" entries (nav.js now combines those two categories into
+  // one, Tenders & Finance). Every sentence below already existed in one of
+  // the two old entries — recombined, not rewritten; nothing new was
+  // invented for the merge. meta/heroLede alone are newly written to
+  // describe the combined scope, and stay just as fact-free as everything
+  // else in this file.
+  "tenders-finance": {
     meta: {
-      title: "Government Tenders & GeM Registration in Salem | ThinkOrange",
+      title: "Government Tenders & Business Finance in Salem | ThinkOrange Consulting",
       description:
-        "GeM registration and end-to-end tender documentation support, so a paperwork error never costs you a bid you were otherwise qualified to win.",
+        "GeM registration and tender documentation support, plus CMA data, loan documentation and personal finance planning. Salem, Tamil Nadu.",
     },
     heroLede:
-      "GeM registration and end-to-end tender documentation, so a missed step never costs you a bid you were otherwise qualified to win.",
+      "GeM registration and tender documentation so a missed step never costs you a bid, plus loan documentation, CMA data and personal finance planning.",
     intro: [
       "Government procurement rewards businesses that get the paperwork right, not necessarily the lowest bidder — a technically strong bid disqualified on a documentation error loses to a weaker one that was submitted correctly.",
       "We register businesses on the Government e-Marketplace, prepare and check tender documentation before submission, and help you navigate the specific portal and departmental requirements of each opportunity, so the bid you submit is the bid that actually gets evaluated.",
+      "Winning the work is one half of this category; funding it is the other. Getting a business loan approved is usually a documentation problem before it's a creditworthiness one — banks want projections, CMA data and a coherent financial story, prepared in the format they actually expect. We prepare that documentation for working capital and term loans, and separately help individuals plan their own finances and manage existing debt in a structured way.",
     ],
     whyUs: [
       "We check documentation against the tender's own requirements before submission, not after a rejection.",
       "Udyam-registered micro and small enterprises get specific GeM procurement benefits — we make sure you're actually claiming them.",
-      "We coordinate directly with the department where a query needs a fast answer.",
+      "We coordinate directly with the department, or the bank, where a query needs a fast answer.",
+      "CMA data and projections prepared in the format lenders actually expect, not a generic template.",
+      "Personal finance planning is treated as seriously as business finance — most firms in this sector don't offer it at all.",
     ],
     faqs: [
       {
@@ -202,49 +219,61 @@ export const categoryContent = {
         a: "Most rejections are documentation, not price — a missing certificate, a mismatch between the registered business name and the bid, or a document that's expired or incorrectly attested. Our Tender Documentation Support service exists specifically to catch these before submission.",
       },
       {
-        q: "Can you help with a specific tender we're already looking at?",
-        a: "Yes — send us the tender notice and we'll tell you what's needed and by when, rather than starting from a generic checklist.",
-      },
-    ],
-    relatedCategories: ["business-setup", "loans-finance"],
-  },
-
-  "loans-finance": {
-    meta: {
-      title: "Business Loans & Personal Finance in Salem | ThinkOrange Consulting",
-      description:
-        "CMA data and loan documentation for business finance, plus personal finance planning and structured debt management. Salem, Tamil Nadu.",
-    },
-    heroLede:
-      "Loan documentation, CMA data and projections for business finance, plus personal planning and structured debt strategies for lasting stability.",
-    intro: [
-      "Getting a business loan approved is usually a documentation problem before it's a creditworthiness one — banks want projections, CMA data and a coherent financial story, prepared in the format they actually expect, not just your raw numbers.",
-      "We prepare that documentation for working capital and term loans, and separately help individuals plan their own finances and manage existing debt in a structured way. The two sit together here because both are ultimately about presenting your financial position clearly enough for someone else — a bank, or your own future self — to act on with confidence.",
-    ],
-    whyUs: [
-      "CMA data and projections prepared in the format lenders actually expect, not a generic template.",
-      "We coordinate with the bank directly where a query needs a fast, accurate answer.",
-      "Personal finance planning is treated as seriously as business finance — most firms in this sector don't offer it at all.",
-    ],
-    faqs: [
-      {
         q: "What is CMA data and why does a bank ask for it?",
         a: "Credit Monitoring Arrangement data is a structured financial projection format Indian banks use to assess working capital and term loan applications. Most lenders expect it in a specific layout, and getting that layout wrong is a common reason applications stall.",
-      },
-      {
-        q: "Can collateral-free loans be arranged for a small business?",
-        a: "Yes, within limits — schemes exist that guarantee a portion of a lender's exposure so collateral isn't always required, with a higher limit available to DPIIT-recognised startups. See Business Loan & Financing for current specifics.",
       },
       {
         q: "Do you help with personal loans as well as business ones?",
         a: "Yes — personal loan and mortgage documentation support sits under Personal Finance & Debt Management, alongside broader budgeting and debt-structuring advice.",
       },
       {
-        q: "What does a 'structured debt strategy' actually mean?",
-        a: "Working out which debts to prioritise, in what order, and how repayment fits your actual cash flow — rather than paying whatever's most urgent each month with no plan behind it.",
+        q: "Can you help with a specific tender we're already looking at?",
+        a: "Yes — send us the tender notice and we'll tell you what's needed and by when, rather than starting from a generic checklist.",
       },
     ],
     relatedCategories: ["business-setup", "gst"],
+  },
+
+  // 18-08-2026: written to fill the gap MISSING-PAGES.md flagged for the
+  // hub introduced by the 17-08-2026 services-menu restructure. msme-udyam
+  // and startup-india-dpiit only moved here (content untouched); the other
+  // four children are new leaves written this same session.
+  "registrations-licences": {
+    meta: {
+      title: "Business Registrations & Licences in Salem | ThinkOrange Consulting",
+      description:
+        "MSME/Udyam, Startup India, IEC, ICEGATE, trademark and NGO Darpan registration — the specific licences a growing business needs beyond incorporation.",
+    },
+    heroLede:
+      "The registrations that come after incorporation — MSME/Udyam, Startup India recognition, import-export codes, trademark protection and NGO Darpan — each opening a different door.",
+    intro: [
+      "Incorporating a business gets you a legal entity; it doesn't automatically get you every registration that entity needs to actually do what it plans to do. Selling to government buyers, importing raw material, protecting your brand name, or receiving CSR funding as a non-profit each sit behind their own, separate registration — and most businesses only discover which one they're missing when a deal is already on the table.",
+      "We handle the specific licences that come up most often once a business is trading: MSME/Udyam classification and the Startup India (DPIIT) recognition that follows a growth story, the Import Export Code and ICEGATE/AD code registration that international trade actually needs, trademark protection for a name or logo worth defending, and NGO Darpan registration for the Trusts, Societies and Section 8 Companies that need it before a grant or CSR conversation can even start.",
+    ],
+    whyUs: [
+      "We tell you which registration you actually need for what you're trying to do, not a bundle of everything that's loosely related.",
+      "Cross-registrations that depend on each other — an IEC before ICEGATE, a Darpan ID before CSR-1 — are sequenced correctly so you're not stuck waiting on a prerequisite you didn't know existed.",
+      "Every threshold and fee we quote is checked against the current Act, Rules or portal — not recalled from memory.",
+    ],
+    faqs: [
+      {
+        q: "Is Startup India (DPIIT) recognition worth applying for?",
+        a: "It depends on what you actually need it for. DPIIT recognition itself doesn't hand you funding — its practical value is a set of specific, confirmed procedural benefits (self-certification for certain labour and environment compliances, easier public procurement participation, and eligibility for a small number of government schemes). Whether it's worth the paperwork comes down to your eligibility and which of those benefits actually applies to your business — see Startup India (DPIIT) for the current criteria.",
+      },
+      {
+        q: "We're importing for the first time — what do we actually need beyond an IEC?",
+        a: "An IEC gets you the right to trade; it doesn't clear a shipment on its own. You'll also need to register on ICEGATE, India's customs portal, and link an AD code from your bank before customs will process your first bill of entry. See IEC Registration and ICEGATE Registration for how the two connect.",
+      },
+      {
+        q: "Do we need a trademark before we register our company name?",
+        a: "No — they're unrelated registrations. Incorporating a company reserves your name against other companies at the Registrar; it does not stop a competitor from trading under a confusingly similar brand. A trademark is the only registration that actually protects your name or logo in the market. See Trademark Registration for how the two differ in practice.",
+      },
+      {
+        q: "Our NGO wants CSR funding — where do we actually start?",
+        a: "With an NGO Darpan ID, before anything else. A company legally cannot file Form CSR-1 — the MCA filing that lets it route CSR funds to your NGO — without your Darpan ID already in place. Get that first, then the CSR-1 and any specific corporate conversation can move. See NGO Darpan Registration for the process.",
+      },
+    ],
+    relatedCategories: ["business-setup", "tenders-finance"],
   },
 };
 

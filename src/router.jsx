@@ -29,6 +29,8 @@ const components = {
   PartnerWithUs: lazy(() => import("@/modules/partner-with-us")),
   Contact: lazy(() => import("@/modules/contact")),
   LegalPage: lazy(() => import("@/modules/legal/LegalPage")),
+  InsightsIndex: lazy(() => import("@/modules/insights")),
+  InsightArticle: lazy(() => import("@/modules/insights/Article")),
   NotFound: lazy(() => import("@/modules/not-found")),
 };
 

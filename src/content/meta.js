@@ -19,7 +19,12 @@ export const meta = {
   "/services": {
     title: "All Services | ThinkOrange Consulting",
     description:
-      "Six practice areas, twenty-one services — GST, income tax, business setup, accounting and audit, government tenders, and loans and finance. Salem, Tamil Nadu.",
+      "Six practice areas, thirty-one services — GST, income tax, business setup, registrations & licences, accounting & payroll, and tenders & finance. Salem, Tamil Nadu.",
+  },
+  "/insights": {
+    title: "Insights | ThinkOrange Consulting",
+    description:
+      "Plain explanations of GST registration, entity choice, Digital Signature Certificates and government tendering — written for business owners, not for other accountants.",
   },
   "/contact": {
     title: "Contact Us | ThinkOrange Consulting, Salem",

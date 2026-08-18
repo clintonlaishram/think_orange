@@ -23,6 +23,8 @@ export function resolveComponent(entry, components) {
     PartnerWithUs,
     Contact,
     LegalPage,
+    InsightsIndex,
+    InsightArticle,
     NotFound,
   } = components;
 
@@ -45,6 +47,11 @@ export function resolveComponent(entry, components) {
       return Contact;
     case "T8":
       return LegalPage;
+    // T10 — the index and the articles share a template family and branch on
+    // path, the same way T3 (/services, /dsc, category hubs) and T6
+    // (/about, /partner-with-us) already do.
+    case "T10":
+      return entry.path === "/insights" ? InsightsIndex : InsightArticle;
     case "T9":
     default:
       return NotFound;

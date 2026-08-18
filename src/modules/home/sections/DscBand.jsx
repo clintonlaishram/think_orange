@@ -1,23 +1,83 @@
 import { Link } from "react-router-dom";
-import { Building2, KeyRound, Ship, User } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  FileSignature,
+  Headset,
+  KeyRound,
+  Lock,
+  RefreshCw,
+  ShieldCheck,
+  Ship,
+  User,
+  Usb,
+} from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Eyebrow } from "@/components/layout/Eyebrow";
 import { ArcGlyph } from "@/components/ui/ArcGlyph";
 import { ArcRings } from "@/components/ui/ArcRings";
+import { Button } from "@/components/ui/Button";
+import { DscShowcase } from "@/components/ui/DscShowcase";
 import { Reveal } from "@/components/motion/Reveal";
+import { ProductShot } from "@/components/ui/ProductShot";
 import { dscProducts as dscNav, site } from "@/content/nav";
 import { dscProducts as dscContent } from "@/content/dsc/products";
+import { Img } from "@/components/ui/Img";
 
 // Homepage section 8 — CONTENT-PLAN.md §6 row 8. Deep surface. Ledes are
 // pulled from src/content/dsc/products.js verbatim — the real T4 page copy
 // — rather than re-written here, so the teaser and the product page never
 // say something subtly different about the same certificate.
+//
+// Restructured 17-08-2026 from a single headline + 4-card grid into three
+// stacked bands (split intro with illustration → labelled product grid →
+// help strip), following a reference layout Clinton supplied. Three things in
+// that reference are deliberately NOT copied, because they break this repo's
+// own rules:
+//   - its centred section heading. DESIGN.md §16 tell 8 is measured at 0
+//     centre-aligned sections sitewide (Phase 10) and this stays left-aligned.
+//   - white text on its orange button. 3.13:1, fails AA — <Button variant=
+//     "primary"> is ember-400 with ink-950 text and always has been.
+//   - its three feature icons sitting in filled circles. §16 tell 6 counts
+//     icon-in-a-circle instances per page, and the product cards below
+//     already spend four of them; these render as bare glyphs instead.
+// 17-08-2026: 3 new entries for the DSC menu restructure's new products
+// (combo-dsc, dsc-renewal-reissue, aadhaar-esign) — `dscNav.map` below
+// iterates every product in nav.js, so a missing key here would try to
+// render `ICONS[slug]` as `undefined`, which crashes (not a graceful
+// blank — React throws on an undefined element type).
 const ICONS = {
   "class-3-individual": User,
   "class-3-organisation": Building2,
+  "combo-dsc": Lock,
   "dgft-iec": Ship,
+  "dsc-renewal-reissue": RefreshCw,
   "buy-tokens": KeyRound,
+  "aadhaar-esign": FileSignature,
 };
+
+// The reference's three trust points were "Secure & Compliant / Quick
+// Processing / Expert Assistance". "Quick Processing" is an unconfirmed
+// turnaround claim wearing an adjective (CLAUDE.md non-negotiables), so it is
+// not here. Each of these three is instead something products.js and
+// drivers.js already state as fact.
+const ASSURANCES = [
+  {
+    icon: ShieldCheck,
+    title: "Licensed CA issuance",
+    desc: "Through eMudhra and SignX",
+  },
+  {
+    icon: Usb,
+    title: "FIPS-compliant token",
+    desc: "Ships with the certificate",
+  },
+  {
+    icon: Headset,
+    title: "Setup support included",
+    desc: "Drivers installed and tested",
+  },
+];
 
 // ink-950 is darker than WhatWeDo's ink-900, so an ember stroke has slightly
 // more headroom here before it reads as loud — but the ladder still sits below
@@ -44,19 +104,75 @@ export function DscBand() {
       />
 
       <Container className="relative">
-        <Reveal>
-          <Eyebrow>Digital Signature Certificates</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[26ch] text-canvas">
-            Issued through our eMudhra and SignX partnership
-          </h2>
-          <p className="mt-3 max-w-[62ch] text-body-lg text-ink-300">
-            Both are licensed certifying authorities, not a reseller of
-            unknown standing — the question every buyer actually has about a
-            digital signature.
-          </p>
+        {/* ── Band 1: split intro. 7/5, copy left, illustration right — the
+            same ratio the hero and every T3 hub intro use. */}
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-12">
+          <div className="lg:col-span-7">
+            <Reveal>
+              <Eyebrow>Digital Signature Certificates</Eyebrow>
+              {/* Two lines, second in ember — the reference's treatment, done
+                  with a plain coloured span. No gradient text (§16). */}
+              <h2 className="mt-3 max-w-[22ch] text-h2 text-canvas">
+                Digital signatures,{" "}
+                <span className="text-ember-300">simplified for you.</span>
+              </h2>
+              <p className="mt-4 max-w-[54ch] text-body-lg text-ink-200">
+                Issued through our eMudhra and SignX partnership — both licensed
+                certifying authorities, not a reseller of unknown standing. That
+                is the question every buyer actually has about a digital
+                signature.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.12}>
+              <ul className="mt-8 grid grid-cols-1 gap-x-5 gap-y-5 sm:grid-cols-3">
+                {ASSURANCES.map(({ icon: Icon, title, desc }) => (
+                  <li key={title} className="flex items-start gap-3">
+                    <Icon
+                      className="mt-0.5 h-5 w-5 shrink-0 text-ember-400"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                    <span className="block">
+                      <span className="block text-body-sm font-medium text-canvas">
+                        {title}
+                      </span>
+                      <span className="mt-0.5 block text-body-sm text-ink-300">
+                        {desc}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          </div>
+
+          <Reveal delay={0.18} className="lg:col-span-5">
+            {/* Was a bare <img alt="dsc"> — CLAUDE.md routes every image
+                through <Img>, and "dsc" is not an alt text. */}
+            <Img
+              src="/images/home/dsc.png"
+              alt="A signed digital document on a laptop beside a USB signing token."
+              className="mx-auto w-full h-full max-w-[800px]"
+            />
+          </Reveal>
+        </div>
+
+        {/* ── Band 2: the product grid, now under its own label. */}
+        <Reveal className="mt-20 lg:mt-24">
+          <Eyebrow>DSC solutions</Eyebrow>
+          <h3 className="mt-3 max-w-[30ch] text-h3 text-canvas">
+            Choose the right DSC for your needs
+          </h3>
+          {/* The reference's short rule under the heading — left-aligned to
+              the text rather than centred beneath it. */}
+          <span
+            className="mt-4 block h-0.5 w-16 rounded-full bg-ember-400"
+            aria-hidden="true"
+          />
         </Reveal>
 
-        <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {dscNav.map((product, index) => {
             const Icon = ICONS[product.slug];
             const lede = dscContent.find((p) => p.slug === product.slug)?.lede;
@@ -71,7 +187,7 @@ export function DscBand() {
                     swap) is gone; .card-dark's is pointer-gated. */}
                 <Link
                   to={product.path}
-                  className="card-dark group block h-full rounded-[var(--radius-md)] lg:rounded-[var(--radius-lg)] p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950"
+                  className="card-dark group flex h-full flex-col rounded-[var(--radius-md)] lg:rounded-[var(--radius-lg)] p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950"
                 >
                   <ArcGlyph
                     variant="corner"
@@ -81,29 +197,66 @@ export function DscBand() {
                   <span className="flex h-11 w-11 items-center justify-center rounded-full border border-ember-400/60">
                     <Icon className="h-5 w-5 text-ember-400" strokeWidth={1.5} aria-hidden="true" />
                   </span>
-                  <h3 className="mt-4 text-h4 text-canvas">{product.label}</h3>
+                  <h4 className="mt-4 text-h4 text-canvas">{product.label}</h4>
                   <p className="mt-2 text-body-sm text-ink-300">{lede}</p>
+                  {/* The whole card is the link, so its accessible name
+                      already includes the product title above — this row is a
+                      visual affordance only, not a second "Learn more" link
+                      with no context (the axe `link-text` failure Phase 10
+                      fixed in five other places). */}
+                  <span
+                    className="mt-5 inline-flex items-center gap-2 pt-1 text-body-sm font-medium text-ember-300"
+                    aria-hidden="true"
+                  >
+                    Learn more
+                    <ArrowRight
+                      className="h-4 w-4 transition-transform duration-[var(--dur-fast)] ease-[var(--ease-out)] motion-safe:group-hover:translate-x-1"
+                      strokeWidth={2}
+                    />
+                  </span>
                 </Link>
               </Reveal>
             );
           })}
         </div>
 
-        {/* fees:null discipline — DESIGN.md §11.1's brief for this row is
-            explicit: "No published prices until you confirm them." */}
-        <Reveal delay={0.3} className="mt-8 rounded-[var(--radius-sm)] lg:rounded-[var(--radius-md)] border border-ink-700 bg-ink-900 px-6 py-4">
-          <p className="text-body-sm text-ink-300">
-            Pricing on request —{" "}
-            <a
-              href={site.whatsappHref}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="font-medium text-ember-300 underline-offset-4 hover:underline"
-            >
-              message us on WhatsApp
-            </a>
-            .
-          </p>
+        {/* ── Band 3: the help strip. The reference's "Need help choosing?"
+            bar, carrying the fees:null line DESIGN.md §11.1 requires of this
+            row ("No published prices until you confirm them") rather than
+            leaving it as a separate note below. */}
+        <Reveal
+          delay={0.3}
+          className="mt-10 flex flex-col gap-6 rounded-[var(--radius-md)] lg:rounded-[var(--radius-lg)] border border-ink-700 bg-ink-900 px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:px-8"
+        >
+          <div className="flex items-start gap-4">
+            <Headset
+              className="mt-0.5 h-6 w-6 shrink-0 text-ember-400"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            />
+            <div>
+              <p className="text-body font-medium text-canvas">
+                Not sure which DSC you need?
+              </p>
+              <p className="mt-1 text-body-sm text-ink-300">
+                Pricing on request —{" "}
+                <a
+                  href={site.whatsappHref}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="font-medium text-ember-300 underline-offset-4 hover:underline"
+                >
+                  message us on WhatsApp
+                </a>{" "}
+                and we will tell you which certificate your filings actually
+                require.
+              </p>
+            </div>
+          </div>
+
+          <Button as={Link} to="/contact" className="shrink-0 self-start sm:self-auto">
+            Talk to us
+          </Button>
         </Reveal>
       </Container>
     </section>

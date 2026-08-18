@@ -5,6 +5,7 @@ import {
   primaryNav,
   serviceCategories,
   dscPanelColumns,
+  dscPartnerPromo,
   site,
 } from "@/content/nav";
 import { cn } from "@/lib/cn";
@@ -22,6 +23,7 @@ const PANELS = {
     ariaLabel: "Services",
     columns: serviceCategories.map((category) => ({
       label: category.label,
+      subline: category.subline,
       path: category.path,
       group: category.group,
       items: category.children,
@@ -34,6 +36,9 @@ const PANELS = {
       items: column.items,
       note: column.note,
     })),
+    // The DSC panel's fourth "column" — a promo card, not a link list. See
+    // dscPartnerPromo's own comment in nav.js.
+    promo: dscPartnerPromo,
   },
 };
 
@@ -187,6 +192,7 @@ export function Header() {
                         id={`panel-${item.panel}`}
                         ariaLabel={PANELS[item.panel].ariaLabel}
                         columns={PANELS[item.panel].columns}
+                        promo={PANELS[item.panel].promo}
                         hubPath={item.hubPath}
                         hubLabel={item.hubLabel}
                         onNavigate={close}

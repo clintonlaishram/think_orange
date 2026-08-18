@@ -10,7 +10,7 @@ import { t } from "../turnaround.js";
 
 export default {
   slug: "tender-documentation",
-  category: "government-tenders",
+  category: "tenders-finance",
   title: "Tender Documentation Support",
   h1: "Tender Documentation Support in Salem, Tamil Nadu",
 

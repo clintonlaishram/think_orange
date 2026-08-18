@@ -1569,6 +1569,23 @@ shared `<ComingSoon />` component instead of the rest of the body.
   (search each for the 13-08-2026 note) and remove the `<ComingSoon />` line each
   one added.
 
+⛔ **REVERTED 17-08-2026.** Client preview is over; all 9 files (`ServiceLeaf.jsx`,
+`CategoryHub.jsx`, `ServicesHub.jsx`, `DscHub.jsx`, `DscProduct.jsx`,
+`UtilityPage.jsx`, `partner-with-us/index.jsx`, `contact/index.jsx`,
+`legal/LegalPage.jsx`) restored to their pre-preview state — each was `git show
+<pre-preview-commit>:<path>`'d back rather than hand-uncommented, having first
+confirmed via `git diff` that the only change since was the comment-out/
+`<ComingSoon />` insertion (no unrelated fixes were bundled into those commits).
+`ComingSoon.jsx` itself is untouched and unused — left in place as a component,
+same discipline as the DarkVeil L2/L4 layers, in case a future preview needs it
+again. `LegalPage.jsx` is back to its real behaviour: `PendingLegal` while a
+policy's `sections` is `null` (true for all 5 today), full renderer once it
+isn't — not `<ComingSoon />` unconditionally. Verified: `npm run lint` (0
+errors), `npm run build` + prerender (48 routes + 404 + sitemap, unchanged
+counts), and a live dev-server pass over one route per affected template
+(a T2 leaf, a T3 category hub, `/services`, `/dsc`, a DSC product, `/contact`,
+`/partner-with-us`, a legal page) — full content renders, zero console errors.
+
 ## Bug fix: mobile nav overlay broke once the header had scrolled — 13-08-2026
 Real bug (Clinton, tested on a phone): the hamburger menu displayed correctly
 when opened from the very top of a page, but opened broken/mispositioned once
@@ -1609,8 +1626,1275 @@ the page had been scrolled even a little first.
   width) resolve correctly post-fix in the simulated-scrolled state, where
   pre-fix the panel was provably boxed into the header instead.
 
+## Hero headline: typewriter effect replaces LineMask — 17-08-2026
+NOT a phase. Standalone request (Clinton, referencing Aceternity's Typewriter
+Effect): the H1 ("Compliance, without the scramble.") now types in
+character-by-character with a blinking cursor instead of LineMask's slide-up
+mask reveal. Same 3-line break as before (still required at display-xl over a
+7-column measure — "Compliance, without" still rewraps into one block if
+allowed to wrap naturally) and the same 0.12s mount delay.
+
+- **New `src/components/motion/Typewriter.jsx`.** Built custom rather than
+  porting Aceternity's component: that one is framer-motion + hardcoded
+  hex/gradient word colours, and this repo's stack is `motion/react` (the
+  renamed framer-motion package, already a dependency) with CLAUDE.md's
+  no-raw-hex / no-gradient-text rules. `lines` mirrors LineMask's per-line
+  shape but each line is an array of `{ text, className }` SEGMENTS, so the
+  serif italic ember "scramble." can keep its own styling while still typing
+  as part of one continuous character stream.
+- **Every character is real DOM text from first render — only `opacity`
+  animates.** This was a deliberate choice, not the obvious one: an earlier
+  draft sliced the string down to `shown` characters (Scramble's technique),
+  which means a prerendered page or a screen reader landing before hydration
+  would see NO text in the H1 at all — unacceptable for the site's primary
+  heading. Rendering the full string always, with only opacity staggered,
+  keeps the complete sentence in the static HTML and the accessibility tree
+  regardless of animation state. Verified in `dist/index.html`: all 27
+  characters present as text nodes, each with `style="opacity:0"`.
+- **Cursor (`.typewriter-cursor`, theme.css) is a plain CSS blink, not
+  JS-driven** — same pattern as `.hero-chevron`/`.hero-card-float`. The
+  global reduced-motion floor's `animation-iteration-count: 1` freezes it at
+  the keyframe's 100% state (opacity 0), so it disappears under reduced
+  motion rather than blinking — a static cursor stranded mid-sentence would
+  read as a stray mark, so invisible is the correct frozen state here, unlike
+  the arc rings which freeze *visible* at a composed angle.
+- ⚠️ **Real, unresolved tradeoff, flagged rather than silently shipped:**
+  because every character starts at `opacity:0` in the prerendered HTML, the
+  H1 — the homepage's largest text block — is invisible until hydration runs
+  the ~1.4s type-in (27 chars × 38ms + the 0.12s start delay). Phase 10
+  already accepted the homepage's Lighthouse Performance at 93/100, below the
+  sitewide 95 gate, and flagged it as the one open gap; this change makes
+  that H1's paint timing worse, not better, since the previous LineMask
+  reveal only clipped/translated real, already-opaque text rather than
+  fading it from zero. **Not re-measured this session** (Phase 10's
+  Lighthouse harness — `_serve-h2.mjs`, median-of-3, GPU-on — was deleted per
+  that phase's own cleanup discipline and would need rebuilding). Re-run that
+  harness before trusting the homepage's Performance score again.
+- Verified instead: `npm run lint` (0 errors), `npm run build` + prerender
+  (48 routes unchanged, no errors), a live browser pass confirming the type-in
+  renders, the cursor blinks (`animation-name: typewriter-blink`, ember-300),
+  and zero console errors — and the `dist/index.html` byte check above.
+  Reduced-motion was reasoned from the component's `useReducedMotion` branch
+  (identical shape to LineMask/Reveal/Scramble's own, all already verified
+  under emulated `prefers-reduced-motion`) rather than re-toggled live this
+  session.
+- LineMask itself is untouched and still used by `/kitchen-sink`
+  (`KitchenSink.jsx`) — this was a swap on one call site, not a component
+  deprecation.
+
+### Follow-up same session: the H1 itself rotates through three headlines
+Clinton asked first for the type-in to repeat every 10s, then for several
+headlines cycling. **Final shape: the H1 rotates.** Three headlines, each
+typed → held → erased → handed to the next, round-robin, in the page's main
+heading. There is no sub-line — an interim version put the rotation on a new
+line beneath a fixed H1, and that was reverted on Clinton's instruction
+("added this effect in main heading line not in subline").
+
+- **The SEO objection I raised against a rotating H1 turned out not to
+  apply, and the reasoning is worth keeping.** The concern was real in
+  general: a rotating heading normally means every variant's text lives in
+  the page's one `<h1>`, which Google reads as a single run-on heading, and
+  Phase 10's audit verified exactly one clean `<h1>` per route. It does not
+  apply *here* because the component mounts **only the active sentence** —
+  the others are not in the DOM at all. So the heading holds exactly one
+  coherent sentence at every moment, and the prerendered HTML holds the
+  first one. Verified against the built `dist/index.html`: `<h1>` count is 1,
+  text content exactly `Compliance,withoutthe scramble.`, with neither other
+  headline present. **If this component is ever changed to render all
+  sequences at once (e.g. for a cross-fade), that verification breaks and
+  the original objection becomes live again.**
+- **Copy is approved, not drafted by me.** Clinton picked the "X, without the
+  Y" pattern from three options on 17-08-2026, and all three are now in
+  rotation. No fee, turnaround, count, deadline or form code appears in any
+  of them — see `heroHeadlines`' header comment, which spells out why
+  "Filed in 3 days, without the follow-ups" would be an invented turnaround
+  guarantee in slogan's clothing.
+- ⚠️ **`heroHeadlines`' three-line shape is load-bearing, not formatting.**
+  Every entry is pre-broken into exactly three lines AND every entry's second
+  line is the same word ("without"). That is what holds the heading's height
+  and rhythm identical across the rotation, so the lede, CTAs and stat row
+  below never shift when a headline swaps. Verified by screenshot at all
+  three headlines: everything below the H1 is pixel-stable. A new entry that
+  wraps to a different line count, or breaks the shared line 2, reintroduces
+  a layout jump twice per cycle. (The pre-breaking itself is inherited from
+  the LineMask version — at display-xl over a 7-column measure a headline
+  allowed to wrap naturally rewraps mid-phrase.)
+- **One component, two modes.** `lines` = one fixed sentence typed once.
+  `sequences` = an array of `lines`, each typed → held → erased in turn,
+  round-robin (what the H1 now uses). The fixed mode is currently unused by
+  the hero but is the reason the component is still safe to reuse elsewhere.
+- ⛔ **THE BUG THAT MADE THE HEADLINE SWAP WITH NO ANIMATION AT ALL, and the
+  API form that caused it.** Clinton reported the headline "change directly
+  without any effect" — no reveal, no typing. The cause was driving the whole
+  cycle from ONE keyframe call,
+  `animate(0, [total, total, 0], { duration: cycle, times: [...] })`, and
+  stepping a `shown` counter from its `onUpdate`. **`animate()` prepends the
+  `from` value as an implicit first keyframe**, so the effective keyframe
+  count is 4 while `times` supplies 3, the reveal/hold/erase split does not
+  survive, and the intended cascade collapses. This is the same overload
+  hazard as the WeakMap crash recorded below — that family of calls is
+  ambiguous, and this repo should not use it for value sequences.
+  **The replacement is a single `shown` counter** driven by two
+  `animate(from, to, options)` value calls (write, then erase) with a
+  `setTimeout` hold between and `setActive` after.
+- ⛔ **THE CARET MUST BE EMITTED INSIDE THE CHARACTER STREAM, AFTER CHARACTER
+  `shown - 1`.** Clinton's second report: the caret "always stay as the then
+  of sentence", where it should follow the write position (`c |`, `Co |`,
+  `Com |`). A caret rendered at the end of the line sits past that line's
+  remaining characters — which are transparent but still laid out — so it
+  parks at the end of the sentence and never moves.
+  - It is anchored to the last WRITTEN character, not to the first unwritten
+    one. Both look identical mid-line, but at a line break "before the first
+    unwritten character" jumps the caret to the START of the next line while
+    the text it belongs to is still on the previous one. Measured: 6 of 295
+    samples misplaced, twice per sentence. Anchoring after `shown - 1` keeps
+    it on its own line by construction — re-measured at **0 of 293
+    misplaced, caret-to-glyph gap a constant 5px**, on both dev and the
+    production build.
+- ⛔ **EVERY CHARACTER STAYS IN FLOW. Unwritten ones are transparent, never
+  `display: none`.** An intermediate attempt removed them from layout so the
+  text would grow into an empty line — the obvious way to let a caret follow
+  the text. It cannot work here: an empty line cannot reproduce the line box
+  of a line that will hold glyphs, and no `min-height` fixes it, because
+  line 3's emphasis word is Instrument Serif and its metrics are taller than
+  the sans. Measured, that version produced **three different `<h1>` heights
+  (260/268/281px) inside one cycle**, shunting the lede, CTAs and stat row on
+  every rotation. Keeping every glyph in flow makes the box constant by
+  construction: re-measured at **one `<h1>` height (281px) and one lede
+  position (561px) across 240 samples**.
+  - ⚠️ When measuring this, sample only AFTER the hero's entrance animations
+    settle (~5s). `Reveal` translates its children 16px on mount, so a probe
+    that starts at 600ms reports the lede moving and looks like a typewriter
+    layout bug when it is not — that cost a false FAIL here.
+- **The per-character fade is a CSS transition on `opacity`, selected by
+  `data-on`** (theme.css). Possible only because the element never leaves
+  flow. A transition is governed by the state being transitioned TO, so
+  writing gets 300ms ease-out and erasing 120ms linear — the erase stays
+  crisp, per "delete effect is okay", while the write keeps the soft reveal
+  of Clinton's Aceternity reference. Zero per-character JS animation.
+  ⚠️ An earlier version made characters appear INSTANTLY on a reading of
+  "fixed writing effect" as "the fade looks smeared". That was the wrong
+  reading — the write effect was *broken*, not too soft. Do not re-remove the
+  fade.
+- **The caret renders only when `(rotates || shown < totalChars)` and
+  `!reduceMotion`.** A fixed, finished sentence otherwise keeps a permanently
+  blinking caret, which reads as a stuck cursor.
+  ⚠️ **Correction to an earlier claim in this file: the caret does NOT freeze
+  invisible under reduced motion.** The global CSS floor collapses the blink
+  to one 0.01ms iteration with no fill, so it settles at its BASE style —
+  **measured opacity 1, solid**. A solid caret parked after a heading that
+  will never write or erase implies motion that is not coming, so it is
+  dropped outright in that branch. Verified absent (`caret: false`) under
+  emulated `prefers-reduced-motion: reduce`, with the full sentence visible
+  and no rotation across 17s.
+- **The H1 is NOT `aria-hidden`**, following Scramble.jsx's precedent — it is
+  real copy, and it is not a live region, so nothing is announced as it
+  rotates; AT reaching it reads whichever headline is settled.
+
+Superseded mechanism, kept because its hazards are still live elsewhere:
+
+- ⛔ **Real bug, not a tooling artifact: passing the keyframes as a single
+  ARRAY first argument — `animate([0, totalChars, totalChars, 0], {...})` —
+  crashed every load with `TypeError: Invalid value used as weak map key`,
+  caught by React's router error boundary.** Framer's `animate()` overloads
+  on the first argument's shape: a bare array there is read as a list of DOM
+  *subjects* to animate (as in `animate([el1, el2], {...})`), not as a
+  keyframes sequence for a plain value. It then tried to track each number
+  (`0`, `27`) as an element in an internal WeakMap — numbers can't be WeakMap
+  keys, hence the exact error text. **Fix: value-only keyframe sequences need
+  the two-argument form, `animate(from, [keyframe1, keyframe2, …], options)`**
+  — `from` (0) stays a separate argument, and `times` gets one entry per
+  value in the `to` array (3), not per value including `from` (4). The
+  two-number form elsewhere in this file (`animate(0, totalChars, {...})`,
+  and Scramble.jsx's own `animate(0, 1, {...})`) was never affected — only
+  the multi-keyframe array form was ambiguous. **Scramble.jsx still uses the
+  safe two-number form and needs no change.**
+
+### ⚠️ Verification lesson: this pane CANNOT test this component
+Two rounds of "verified working" in the in-app preview pane were wrong, and
+the animation-free swap Clinton reported shipped straight through them. The
+pane reports `document.visibilityState === "hidden"`, which suspends rAF and
+throttles timers — already documented in the Phase 4 section, and it bites
+harder here than anywhere else in the codebase:
+- With the old keyframe mechanism, the pane showed the sentence fully typed,
+  which looked like success. It was the animation being skipped to its end
+  state, not running.
+- An interim `useAnimate` + `stagger()` version showed the headline
+  **permanently invisible** in the pane (every character stuck at opacity 0,
+  no console error, no unhandled rejection) — which looks like a catastrophic
+  bug and was not one. A real browser rendered it correctly.
+- `document.getAnimations()` does not help either: motion drives its opacity
+  animations on its own JS driver, not WAAPI, so the H1 reports only the
+  caret's CSS blink. (The CURRENT version's fades are real CSS transitions,
+  so they would show — but the counter driving them is still JS.)
+
+**Verify this component by driving a real Chrome over CDP** — Node 22 has a
+native `WebSocket`, so no dependency is needed; launch
+`/Applications/Google Chrome.app/…/Google Chrome --headless=new
+--remote-debugging-port=…`, then poll on an interval. Check
+`document.visibilityState` reads "visible" first. Three probes are worth
+rebuilding, and each caught a real defect the others missed:
+1. **Progression** — count `.typewriter-char[data-on="true"]` and look for
+   samples where `0 < written < total`. Catches the write collapsing to an
+   instant swap.
+2. **Caret tracking** — `caret.getBoundingClientRect().left` minus the last
+   written character's `.right`. Should be a small constant on the same line
+   (here: 5px). Catches the caret parking at the end of the sentence, and
+   the line-break jump.
+3. **Layout stability** — the `<h1>`'s height and the lede's `top`, sampled
+   across a full cycle, each expected to yield exactly ONE distinct value.
+   Catches the collapsing-empty-line problem. **Start this one ~5s in**, or
+   `Reveal`'s 16px mount translation reports a false failure.
+
+**Measured results, both dev and the production build over `npx serve dist`:**
+all three headlines observed in rotation; the write steps through
+intermediate counts (`C → Co → Com → …`) rather than jumping, and the erase
+steps back down the same way; caret-to-glyph gap a constant **5px in 293/293
+samples, 0 misplaced**; **one `<h1>` height (281px) and one lede top (561px)
+across 240 samples**; cycle ~10.0s end to end. Reduced motion verified via
+`Emulation.setEmulatedMedia`: full sentence visible, no rotation across 17s,
+no caret.
+- **Stale console errors are a trap in this tool.** After fixing the WeakMap
+  crash, `read_console_messages` kept returning the OLD errors on the same
+  tab across a forced reload, which looks exactly like an unfixed bug. Same
+  again later for a `heroRotatingLines is not defined` HMR error that a hard
+  reload had already resolved. **Open a NEW tab to get a clean console before
+  concluding a fix did not work** — both times the fresh tab reported zero
+  errors.
+
+## Bug fix: hero stat row invisible-until-scroll at ~810–820px viewport height — 17-08-2026
+Clinton reported the stat row "not shown when i open in more height desktop
+screen, only show when i scroll a little bit." Real bug in `Reveal`
+(`src/components/motion/Reveal.jsx`), not the typewriter work above, and not
+a tooling artifact — confirmed by driving a real Chrome over CDP (the in-app
+preview pane cannot be trusted for anything IntersectionObserver-based; see
+the section above).
+
+- **Root cause: a dead zone in `Reveal`'s scroll-trigger geometry.**
+  `useInView` is called with `margin: "0px 0px -12% 0px"` (shrinks the
+  intersection root by 12% of viewport height at the bottom) and
+  `amount: 0.18` (18% of the target must overlap that shrunk root). For most
+  viewport heights this is invisible — either the target is fully above the
+  shrunk boundary (passes trivially) or fully below it (correctly waits for a
+  real scroll, the below-the-fold case the margin exists for). But because
+  the hero's content is vertically centred in a `min-h-[100svh]` container,
+  there is a **narrow band of viewport heights (~810–820px at 1440 width)
+  where the stat row is genuinely ON SCREEN at mount (`fitsInViewport: true`)
+  yet overlaps the shrunk root by LESS than 18%** — so `inView` never becomes
+  true, the row sits at `opacity: 0` forever, and only an actual scroll event
+  (which recomputes the intersection against new geometry) fixes it. Worked
+  out algebraically first (content height is a fixed ~750px regardless of
+  viewport height at this breakpoint, so the failure band is derivable), then
+  confirmed empirically: `revealOpacity: "0"` at 800/810/815px, `"1"` at
+  790px and 825px+, and one sample at 820px caught mid-transition
+  (`"0.446718"`) after a 2px scroll — i.e. the scroll didn't reveal
+  already-rendered content, it triggered the reveal that had never fired.
+- **This band is plausible on real hardware** — common laptop viewport
+  heights after browser chrome land in or near it — which is why Clinton hit
+  it on a real desktop despite it not reproducing at the first several
+  round-number heights (900/1200/1400/1600px) tried.
+- **Fix: `Reveal` now accepts optional `amount`/`margin` props**, defaulting
+  to the existing values so every other call site (14 others, sitewide) is
+  byte-for-byte unaffected. `HeroStats`' own `<Reveal>` in `Hero.jsx` now
+  passes `margin="0px"` — no bottom exclusion — because this row is the
+  hero's own trailing content and can legitimately already be on screen at
+  mount, unlike a genuine below-the-fold section reveal, where the -12%
+  margin is correct and stays untouched everywhere else. With `margin="0px"`,
+  the row reaches 100% overlap the instant `fitsInViewport` is true, so
+  there is no longer a threshold to miss.
+- **Verified at the exact failing heights (700/750/780/800/810/815/820/825/
+  850/900/1200/1600px, width 1440):** every height where the row is on-screen
+  at load now reports `revealOpacity: "1"` immediately, with no scroll. 700px
+  (row genuinely below the fold) correctly still waits for a real scroll —
+  the fix removes the dead zone without turning this into an always-on
+  reveal. `npm run lint`, `content:check` and `build` + prerender all clean.
+
+⚠️ **Same class of bug could exist for any OTHER `<Reveal>` whose content sits
+near a viewport-height-dependent fold** — most of the site's Reveals wrap
+content that's unambiguously below the fold on any real viewport (they never
+hit the "on screen but under-threshold" band), so this was not audited
+sitewide. If a future report describes "shows only after a tiny scroll" for
+a different section, check whether that section's container height also
+scales with viewport height (vertical centering, `min-h-[100svh]`, etc.) —
+that's the precondition for this dead zone to exist at all.
+
+## Services menu restructure — nav.js only, content not design — 17-08-2026
+NOT a phase. Clinton supplied a revised services mega-menu
+(`thinkorange-services-menu.html`) and asked for the site updated to match —
+explicitly the CONTENT (category names, groupings, service names), not that
+file's own visual mockup (a static HTML/CSS panel, never wired to the real
+`MegaPanel` component). `serviceCategories` in `src/content/nav.js` — the
+keystone every surface derives from — was restructured to match exactly;
+nothing else needed a structural change, per that file's own discipline.
+
+- **What changed, in nav.js:** new category **Registrations & Licences**
+  (`msme-udyam` and `startup-india-dpiit` MOVED here from Business Setup,
+  plus 4 new unwritten leaves). Business Setup gained 1 new unwritten leaf
+  (Trust, Society & Section 8) and lost the two that moved out. **Accounting
+  & Audit relabelled "Accounting, Payroll & Audit"** — slug/path unchanged
+  (`accounting-audit`), so its 3 written leaves kept their URLs; gained 3 new
+  unwritten leaves. **Government Tenders + Loans & Finance MERGED** into one
+  category, **Tenders & Finance** (`tenders-finance`) — all 4 existing leaves
+  moved path with content untouched. GST gained 1 new unwritten leaf (LUT &
+  Export Refunds). Income Tax gained 1 new unwritten leaf (Notices &
+  Assessments) — ⛔ blocked the same as the category's other 3, BLOCKERS.md §1.
+  Total leaf count: 21 → 31. Total routes: 48 → 58 (+404, sitemap unaffected).
+- **`MegaPanel.jsx` needed zero code changes.** Its statutory/growth split
+  already worked by filtering on `group` and finding the first "growth"
+  index at render time, not by assuming a fixed 4-and-2 split — so 5
+  statutory + 1 growth (Tenders & Finance) renders the same hairline
+  separation mechanism correctly. Verified live: mega panel shows all 6
+  columns, hairline break still lands before the one growth column.
+  **`CategoryHub.jsx` also needed zero code changes** — its `content?.x &&`
+  guards already tolerate `getCategoryContent(slug)` returning `undefined`,
+  which is exactly the new Registrations & Licences hub's state (hero +
+  child grid + CTA only, no intro/FAQ/why-us) until that copy is written.
+- **`category-content.js`'s two old entries for the merged category were
+  combined into one `tenders-finance` entry by RECOMBINING their existing,
+  already-approved prose** — every sentence in the merged intro/whyUs/faqs
+  already existed in one of the two old entries; only `meta`/`heroLede` are
+  newly written, and stay exactly as fact-free as the rest of the file.
+  **Business Setup's intro and FAQ list were edited for accuracy**, not
+  expanded: the paragraph naming DPIIT/MSME as part of this category was
+  rewritten (they moved out), and the DPIIT FAQ was dropped rather than left
+  stale — noted in `MISSING-PAGES.md` to carry into the new hub's content
+  once written, rather than silently lost.
+- **`msme-udyam`/`startup-india-dpiit`/`gem-registration`/
+  `tender-documentation`/`business-loan`'s own `category:` field** (each
+  leaf's own metadata, required by `_schema.js`, documented there as "Parent
+  category slug from nav.js") **were updated to match** even though nothing
+  currently reads that field at render time — `content:check`'s orphan check
+  only cross-validates a leaf's `slug` against nav.js, not this field — kept
+  accurate for whichever future validator or review-doc generator expects it
+  to actually match.
+- **`WhatWeDo.jsx`'s `PROMISES`/`SPANS` maps are keyed by category slug and
+  would have silently rendered a blank promise + fallen back to a default
+  span for any slug not in the map** — updated for the new/merged slugs.
+  The bento layout is UNCHANGED as a pattern (6+3+3 / 3+3+6, verified live
+  via each card's `col-span` class) — only which category fills which slot
+  moved, so DESIGN.md §11.3's asymmetric-grid intent survives the
+  restructure untouched.
+- **Two other stale-content bugs caught and fixed in the same pass, not
+  directly requested but silently wrong the moment the leaf count changed:**
+  `ServicesHub.jsx`'s lede hardcoded "twenty-one services" — now computed
+  from `serviceCategories` at render time so a future count change can't
+  silently go stale again the same way; and `meta.js`'s `/services` SEO
+  description, which hardcoded the same stale count and the two now-gone
+  category names.
+- **`MISSING-PAGES.md` (new)** is the punch list this restructure's own
+  request asked for: every new/moved leaf and the one new category hub that
+  still needs real content, organised under a "Services" heading. Nothing
+  in it is a blocker — every route already renders today via `PendingLeaf`
+  or `CategoryHub`'s tolerant no-content branches — it's a writing backlog,
+  not a bug list. Follow it, plus this file's own content-writing rules
+  above, when that batch of leaves eventually gets written.
+- Verified: `npm run lint` (0 errors), `npm run content:check` (17/21
+  written leaves still validate clean — none of the moves or renames touched
+  leaf *content*, only nav.js/category-metadata), `npm run build` + prerender
+  (58 routes + 404 + sitemap, up from 48), and a live dev-server pass: the
+  mega panel's 6 columns, a new unwritten leaf's `PendingLeaf` fallback (with
+  correct written-sibling links), the new hub's tolerant render, the merged
+  hub's combined intro/FAQ, Business Setup's corrected copy, and the
+  homepage's 6-card bento grid in the right 6/3/3/3/3/6 spans — zero console
+  errors throughout.
+
+## DSC & eSign menu restructure + Partner With Us moved into the DSC panel — 17-08-2026
+NOT a phase. Same treatment as the services menu restructure above, applied to
+`thinkorange-dsc-menu.html` (Clinton's revised DSC & eSign mega-menu) — content
+only, that file's own visual mockup was not implemented. Plus an explicit,
+separate design request: pull "Partner With Us" out of the main navbar
+entirely and surface it as a premium promo card inside the DSC panel instead.
+
+- **nav.js DSC exports restructured:** `dscProducts` grew from 4 to 7 (added
+  `combo-dsc`, `dsc-renewal-reissue`, `aadhaar-esign` — all unwritten). Two new
+  standalone T5 pages, `dscValidityFaqsPage` and `dscEsignVsDscPage` (also
+  unwritten), added alongside the existing `dscDocumentsPage`. `dscPanelColumns`
+  rebuilt into 3 columns matching the revised menu ("Digital Signature
+  Certificates" / "Tokens & Resources" / "eSign Solutions") and switched from
+  positional indices (`dscProducts[3]`) to a `dscProduct(slug)` lookup helper —
+  indices would silently point at the wrong item the next time something is
+  inserted. New `dscPartnerPromo` export holds the promo card's content
+  (heading/description/CTA/secondary link), copied verbatim from the menu's
+  "Partner Programme" panel. All three of `allRoutes`, `footerColumns` and the
+  `slugIndex` behind `findBySlug` were updated for the 2 new T5 pages — missing
+  any one would have left a route unreachable from the sitemap/footer or an
+  unresolvable `related` pointer. Total DSC routes: 9 → 14.
+- ⛔ **Two T4/T5 templates had NO graceful fallback for an unwritten slug —
+  both `return`ed `null`, a genuinely blank page (not even a hero), and this
+  restructure would have shipped five of them.** `PendingLeaf` (T2) has
+  existed since Phase 6 for exactly this; T4/T5 never needed it before because
+  every one of the original 4+6 routes had content. Added `PendingProduct` to
+  `DscProduct.jsx` and `PendingUtility` to `UtilityPage.jsx`, both mirroring
+  `PendingLeaf`'s shape (hero, "still being written", phone/WhatsApp buttons).
+  Verified live: `/dsc/combo-dsc` and `/dsc/esign-or-dsc` both render this
+  state correctly instead of a blank `<main>`.
+- ⛔ **Real crash caught before shipping: `DscBand.jsx`'s homepage section
+  has its own `ICONS` map keyed by product slug, with only 4 entries.**
+  `dscNav.map(...)` iterates every product in nav.js and does `<Icon />`
+  where `Icon = ICONS[product.slug]` — for the 3 new products this evaluates
+  to `undefined`, and `<undefined />` is a hard React crash (invalid element
+  type), not a graceful blank. Added `Lock` (combo-dsc), `RefreshCw`
+  (dsc-renewal-reissue) and `FileSignature` (aadhaar-esign). Grepped the rest
+  of `src/` for other slug-keyed DSC maps before calling this done — none
+  found (`WhatWeDo.jsx`'s equivalent maps are services-only, `DriverDownloads.jsx`
+  only touches the untouched `dscDriversHub`).
+- **The DSC mega panel gained two new mechanisms in `MegaPanel.jsx`, both
+  additive — the Services panel is unaffected:**
+  1. **Per-item `note`** (`item.note`, rendered under a link's label) — the
+     revised menu's "HYP2003 · mToken · InnaIT" subtitle on "Buy DSC Tokens"
+     needed this; the component only had a column-level `note` before.
+  2. **A `promo` prop**, rendered by a new `PanelPromo` sub-component instead
+     of `PanelColumn` — a promo card isn't a link list, so it gets its own
+     branch rather than overloading `column.items`. Sized as one more equal
+     grid track in the SAME grid as the link columns (not a second sibling
+     grid), same reasoning `MegaPanel`'s existing growth-column comment
+     already gives for why that split matters.
+  `MobileNav.jsx` got the mobile equivalents: per-item note rendering inline,
+  and a `PromoCard` component rendered inside the DSC accordion group,
+  `tabIndex`-gated the same way every other link in that accordion already is.
+- ⛔ **Real bug, caught by checking computed styles rather than trusting a
+  screenshot: the promo card's "Partner Programme" heading rendered CANVAS
+  instead of the ember I'd styled it, because `[data-surface="dark"] h4`
+  (theme.css) beats a plain `.text-ember-300` class on specificity — the
+  exact trap this file already documents once for PartnerProgramme's h3.**
+  Fixed by NOT fighting it: dropped to `text-h4 text-canvas`, matching
+  `PanelColumn`'s own heading style AND matching what the source mockup's
+  `.col.panel h4` actually does (plain white, same as every other column
+  heading — my ember instinct was an embellishment beyond the source, not
+  something the mockup asked for). Applied to both the desktop and mobile
+  versions.
+- **"Partner With Us" removal from the navbar touched two different arrays
+  that don't share one true source, on purpose.** `primaryNav` (desktop) had
+  the entry removed outright. `standalonePages` — a SEPARATE array that also
+  feeds the footer's Company column and `allRoutes` — was left untouched, so
+  the real `/partner-with-us` page keeps existing and stays reachable from
+  the footer; `MobileNav.jsx`'s flat link list (which reads `standalonePages`
+  directly, not `primaryNav`) instead filters it out at render time
+  (`.filter((page) => page.slug !== "partner-with-us")`). Missing this
+  filter would have left the old link sitting in the mobile menu even after
+  it disappeared from desktop — the two navbars don't derive from the same
+  array, so removing it from one doesn't remove it from the other for free.
+- **"DSC" relabelled "Digital Signatures"** in `primaryNav` (desktop) and
+  `MobileNav.jsx`'s `SECTIONS` (mobile) — both hardcoded the string
+  separately, so both needed the edit. Left alone deliberately: the panel's
+  own internal column labels and DSC product names ("Buy DSC Tokens", etc.),
+  where "DSC" is the accurate, established short form for a specific
+  certificate rather than the whole practice area.
+- **"Partner login" has no backing portal — nothing on this site
+  authenticates a partner — so it's routed to WhatsApp** with a pre-filled
+  message, not a dead link or an invented login page. Same "no backend yet,
+  route to a human" pattern as `EnquiryCard`/`DscEnquiryStrip` elsewhere in
+  the DSC tree. The WhatsApp link-builder is duplicated (not shared) between
+  `MegaPanel.jsx` and `MobileNav.jsx` — matching `DscProduct.jsx`'s own
+  precedent of keeping such small formatters local rather than centralising
+  a two-call-site helper into nav.js.
+- **`DscHub.jsx`'s "Documents & drivers" section grew from 2 cards to 4**
+  (added Validity/Renewal/FAQs and eSign-or-DSC), `sm:grid-cols-2` →
+  `sm:grid-cols-2 lg:grid-cols-4`, so both new T5 pages are reachable from the
+  hub page itself, not just tucked inside the nav menu.
+- **`MISSING-PAGES.md` gained a "DSC & eSign" section**, same discipline as
+  its existing "Services" section — nothing below is a blocker, every route
+  already renders via the new `PendingProduct`/`PendingUtility` fallbacks;
+  it's a writing backlog. Flags one thing for Clinton to confirm rather than
+  guess at: whether `buy-tokens`'s own product-page copy (still HYP2003-only)
+  should be updated to match the menu's newer "HYP2003 · mToken · InnaIT"
+  subtitle.
+- Verified: `npm run lint` (0 errors), `npm run content:check` (clean, DSC
+  content isn't covered by this script at all — no schema exists for T4/T5
+  the way `_schema.js` covers T2), `npm run build` + prerender (63 routes +
+  404 + sitemap, up from 58), and a live dev-server pass: the mega panel's 3
+  columns + promo card (desktop and mobile), the per-item token-brand note,
+  `PendingProduct`/`PendingUtility` on two of the five new unwritten routes,
+  the DSC hub's 4-card documents/drivers grid, the homepage DSC band
+  rendering all 7 products without crashing, "Partner With Us" absent from
+  both navbars but still reachable via the promo card/footer/`/partner-with-us`
+  directly, and zero console errors throughout.
+
+## Services backlog closed — 18-08-2026
+NOT a phase. Closed `MISSING-PAGES.md`'s Services section (the DSC & eSign section
+there is separate and still open). Deliberately broke the usual "4-5 leaves per
+session" rule (Session discipline, below) — this ran as 5 parallel research batches,
+one per shared statutory domain, each independently researching real sources and
+writing its own leaf file(s) with no shared-file edits, so the parallelism didn't
+create the drift that rule exists to prevent. Statutory/turnaround keys from all 5
+batches were merged centrally afterward, once, to avoid concurrent writes to those
+shared files.
+
+- **10 leaf files written**: `iec-registration`, `icegate-registration`,
+  `trademark-registration`, `ngo-darpan-registration` (new Registrations & Licences
+  category), `gst-lut-export-refunds` (GST), `trust-society-section8` (Business
+  Setup), `pf-esi-registration`, `payroll-processing-returns`, `roc-annual-compliance`
+  (Accounting, Payroll & Audit), and `personal-finance` (Tenders & Finance — closed
+  the pre-existing gap `services/index.js`'s own header comment had flagged since
+  Phase 3). Plus the `registrations-licences` entry in `category-content.js`
+  (intro/whyUs/faqs, carrying forward the DPIIT FAQ that lost its home in the
+  17-08-2026 restructure). 27 of 31 service leaves are now written; the 4 unwritten
+  are all Income Tax, all blocked on BLOCKERS.md §1 (now updated to list all four,
+  including `notices-assessments`, added by that same restructure).
+- **`trust-society-section8.js` covers three legal structures in one leaf** (nav.js
+  groups them as one route) — `documents` has three groups instead of the usual one.
+  Real research finding worth flagging again here: Tamil Nadu registers societies
+  under its OWN 1975 Act, not the central 1860 Act every generic guide assumes — got
+  this wrong once would have meant a Salem client following the wrong statute's
+  procedure entirely, not just a stale number.
+- **`roc-annual-compliance.js` reuses existing `statutory.js` keys** (`aoc4Window`,
+  `mgt7Window`, `llpForm8Due`, `llpForm11Due`, etc.) rather than duplicating them —
+  the research agent was briefed specifically to check for this before adding new
+  keys, since this leaf's facts overlap heavily with `private-limited-company.js`'s.
+- **`payroll-processing-returns.js` needed the same income-tax exclusion discipline
+  as everywhere else**, even though payroll is an EPF/ESI/Companies-Act topic, not an
+  income-tax one: salary TDS is mentioned only generically ("deducted and deposited
+  each month"), no section number, no form name, because that specific sub-topic
+  (salary TDS's section and form both moved under the 2025 Act) is exactly what
+  BLOCKERS.md §1 is about. Same exclusion applied to `12A`/`80G` mentions in
+  `trust-society-section8.js` and `ngo-darpan-registration.js` — non-profits
+  routinely pursue income-tax exemption registration, described generically with no
+  section number, flagged in each leaf's `review.notes` as deferred pending that
+  blocker.
+- **`content:check`'s inline-fact scanner caught two real misses**: `gst-lut-export-
+  refunds.js` had literal "31 March"/"1 April" mentions alongside its correct `s()`
+  calls (reworded to "the financial year ends"/"a new financial year" — the specific
+  dates are already established via `s("lutValidityPeriod")` elsewhere on the page),
+  and `personal-finance.js` had literal "3 months"/"6 months" document-lookback
+  windows. The latter weren't restated via a new statutory key, because they aren't a
+  legal fact — how many months of statements a lender wants is the LENDER's practice
+  and varies; reworded to say so honestly ("the exact number of months is set by the
+  lender") rather than inventing a false universal rule.
+- Verified with a live dev-server pass (not just `content:check`/`build`) over all 9
+  new leaves plus the new hub — real content renders, zero console errors. The
+  session's `.claude/launch.json` had a stale hardcoded `port: 5173` that collided
+  with an unrelated project's dev server; fixed by pinning an explicit unlikely-to-
+  collide port (5183) with `--strictPort` rather than relying on `autoPort`, which
+  doesn't work here since `vite --host` doesn't read the tool's reassigned port back
+  and just auto-increments past whatever's already in use.
+
+## DSC & eSign backlog closed — 18-08-2026
+NOT a phase. Same session as the Services backlog above; closes the other half of
+`MISSING-PAGES.md` (the DSC & eSign restructure's writing backlog). Content researched
+from `svsdigicorp.com` (a real DSC reseller, Clinton's requested source — used to
+confirm what a Combo DSC actually is commercially, not just in law) plus the Wikipedia
+eSign (India) article and several DSC-industry sources for renewal mechanics and the
+eSign-vs-DSC comparison.
+
+- **3 T4 products** (`combo-dsc`, `dsc-renewal-reissue`, `aadhaar-esign`) added to
+  `src/content/dsc/products.js` — all fit the existing shape with zero template
+  changes. `aadhaar-esign` is the interesting one: `validityOptions: null` and
+  `driverSlugs: []`, both already handled by `DscProduct.jsx`'s existing optional
+  chaining, because eSign genuinely has no token and no multi-year certificate to
+  validate — it's a different mechanism from every other product on this page, not a
+  DSC variant with different numbers.
+- **2 new T5 pages, and T5 had no content schema for either — one had to be designed
+  from scratch**: `validity-renewal-faqs.js` and `esign-or-dsc.js`
+  (`src/content/dsc/`), plus two new dispatch branches and render functions
+  (`ValidityRenewalFaqs`, `EsignOrDsc`) in `UtilityPage.jsx`. `validity-renewal-faqs`
+  deliberately does NOT duplicate each product's `validityOptions` as static content —
+  it reads `dscProducts` directly at render time, same "select by reference"
+  discipline as the homepage FAQ row and the existing Documents Required page, so a
+  future validity change on any product can't leave this page quietly stale.
+- **`DscHub.jsx` needed zero changes** — it already builds its product grid and its
+  documents/drivers grid from `dscProducts`/nav.js directly, so all 7 products (up
+  from 4) and both new T5 pages appeared automatically the moment the content existed.
+  Worth remembering as a pattern: a hub/index page built from a data source, not a
+  hardcoded list, absorbs new children for free.
+- **The one fact that mattered most to get unambiguously right, stated twice**:
+  Aadhaar eSign does NOT substitute for a Class 3 DSC on statutory portals (income
+  tax, GST, MCA21/ROC, e-tendering/GeM) — those mandate Class 3 specifically. Stated
+  in `aadhaar-esign`'s own `verificationNote` (a prominent rendered callout, not buried
+  prose) and again as its own row on the `esign-or-dsc` comparison table, so a reader
+  landing on either page gets the correction rather than an easy-to-miss caveat.
+- **Two things flagged as inferred, not confirmed**, in `MISSING-PAGES.md`: whether
+  GeM specifically requires an encryption certificate for `combo-dsc` (SVS DigiCorp's
+  own site doesn't list GeM under their combo product — worded as "many e-tendering
+  portals" rather than naming GeM), and whether ThinkOrange's existing eMudhra/SignX
+  DSC partnership actually extends to Aadhaar eSign delivery today, or whether that's
+  this session's reasonable-but-unconfirmed inference from the partnership already
+  existing for DSC issuance.
+- **No `content:check`-equivalent schema exists for DSC content** (T2's `_schema.js`
+  only covers service leaves — a pre-existing gap, noted back in the Phase 7 section
+  above). Verified instead by `npm run lint`, `npm run build`, and a live dev-server
+  pass over all 5 new routes plus `/dsc` itself — zero console errors, and the DSC
+  hub's product/resource grids confirmed picking up every new entry automatically.
+
+## Income Tax leaves written — BLOCKERS.md §1 cleared for writing — 19-08-2026
+NOT a phase. The last four unwritten service leaves — `itr-filing`,
+`tds-compliance`, `tax-planning-advisory` and `notices-assessments` — are now
+written. **All 31 service leaves have content.** The blocker was never about
+writing capacity; it was that the Income Tax Act, 2025 replaced the 1961 Act on
+01-04-2026 and every section number, form name and the core "Assessment Year"
+framing had to be RESEARCHED rather than recalled. That research happened this
+session and is recorded, fact by fact, in `statutory.js`.
+
+- **`statutory.js` gained an `INCOME TAX ACT, 2025` block (~45 keys)**, each with
+  its own `basis` and `source`, plus a separate `incomeTaxAsOf` export — that
+  block needs re-checking on a shorter cycle than the GST and Companies Act
+  values, so it does not hide behind the file-wide `asOf`.
+- **The mapping that made these pages writeable at all**, since a remembered
+  number here is a wrong number: returns are `Section 263` (was 139/139D/194P);
+  TDS is `392` salary + `393` everything-else-by-payment-code (was 192–194T,
+  sixty-odd sections) with compliance under `397`; assessment is `270` (was 143),
+  best judgment `271` (was 144), faceless `273`, reassessment notice `280` (was
+  148); late fee `428` (was 234F), interest `423`/`424` (was 234A/234B); rebate
+  `156` (was 87A); tax audit `63` (was 44AB); presumptive `58`/`61`. Forms:
+  statements `138`/`140`/`144`/`143` (was 24Q/26Q/27Q/27EQ), certificates
+  `130`/`131` (was 16/16A).
+- **BLOCKERS.md §1's Option A was taken**, as it recommended: every leaf leads
+  with the 2025 Act and states that income earned up to 31-03-2026 is still
+  governed by the 1961 Act. **No page says "Assessment Year" except to say it has
+  been abolished** — that concept was removed, not renamed, and copy still using
+  it is copy written against a repealed Act. That is the single most visible
+  possible error on a tax consultancy's own site, so treat it as a hard rule for
+  any future income-tax content.
+- **What was deliberately NOT published, and why it is not a gap:** no TDS rate
+  table or per-payment-code threshold, no basic exemption amount, no presumptive
+  turnover ceiling, no reassessment limitation period, and no first-appeal form
+  number. Rates reportedly carried over unchanged from the 1961 Act — but
+  "reportedly" is not the standard for a number a client will actually deduct on,
+  and one secondary source reporting Form 99 replacing Form 35 was not
+  corroborated. Same discipline as `fees: null`: state the mechanism, defer the
+  unconfirmed number. Each leaf's `review.notes` says exactly what was withheld.
+- **`tax-planning-advisory` carries a different risk from the other three and is
+  written differently.** Filing, TDS and notices go wrong by citing a repealed
+  section; a planning page goes wrong by drifting into personalised financial
+  advice. So it states mechanisms and what the comparison depends on, names no
+  investment product, gives no worked example, and quantifies no saving. The
+  rebate line carries two caveats that must survive any rewrite: the ₹12 lakh
+  figure is taxable income AFTER the standard deduction, and the rebate does not
+  extend to income taxed at special rates. Stating the headline without them is
+  the most misread number in Indian tax.
+- **`notices-assessments` is now the second-highest-risk page on the site**, after
+  `gst-notices-litigation`, and for the same reason — a visitor may act on it
+  while a reply window is running. It gives the OLD section number in brackets
+  once per concept (143, 148, 144) purely as orientation, because a reader
+  arriving with a notice searched for the old number; the citation itself is
+  always the new one.
+- **Two `content:check` catches worth knowing about**: the inline-fact scanner
+  flagged the literal commencement date "1 April 2026" (now `s(
+  "incomeTaxAct2025Commencement")`) and a raw "₹12 lakh" sitting in an FAQ
+  QUESTION, not an answer — the question was reworded so the amount comes from
+  the statutory key in the answer. It also enforces that every `s()` key used
+  appears in that leaf's `review.statutoryKeys`, which caught four omissions.
+  The scanner earns its keep on exactly this kind of page.
+- **Fixed in passing: `content:check` reported "31 leaf file(s) written of 21"** —
+  the total was hardcoded and went stale when the 17-08-2026 menu restructure took
+  the count from 21 to 31. Now derived from `serviceLeavesBySlug.size` (a Map, not
+  an object — `Object.keys()` on it returns 0 and reports "of 0").
+- Verified: `npm run lint` (0 errors; one PRE-EXISTING unused-`site`-import warning
+  in `MegaPanel.jsx` from the DSC restructure session, untouched here),
+  `npm run content:check` (31/31 leaves validate, no hardcoded facts, only the
+  three long-standing unconfirmed-content warnings), `npm run build` + prerender
+  (63 routes), and a real-Chrome-over-CDP pass across the Income Tax hub and all
+  four new leaves — correct H1, 9 sections each, 8 FAQs, 5 JSON-LD blocks, "On
+  request" fees, no `undefined` in any rendered string, zero console errors.
+
+## One FAQ treatment sitewide — homepage design applied to every page — 19-08-2026
+NOT a phase. Clinton: "in faqs section in all page take the design of Faqs
+section of home page." There were two FAQ treatments; there is now one, and the
+homepage is no longer the special call site — it is one of nine.
+
+- **What the homepage design actually was, and it is TWO things, not one.** The
+  row treatment (mono `01` index, question at `text-h4`, a `+` that rotates
+  135° to an `×`, hairline top/bottom rules, first row open) AND the section
+  composition (4/8 split, STICKY left rail carrying eyebrow + h2 + one
+  supporting line + a WhatsApp escape hatch). Only migrating the first would
+  have left every other page stacking a heading above a `max-w-[76ch]` list
+  with the entire right half of the 1800px container empty — which is what they
+  were doing. Both moved.
+- **`components/ui/Accordion.jsx` now IS that row treatment**, and the
+  homepage's private `FaqAccordion` inside `Faqs.jsx` is deleted. Single
+  definition, same discipline as `.card-dark`. New optional `item.link`
+  (`{ to, label }`) renders the "More on X ↗" row — the ONE thing unique to the
+  homepage, whose FAQs are pointers into written leaves.
+- **`components/ui/FaqSection.jsx` (new)** is the section composition.
+  Deliberately NOT a `<Section>`: the surface is decided per page (DscHub
+  derives it from its column count so the cadence can't repeat) and callers
+  hang `id`/JSON-LD off their own Section. It owns the layout inside, nothing
+  else.
+- **The animation mechanism is the grid-rows one, NOT the homepage's old
+  `AnimatePresence` height animation, and that is a real improvement rather
+  than a compromise.** `grid-template-rows: 0fr → 1fr` (DESIGN.md §9.3) keeps
+  the panel MOUNTED while closed, which removes the dangling-`aria-controls`
+  problem the homepage version had to work around by setting the attribute only
+  while open (found in the Phase 5 a11y pass, recorded above). Verified: 0
+  dangling references on all 10 routes checked.
+  - Consequence to remember: a mounted-but-collapsed panel means any link
+    inside it is still in the tab order. `item.link` carries
+    `tabIndex={isOpen ? 0 : -1}` for exactly that. Measured on the homepage:
+    exactly 1 tabbable panel link (the open row's), not 6.
+- **9 call sites migrated**: homepage, T2 service leaves, T3 category hubs, DSC
+  hub, DSC products, three sections in T5 utility pages (including the driver
+  troubleshooting list, which is the same archetype and takes a custom
+  `askLabel="Send us a screenshot"`), and partner-with-us.
+- **Two copy bugs the new layout EXPOSED rather than caused** — both were
+  `.toLowerCase()` calls that were tolerable under a small eyebrow and read as
+  typos once promoted into the rail's h2 and body copy: `About gst services` →
+  `About GST` (CategoryHub) and "asked about gst registration" → "about GST
+  Registration" (ServiceLeaf), same for DSC product labels. nav.js and leaf
+  titles are already correctly cased; do not lower-case them.
+- **Tailwind v4 gotcha that produced a false negative during verification:**
+  `rotate-[135deg]` compiles to the INDIVIDUAL `rotate` CSS property, not to
+  `transform`. `getComputedStyle(el).transform` reads `"none"` and looks like
+  the class never applied. Read `.rotate` instead — it reports `"135deg"`.
+- Verified on 10 routes in a real Chrome over CDP: identical list width (833px
+  at 1440), sticky rail on every one, exactly one row open, `+` at 135° on the
+  open row, 0 dangling `aria-controls`, single-open toggle by mouse AND by real
+  Enter key events, no HTML entity leaking into rendered text, no horizontal
+  overflow at 375px, zero console errors. `npm run lint` (0 errors; the one
+  pre-existing `MegaPanel.jsx` unused-`site` warning is untouched),
+  `content:check` clean, `build` + prerender 63 routes.
+
+## One step treatment sitewide — scroll-linked StepFlow — 19-08-2026
+NOT a phase. Clinton: "in all step section i want to make a premium step section
+like HowWeWork component, with scrolling effect." Three sections hand-rolled the
+same static `border-l` list with a numbered circle — T2's *How it works*, T4's
+*How to get it*, T5's *Installation* — while only the homepage's `HowWeWork` had
+the real scroll-linked treatment. `components/ui/StepFlow.jsx` (new) is that
+treatment generalised. **HowWeWork itself is untouched and stays the reference.**
+
+- **Vertical, not HowWeWork's horizontal arc, and that is a content constraint
+  rather than a preference.** The arc samples a quadratic bézier at exactly four
+  points and pairs each with a one-line label in a 4-column row. These sections
+  carry 3–6 steps whose bodies run a full sentence plus a duration — at six
+  columns that is a ~280px track even on the 1800px container. So StepFlow uses
+  the mechanic from HowWeWork's own MOBILE variant (vertical connector,
+  draw-on-scroll, nodes popping as the line reaches them): same idea, same
+  tokens, in a shape the content survives.
+- **The progress line is a `scaleY` transform, NOT an SVG `pathLength`.**
+  pathLength animates stroke geometry, which is a paint property; a transform is
+  composited. Same reasoning that put the dark-card hover ring on opacity rather
+  than a growing box-shadow.
+- ⚠️ **NODE THRESHOLDS ARE MEASURED FROM THE DOM, not assumed evenly spaced,
+  and this is the detail that decides whether the effect reads as real.** An
+  even `i/(n-1)` split is only correct when every step is the same height, and
+  these are not — one step has a two-line body and a duration, the next has one
+  line. With an assumed split, a node pops visibly before or after the line
+  actually arrives, which is the classic tell of a fake scroll effect. Each
+  node's true centre is measured in a layout effect and re-measured by a
+  `ResizeObserver` on the container AND every node, so a font swap or a
+  re-wrapping title cannot desynchronise it.
+- ⛔ **BODY COPY IS NEVER DIMMED — a measured accessibility decision, and the
+  first version got it wrong.** Fading un-reached steps to 0.55 opacity puts
+  ink-300 body copy at **2.43:1** against ink-900, far under the 4.5:1 AA floor
+  Phase 10 holds the site to; even 0.8 opacity only reaches 3.79:1 (light
+  surface: 2.88:1 and 5.35:1 respectively). Text a reader can scroll to must
+  pass at rest. The motion now lives entirely in the line and the nodes — both
+  decorative and `aria-hidden` — and every word is full contrast from first
+  paint. **Do not reintroduce a text fade here.**
+  - The node rests at **0.3 opacity, not 0**. At zero, a step the line has not
+    reached renders as body copy with a hole where its number should be, which
+    reads as a loading failure to anyone landing mid-section from the sub-nav's
+    anchor links.
+- **Layout: the same 4/8 sticky rail as `FaqSection`**, for the same reason — a
+  step list is a 62ch measure, so heading-above-list left the right half of the
+  container empty. StepFlow owns its `Container` and heading (`eyebrow`,
+  `heading`, `intro` props) so call sites are one element.
+- **Duration is a hairline rule plus mono, NOT a bordered pill.** The first pass
+  used a `rounded-full` bordered pill; beside body copy that reads as a button,
+  and several steps render `turnaround.js`'s "Confirm with us" fallback — a pill
+  saying that looks like a call to action that does nothing when clicked.
+- **`useLayoutEffect` is isomorphic here** (`typeof window` check): Phase 9
+  prerenders every route through `renderToString`, where a layout effect warns
+  and has nothing to measure anyway.
+- Verified in a real Chrome over CDP on all four affected route families (T2 leaf
+  incl. a new Income Tax leaf, T4 product, T5 driver): the line's `scaleY` steps
+  through genuine intermediate values (0 → 0.31 → 0.75 → 1) with nodes lighting
+  in step, and probes repeatedly caught nodes MID-POP (0.47, 0.65, 0.92) — which
+  is the proof it tracks live scroll position rather than animating to completion
+  on entry. Body opacity is `1` everywhere, at every scroll position. Reduced
+  motion via emulated media: line fully drawn, all nodes and bodies at 1, no
+  animation. 375px: no horizontal overflow, nodes at x=24. Zero console errors.
+  `npm run lint` (0 errors), `content:check` clean, `build` + prerender 63 routes.
+
+## Bug fix: `overflow-x-hidden` on <main> disabled EVERY sticky on the site — 19-08-2026
+Clinton reported the T2 sub-nav "supposed to be sticky after navbar but it is
+not working". Real bug, one root cause, and its blast radius was much wider than
+the reported symptom.
+
+- ⛔ **ROOT CAUSE: `<main id="main" className="overflow-x-hidden">` in
+  `RootLayout.jsx`.** Per spec, when one overflow axis is not `visible` the
+  other computes to `auto` — so `overflow-x: hidden` silently gave `<main>`
+  `overflow-y: auto` and made it a SCROLL CONTAINER. A `position: sticky`
+  element inside then sticks to main's scrollport rather than the viewport, and
+  since main is not the thing being scrolled (the document is), it never engages
+  at all. Measured before the fix: at scrollY 1800 the sub-nav sat at **-1344px**
+  instead of parking at 64px.
+- **Fix: `overflow-x-clip`.** `clip` does the same visual clipping WITHOUT
+  creating a scroll container, so the horizontal-overflow guard the class was
+  there for still holds. Verified after the change: `main` computes
+  `overflow-x: clip / overflow-y: visible`, and `documentElement.scrollWidth`
+  is still exactly 375 at a 375px viewport on `/`, a T2 leaf, `/dsc`, `/contact`
+  and `/about` — nothing started overflowing.
+- **This one line was breaking every sticky on the site, not just the sub-nav**:
+  the T2 enquiry card, and both rails added earlier the same day (`FaqSection`,
+  `StepFlow`). They are all now measured parking correctly — sub-nav at exactly
+  64px at every scroll position, rails at 116px (`--header-h` + 32).
+- **Second, independent bug found while verifying, on the T2 enquiry card:
+  `lg:self-start` on its grid column.** A sticky element can only travel inside
+  its parent's box; `self-start` shrank the column to the card's own height, so
+  there was zero travel and it scrolled away like a static element even once the
+  main overflow bug was fixed. Removed — the column now stretches to the row
+  height, which is the point of it being sticky.
+  - ⚠️ **Still honestly limited, and not something CSS can fix here:** the card's
+    travel is bounded by the OVERVIEW SECTION's height, and on several leaves the
+    card is the tallest item in that row, so the row height equals the card
+    height and there is nothing to travel through. It engages on leaves whose
+    overview column is taller, and on short viewports. Making it stick through
+    the whole page would mean moving it out of the overview section, which is a
+    template restructure CONTENT-PLAN.md §7 does not ask for — flagged rather
+    than silently half-fixed.
+- **Debugging note that cost a wrong reading:** an early probe reported the
+  sub-nav's `position` as `static`, which looked like the Tailwind class never
+  applied. It was a selector error —
+  `nav[aria-label="On this page"].parentElement` is `Container`'s inner div, not
+  the sticky wrapper. Use `.closest('div.sticky')`.
+- **The general rule for this repo, since this will recur:** if something that
+  should be sticky is not, check every ancestor for a non-`visible` overflow on
+  EITHER axis before touching the sticky element itself. `overflow-x-hidden` is
+  the usual culprit and it never looks like the cause.
+
+## Sticky sub-nav extended to the DSC tree — 19-08-2026
+NOT a phase. Clinton asked for the T2 sub-nav on the DSC pages too, straight
+after the sticky bug above was fixed.
+
+- **`SubNav` moved out of `ServiceLeaf.jsx` into
+  `components/layout/SubNav.jsx`** — it was a private function there. One
+  implementation now serves T2 leaves, T4 DSC products, the DSC hub and three
+  T5 pages. Two things gained in the move: `aria-current` on the active tab
+  (the scroll-spy was purely visual before), and a `sections.length < 2` guard
+  that renders nothing — a one-tab bar is decoration, not navigation.
+- ⚠️ **EVERY BAR IS BUILT FROM WHAT THE PAGE ACTUALLY RENDERS, never a fixed
+  list, and this is the trap to avoid if more pages get one.** A tab pointing at
+  a section that conditionally did not render scrolls nowhere AND never lights
+  up under the scroll-spy, which looks broken rather than empty. So:
+  `aadhaar-esign` has `validityOptions: null` and correctly shows 5 tabs where
+  the other products show 6; a driver with no `troubleshooting` drops that tab;
+  the FAQ tab appears only where FAQs exist. Verified per page that every tab's
+  target id resolves to a real element.
+- **`DscHub`'s bar is derived from the same `columns` array its sections render
+  from**, through a single `groupId(label)` helper — so a nav.js menu change
+  moves the menu, the sections and the bar together, and a tab can never point
+  at an id that was spelled differently in two places. Same "one source" rule
+  the hub's grouping already followed.
+- **`/dsc/documents-required` and `/dsc/drivers` deliberately get NO bar** —
+  each is a single anchorable section, so the guard above returns null. That is
+  the intended outcome, not a gap.
+- **T5's "no marketing chrome" brief (CONTENT-PLAN.md §9) was considered and
+  does not bar this**: a sub-nav is navigation, not chrome, and on a driver page
+  it is the fastest route to the one section a stuck user wants. No `Reveal` was
+  added anywhere in the T5 tree.
+- Verified in a real Chrome across 8 routes (DSC hub, two products including the
+  no-validity one, three T5 pages, plus a T2 leaf as a regression check): every
+  tab's target exists, the bar parks at exactly 64px at every scroll position
+  while the page has content below it, and the scroll-spy marks the correct tab
+  after jumping to a section. Zero console errors. Lint, `content:check`, build
+  + prerender 63 routes all clean.
+- **Found, NOT fixed, pre-existing and unrelated to this change:**
+  `DscHub.jsx` renders `<img src="public/images/drivers/dsc-card.png">` — a bare
+  `<img>` (CLAUDE.md forbids these outside the `<Img>` component) whose path is
+  also wrong: `public/` is the build root, so the served URL is `/images/...`,
+  and as written it resolves relative to the route and 404s. Flagged rather than
+  silently changed, since it came in with an uncommitted image batch from
+  another session.
+
+## Supplied product images framed — ProductShot, and two live bugs fixed — 19-08-2026
+NOT a phase. Clinton added two of his own images (`public/images/drivers/dsc-card.png`,
+a HYP2003 token; `public/images/home/dsc.png`, a signed-document illustration)
+and asked for them to be fixed and made to look premium instead of "plain".
+
+- ⛔ **BUG 1, and it was live: `DscHub.jsx` had `src="public/images/drivers/
+  dsc-card.png"`.** `public/` is Vite's build ROOT, not a URL segment — the
+  served path is `/images/...`. As written the browser resolved it relative to
+  the route (`/dsc/public/images/...`) and 404'd, so the DSC hub was shipping a
+  broken image. Now `/images/drivers/dsc-card.png`, verified 200 in the network
+  log and present in `dist/images/drivers/`.
+- ⛔ **BUG 2: both were bare `<img>` tags**, which CLAUDE.md forbids outright.
+  Both now go through `<Img>`, whose required width/height reserve the box
+  before load — these are 600–700KB PNGs, so without that they shift the layout
+  under the reader on a slow connection. `alt="dsc"` is also not alt text; both
+  now describe what is pictured.
+- **`components/ui/ProductShot.jsx` (new)** is the frame. It is not decoration
+  for its own sake — both assets are transparent PNGs of dark hardware, and on
+  a light section they float with no ground while their own drop shadow reads
+  as dirt on the page. So: a dark plinth, ONE ember key light behind the
+  object, a blurred ground ellipse under it, the site's arc rings at panel
+  weight, and a mono caption rule.
+  - **The surface is `.panel-dark`, reused, not re-specified.** It already
+    encodes the directional wash, hairline border and §6.4 inset light-catch,
+    and it is deliberately the class with NO hover state — correct for a
+    product still, where a lift or ring would signal an interaction that does
+    not exist.
+  - Every colour is a `color-mix` over a token; no raw rgba anywhere.
+- ⚠️ **`ratio` is passed the file's REAL pixel dimensions, and that is
+  load-bearing, not just CLS hygiene.** `<Img>`'s inner `<img>` is
+  `h-full w-full object-cover`; cover only equals contain — i.e. only leaves a
+  transparent product uncropped — when the box's aspect ratio is the file's
+  own. A "nicer" design ratio silently crops the product.
+- **Per-instance tuning is via `className`, and works because `cn()` is
+  `twMerge`, so a caller's padding genuinely overrides the component's.** The
+  hub's token is wide and flat (1143×370) and was swimming in a panel twice its
+  height at the default padding; the homepage illustration (1050×711) uses the
+  default.
+- Verified in a real Chrome: both images load 200 and paint inside the plinth
+  at 1440 and at 375 (panel 327px, image 285px, no horizontal overflow), zero
+  console errors, lint/build/prerender clean.
+- **Unrelated note for whoever reads this next:** the route count moved 63 → 68
+  mid-session because `nav.js` was edited outside this work (five new routes).
+  Nothing here touched it; if a build diff shows 68, that is why.
+- ⚠️ **Worth a human check, not something I can settle:** IMAGE-PLAN.md §2 bars
+  AI-generated people, offices and certificates. `home/dsc.png` is a 3D render
+  of a generic "DIGITAL SIGNATURE" document — no name, no PAN, no issuer marks,
+  so it is the same generic-document reasoning `DscShowcase.jsx` already relies
+  on, but confirm its provenance and licence before launch. The token photo is
+  a real product shot and raises no §2 question.
+
 ## Session discipline
 - One phase per session. Start fresh between phases — see BUILD-PLAN.md §5.
 - Load only the plan sections a phase actually needs, not the whole document.
 - Phase 3 (content) batches must stay independent — 4-5 leaf files per session, then
  a fresh session. Always build the exemplar first and reference it by name.
+
+## "View all" hubs realigned to the new menus — 19-08-2026
+NOT a phase. Clinton: update the two "View all" destinations (`/services`,
+`/dsc` — the mega panels' utility-rail links, `nav.js`'s `hubLabel`) to match
+the restructured Services and DSC & eSign menus. Both pages already picked up
+the new *membership* automatically (they build from nav.js), but each presented
+a different STRUCTURE from the menu it's reached through — that's what changed.
+
+- **`DscHub.jsx` now renders three sections driven by `dscPanelColumns`** — the
+  same export the DSC mega panel renders from — instead of one flat 7-card
+  product grid plus a hardcoded 4-card resources row. So "Certificates" /
+  "Tokens & resources" / "eSign" group the same way, in the same order, with the
+  same membership, on both surfaces; adding or moving a menu item updates both.
+  `buy-tokens`' `note` ("HYP2003 · mToken · InnaIT") renders on its card too,
+  same string the panel shows.
+  - **Teasers resolve from each linked page's OWN content file** (`itemTeaser`)
+    — product `lede`, `dscValidityRenewalContent.heroLede`,
+    `esignOrDscContent.heroLede`, the drivers hub's own child labels — never
+    restated in the hub. Same "select by reference" discipline as the homepage
+    FAQ row and Documents Required. A page with no content file yet renders its
+    card without a teaser rather than crashing or showing `undefined`.
+  - **Per-column heading/eyebrow/lede copy is keyed by the column's own menu
+    label** (`COLUMN_HEADINGS` etc.) with a fallback to that label, so a fourth
+    menu column still renders a complete section instead of a blank one.
+  - **The FAQ and why-us surfaces are DERIVED from the column count**
+    (`faqSurface`/`whySurface`), not hardcoded: the group sections alternate
+    light-alt/light, so a menu column added or removed would otherwise put two
+    identical surfaces back to back. Verified live off `section[data-surface]`:
+    `deep → light → light-alt → light → light-alt → light → light-alt → ember`,
+    zero consecutive repeats.
+  - **Partner Programme panel added at the foot**, from `dscPartnerPromo` — the
+    17-08-2026 restructure pulled "Partner With Us" out of the navbar entirely
+    and into the DSC panel, so the DSC hub has to carry it too. `.panel-dark` +
+    `data-surface="dark"` (the established dark-panel-on-light-section pattern;
+    the attribute is load-bearing for `var(--surface-*)`), heading `text-canvas`
+    not ember — `[data-surface="dark"] h3` beats a plain class on specificity,
+    the trap this file already records twice. `secondaryLabel` ("Partner login")
+    is deliberately not rendered: no backing portal, same reason the panel's own
+    copy of it is commented out.
+- **`hub-content.js` copy was genuinely stale, not just structurally off**: the
+  intro said "Choose individual or organisation Class 3, DGFT, or a standalone
+  token" — written when there were 4 products, and silently wrong since combo,
+  renewal and Aadhaar eSign landed. `meta.description`, `heroLede` and that
+  paragraph now cover all seven. Two FAQs added, both restating facts already
+  reviewed elsewhere in the DSC tree rather than new claims: what a combo
+  certificate adds, and — the one that matters — that **Aadhaar eSign does not
+  replace a Class 3 certificate on statutory portals**, which is now asserted on
+  the product page, the comparison page and the hub FAQ.
+- **`ServicesHub.jsx` now mirrors the services panel's statutory/growth split**
+  (filter on `group`, find the first growth index — the same mechanism
+  `MegaPanel.jsx` uses for its hairline), printing a group heading at each
+  boundary. Each category's `subline` — already in nav.js, previously
+  panel-only — renders under its heading, and "View category" carries the leaf
+  count.
+  - **The lede's category count AND names are now derived**, not typed: both had
+    already gone stale once each (the 17-08-2026 restructure). The Oxford comma
+    in that join is load-bearing — category labels contain their own commas
+    ("Accounting, Payroll & Audit"), so without it the last two run together.
+- **Two stray unused imports were removed from `nav.js`** (`sub` from date-fns
+  and `s` from `./statutory`, both flagged unused by ESLint, both uncommitted).
+  The extensionless `./statutory` specifier crashed `npm run content:check`
+  outright under Node ESM (`ERR_MODULE_NOT_FOUND`) — Vite resolves it, plain
+  Node does not. Unrelated to this change, but it blocked the validator.
+- **No "Soon" tags render on `/services` any more, and that's correct** —
+  `content:check` now reports 31 of 31 leaves written (the four income-tax
+  leaves landed 19-08-2026), so `getServiceContent` resolves for every child.
+  The mechanism is untouched and will show them again for any future
+  unwritten leaf.
+- Verified: `npm run lint` (0 errors; the 3 warnings are pre-existing, in files
+  not touched here), `npm run content:check` (clean apart from the three
+  standing unconfirmed-content warnings), `npm run build` + prerender (63
+  routes + 404 + sitemap, unchanged), then a real Chrome over CDP against
+  `npx serve dist` (never `vite preview` — Phase 9's note still applies):
+  rendered text of both hubs read end to end, surface cadence sampled off the
+  live DOM, and section screenshots of the certificates grid, the eSign group
+  and the partner panel.
+  - ⚠️ **Pre-existing and NOT from this change: React error #418 (hydration)
+    logs on `/services` and `/dsc` — and equally on `/about` and `/contact`,
+    which this session never touched.** Phase 9 attributed a #418 to
+    `vite preview` serving the wrong file; this one reproduces under
+    `npx serve dist`, so that explanation does not cover it. Sitewide, worth
+    its own investigation; deliberately not chased inside this change.
+
+## Scroll nav: one down/up control, sitewide — 19-08-2026
+NOT a phase. Clinton: the round chevron button should advance about one screen
+("show the next section after the hero, around 100svh"), then become an arrow-up
+that returns to the top, and look premium. New component
+`src/components/layout/ScrollNav.jsx` + `.scroll-nav` in theme.css, mounted once
+in `RootLayout.jsx`.
+
+- **The button it replaces had two real defects, both fixed here rather than
+  restyled around.** It was `position: absolute` inside a fragment, so it
+  resolved against the page box and scrolled out of reach instead of staying
+  available; and its target was `mainRef.current.nextElementSibling` — the
+  **footer** — so "scroll to the next section" jumped the entire page. `mainRef`
+  existed only for that and is gone.
+- **Behaviour, measured on the production build over `npx serve dist`:** at the
+  top it points down and advances to the next `<section>` **below the current
+  scroll position**, resolved from the live DOM. On the homepage that is exactly
+  the post-hero section (`y 0 → 829` at a 813px viewport, i.e. ~100svh, which is
+  the brief). It flips to arrow-up past **85% of one viewport** and stays up to
+  the foot of the page; pressing it there returns to `y 0` and it flips back.
+  On a compact-hero template (`/dsc`, hero ~483px) the presses walk
+  `0 → 483 → 1119 → 0`, flipping only once past that 85% line.
+  - **Targeting the next section below the scroll position, not `sections[1]`,
+    is deliberate.** With `sections[1]` a second press on a short-hero page
+    re-targets a section already at the top of the viewport and the control
+    appears dead — the first version did exactly that on `/dsc`.
+- **Premium treatment, and what it is NOT.** A scroll-progress ring around the
+  disc (SVG, ember, `strokeDashoffset` derived from `2πr` so changing r can't
+  leave a stale dash length), a directional icon swap through `AnimatePresence`
+  (the outgoing glyph exits the way the new one points, so the flip reads as the
+  page's direction changing rather than a cross-fade), and the down state keeps
+  the existing `.hero-chevron` nudge while the up state drops it — a hint to
+  start scrolling is meaningless once you have.
+  - **Translucent, NOT glass.** No `backdrop-filter` anywhere on it: DESIGN.md
+    §7.5 keeps blur exclusive to the sticky nav and permits translucency without
+    it, which also keeps a second large blur surface off the mobile compositor.
+    The disc is an ink `color-mix` gradient with inset shadows for a lit top rim
+    and a dark bottom one — the same construction as `.whatsapp-fab`, in ink
+    with an ember rim so the FAB stays that corner's only colour exception.
+  - **Hover is gated to `(hover: hover) and (pointer: fine)`** — ungated, a tap
+    leaves the disc stuck lit, the same defect the dark cards had before their
+    own gate.
+  - Progress is quantised to whole percent and read inside one rAF-throttled
+    passive `scroll`/`resize` listener, so a continuous scroll doesn't re-render
+    per pixel.
+- **Geometry is a STACK with `FloatingWhatsApp`, not a neighbour:** 44px at
+  `bottom-23 right-6` = 24 + 56 + 12 gap above the 56px FAB, and deliberately
+  smaller so the WhatsApp affordance stays dominant. Verified by bounding-box
+  intersection at the very bottom of the homepage (where the footer's own links
+  live) at **1440px and 375px: zero footer-link overlaps, no FAB overlap, and
+  `elementFromPoint` at the disc's centre returns the button** — i.e. nothing
+  covers it. CLAUDE.md already records that the last time this corner changed,
+  the footer padding written for the old corner silently stopped protecting
+  anything; **re-run that check if either control moves.**
+- **SSR/hydration:** initial state is deterministic (`down`, progress 0,
+  visible), so the prerendered markup and the client's first pass agree; the
+  effect specialises it afterwards. When there is nothing to scroll the button
+  fades out and leaves the tab order (`tabIndex -1`, `aria-hidden`,
+  `pointer-events: none`) rather than sitting there inert.
+- **Reduced motion verified via `Emulation.setEmulatedMedia`:** the scroll
+  becomes `behavior: "auto"` (arrived at y 829 within 250ms of the press, vs a
+  smooth animation), the icon swap and hover/tap motion are dropped, and
+  `document.getAnimations()` reports **0 running animations**.
+- Verified: `npm run lint` (0 errors), `npm run build` + prerender (63 routes,
+  unchanged), plus the CDP passes above on `/` and `/dsc`. Also worth knowing:
+  a failed prerender leaves `dist-server/` behind, and ESLint then lints that
+  bundle and reports dozens of errors in generated code — delete `dist-server/`
+  before believing them.
+
+### Follow-up: DSC panel headings now match the Services panel — 19-08-2026
+Clinton: the Digital Signatures dropdown's column headings should look like the
+Services dropdown's. They didn't, and the cause was in `MegaPanel.jsx`'s
+`PanelColumn`, not in either panel's data.
+
+- **The whole ember heading treatment hung off `column.path`.** Services columns
+  are real category routes, so they got `text-ember-300` + `font-semibold` +
+  the column layout; the DSC columns are GROUPINGS with no route
+  ("Digital Signature Certificates", "Tokens & Resources", "eSign Solutions"),
+  so they fell through to plain `text-canvas`. One component, two visibly
+  different dropdowns. Now the LOOK is unconditional and only the interactive
+  states (hover colour, focus ring, `rounded-sm`) stay conditional on `path`.
+  The DSC groups remain non-links — there is no page for a grouping to link to.
+- **The subline `<span>` rendered even when there was no subline**, and an empty
+  `text-xs` span still occupies a line box — so every column without one (all
+  three DSC columns) carried a blank row between its label and the gradient
+  rule. Now conditional. No sublines were invented for the DSC groups; nav.js
+  simply doesn't have them.
+- Verified by opening both panels in a real headless Chrome at 1680px and
+  screenshotting each: both render ember-300 semibold labels with the gradient
+  rule beneath, the Services columns additionally showing their real sublines.
+  `npm run lint` (0 errors), `npm run build` + prerender (63 routes, unchanged).
+
+## Insights is live: 4 real articles + /insights routes (T10) — 19-08-2026
+NOT a phase. Clinton: show four service-related articles in the homepage Insights
+component, in a feature-plus-three layout, and make them open real article pages
+with proper slugs. This closes CONTENT-PLAN.md §6 row 12 ("Reserve the route and
+add at 4+ articles") and clears launch blocker 3 from the Phase 10 list — the
+four `PLACEHOLDER — not a real article` entries are gone, replaced by written
+articles on routes that exist.
+
+### Content
+- **`src/content/insights.js` is now a DIRECTORY**, and the split is
+  load-bearing rather than tidiness:
+  - `insights/index.js` — the index (slug, title, excerpt, category,
+    readMinutes, published, `related` service slugs, per-article `meta`). Small,
+    and imported by `nav.js`, which is in the always-eager main chunk.
+  - `insights/bodies.js` — the article prose, imported ONLY by the article
+    template, so it lands in that route's own lazy chunk. Verified in the built
+    output: body text is in `Article-*.js` (18.9KB) and appears in **no** other
+    chunk; main went 472KB → 482KB, which is the index data plus the new
+    homepage section, not the articles.
+- **Four articles, all deliberately outside income-tax territory.** Entity
+  choice (Pvt Ltd / LLP / OPC), Class 3 DSC vs Aadhaar eSign, when GST
+  registration becomes mandatory, and GeM registration / tender readiness.
+  BLOCKERS.md §1 makes income tax unreviewed for editorial exactly as it does
+  for the four blocked service leaves, so no article touches ITR, TDS or
+  assessments; where a reader would reasonably ask one, the article says to ask
+  us instead of answering.
+- **Not one statutory value is typed as a literal in `bodies.js` — every one
+  comes through `s()`.** Thresholds, form codes (`GST REG-01`/`REG-06`), the
+  30-day application window, AOC-4/MGT-7/Form 8/Form 11 due dates, the
+  non-registration penalty, the Udyam EMD exemption. A CA correction in
+  statutory.js therefore reaches the articles automatically, and
+  `content:check`'s scanner covers them the same way it covers a leaf. Verified
+  live: the rendered GST article shows "₹40 lakh", "30 days" and "GST REG-01"
+  interpolated, not hardcoded.
+- No fee, turnaround, client count, byline, view count or read-count claim
+  anywhere. `readMinutes` is labelled as an estimate; `published` is the day the
+  articles were written, not backdated to imply a longer-running editorial.
+  `confirmed: true` here means "real article, real route" — the flag
+  `Insights.jsx` and `content-check.mjs` read — NOT "CA-reviewed prose".
+- **`src/lib/formatDate.js` (new)** formats the publish date. It parses
+  "YYYY-MM-DD" by hand and never touches `toISOString()` — `new Date("2026-08-19")`
+  is UTC midnight, which renders as the previous day for any IST reader. Same
+  trap `compliance-calendar.js` already documents for deadlines.
+
+### Routes and wiring
+- **`nav.js` gained `insightsIndexPage` + `insightArticlePages` (T10)**, 5 new
+  routes (68 total, from 63). `/insights` exists specifically so an article has
+  a real parent: `breadcrumbsFor` walks `parent` links, and without it every
+  article's breadcrumb would point at a path with no file behind it — a 404 for
+  a crawler and for any hard navigation.
+  - **Article LABELS are read from the content, not retyped in nav.js**, so a
+    retitled article can't leave the breadcrumb, footer or XML sitemap asserting
+    the old headline. This is the ONE place nav.js derives from a content file
+    rather than the reverse; safe because `insights/index.js` imports nothing
+    from nav.js, so there's no cycle.
+  - Also added to `footerColumns`' Company column and to `slugIndex`, so
+    `findBySlug` resolves an article and a future leaf `related` entry could
+    point at one.
+- **T10 branches on path** (`/insights` → index, anything else → article), the
+  same convention T3 and T6 already use. Added to `routeComponents.js` (the
+  shared resolver), `router.jsx` (lazy) and `router-static.jsx` (eager, SSR) —
+  all three, or the client and the prerender would render different templates.
+- `seo.js` gained a T10 branch; `meta.js` gained `/insights`.
+- **`articleJsonLd` (BlogPosting) added to `lib/jsonld.js`.** No personal author
+  — the page carries no byline, and naming someone in structured data the page
+  never states is the same class of claim as a team name on §1.1's hold list.
+  `dateModified` mirrors `datePublished` deliberately: a rebuild is not an edit.
+- ⛔ **Real defect caught by counting `ld+json` @types on the live page, not by
+  reading the diff: the article shipped TWO `BreadcrumbList` blocks.**
+  `Breadcrumbs.jsx` (inside `PageHero`) already emits one from the same trail,
+  and Article.jsx was emitting a second. Removed from the template. **Any new
+  page template using `PageHero` must NOT add its own BreadcrumbList.**
+
+### The homepage layout (Clinton's sketch)
+One tall feature panel on the left carrying article 1 with its heading and
+subheading at the panel's foot; articles 2–4 stacked down the right, each a
+numbered plate beside its own heading and subheading. Two columns at `lg`, one
+stack below.
+- **The plates are typographic, and that is a content decision, not a
+  placeholder.** IMAGE-PLAN.md §2 forbids AI-generated imagery and the site owns
+  exactly one licensed photograph, so four editorial thumbnails do not exist and
+  cannot be conjured. Each plate is the site's own arc motif on a dark surface
+  with a mono index. Swapping in real commissioned art later is a change inside
+  `SecondaryRow` alone.
+- **`.card-dark` sits on the feature `<Link>` ITSELF, not on an absolutely
+  positioned child** — that class's hover ring and lift are written for the
+  element being hovered, so a surface on a child leaves the affordance
+  responding to the child's hover box instead of the link's. The plates use
+  **`.panel-dark`** instead, precisely because a decorative plate inside a link
+  must not carry a hover ring that reads as a nested click target.
+- `data-surface="dark"` on both, load-bearing as always for a dark surface
+  inside a light section. Each `ArcRings` instance has its own `gradientId`
+  (`url(#id)` resolves document-wide).
+- Section surface is unchanged (`light`), and the homepage cadence still has
+  **zero consecutive repeats** with the section now rendering real content.
+
+### Verification
+`npm run lint` (0 errors), `npm run content:check` (**the insights warning is
+gone** — its stale text was also corrected, since it claimed no /insights route
+exists; the testimonial and hero-stat warnings remain, untouched),
+`npm run build` + prerender (68 routes + 404 + sitemap; all four article slugs
+present in sitemap.xml). Then over `npx serve dist` in real Chrome: all five new
+routes return 200 with their own `<title>`, the article page renders
+`Organization + LocalBusiness + BlogPosting + BreadcrumbList` (one each), and a
+**link-integrity scan of `dist/` — 3,440 internal hrefs, 0 broken.**
+- Screenshots confirmed the sketched layout renders as intended and the article
+  template's prose/sticky-rail layout holds. Note the standing headless gotcha:
+  a `captureBeyondViewport` shot of this section comes back BLANK because
+  `Reveal` hasn't fired — scroll the section into the viewport and capture the
+  plain viewport instead.
+
+### Follow-up: real photography on the Insights surfaces — 19-08-2026
+Clinton: download relevant images from a free source and use them instead of the
+colour cards, in the article pages too. Four licensed photographs now carry the
+homepage feature panel, the homepage list thumbnails, the index cards and each
+article's header.
+
+- **What was downloaded, and why these.** Four Unsplash photos at w=1600, q=80 —
+  documents on a desk (entity choice), a laptop on a desk (DSC/eSign), a
+  calculator on printed figures (GST), warehouse racking (GeM/tenders). All four
+  are **IMAGE-PLAN.md §2 TIER 2** — licensed *contextual* stock — and **no frame
+  contains a person**, which is what keeps them inside §2's narrow permission:
+  none implies "our office", "our team" or "our client's paperwork". §2 Tier 3
+  (AI-generated anything) was never in play. Photographer, photo page and CDN URL
+  for each are recorded in `src/assets/insights/ATTRIBUTION.txt`, even though the
+  Unsplash licence requires no attribution — same discipline as
+  `public/images/home/ATTRIBUTION.txt`.
+- **Sources live in `src/assets/insights/`, NOT `public/` — deliberately, and
+  this differs from `Hero.jsx`.** Anything under `public/` is copied to `dist`
+  verbatim *as well as* being processed by imagetools, so the hero's pattern
+  ships its untouched 1600px JPEG to every deploy even though no page requests
+  it. Keeping these four in `src/assets` saves ~684KB per deploy and emits only
+  the avif/webp variants (54 files). **Worth migrating the hero the same way next
+  time that file is open.**
+- **`src/content/insights/images.js` (new) is the slug → picture map, and it is
+  the one VITE-ONLY file under `src/content/`.** The `?w=…&as=picture` queries
+  are imagetools directives, so plain Node cannot import it — it must never be
+  pulled into `nav.js`, `seo.js` or anything `prerender.mjs`/`content-check.mjs`
+  load directly. Components only.
+- **`alt` differs by context, on purpose.** The article header carries a real
+  description of the photograph; the homepage list and the index cards use
+  `alt=""` because the headline sits directly beside the image and a description
+  there would only restate what a screen reader already has (WCAG 1.1.1). Both
+  go through `<Img>` — no bare `<img>` was added anywhere.
+- **The article header image is `priority`** (eager, `fetchpriority=high`): on
+  that page it IS the LCP element, so lazy-loading it is a measurable delay
+  rather than a saving. Everything else stays lazy. Verified live: all served as
+  **AVIF**, header 1382px natural into a 1281px box, thumbnails 112px into 112px.
+- **The header image sits INSIDE the existing `light` section, not in its own.**
+  A second `light` section back-to-back would read as one surface anyway and
+  would register as a consecutive repeat in the surface-cadence audit, which
+  counts `section[data-surface]`.
+- ⛔ **A REAL CONTRAST FAILURE was found by measuring, and it is the reason the
+  scrim's stops are what they are.** The feature panel's headline sits over its
+  photograph, so it carries a gradient scrim. The first version (94% ink at the
+  foot falling to 42% by 78% height) left the eyebrow — ember-200, 11px — on the
+  bright region of the white-paper photo at **3.13:1**, under the 4.5:1 floor for
+  normal text. Same failure mode Phase 10 found in the hero over the lit arc, and
+  invisible to any static resolver because the background is a photograph.
+  Re-tuned to hold ~92% ink across the whole copy block: re-measured
+  **4.83:1 (eyebrow) / 11.43:1 (headline, 40px) / 13.36:1 (excerpt)** — all pass.
+  - Method: hide the panel's text (`color: transparent`), screenshot, decode
+    in-page via canvas, sample the 95th-percentile luminance under each text box,
+    ratio against the text's own computed colour. Worth rebuilding rather than
+    trusting a static check whenever text lands on an image.
+  - ⚠️ **Those figures are for THIS photo in the feature slot.** The failure came
+    from the image's own bright area, not the gradient alone — so reordering
+    `insights` (article 1 is the feature) or swapping a photo requires
+    re-measuring, not just eyeballing.
+- Verified: `npm run lint` (0 errors), `npm run content:check` (clean),
+  `npm run build` + prerender (68 routes), all four images returning 200 as AVIF
+  with correct natural sizes, and an asset+link integrity scan of `dist/` —
+  **3,730 internal refs, 0 broken.**

@@ -11,7 +11,7 @@ import { serviceLeavesBySlug } from "../src/content/nav.js";
 import { statutory } from "../src/content/statutory.js";
 import { unconfirmedHeroStats } from "../src/content/home-hero.js";
 import { unconfirmedTestimonials } from "../src/content/testimonials.js";
-import { unconfirmedInsights } from "../src/content/insights.js";
+import { unconfirmedInsights } from "../src/content/insights/index.js";
 
 const { ok, problems } = validateAll(writtenLeaves);
 
@@ -114,7 +114,12 @@ for (const leaf of writtenLeaves) {
 
 const all = [...problems, ...orphaned, ...badKeys, ...undeclaredKeys, ...inlineFacts];
 
-console.log(`\ncontent:check — ${writtenLeaves.length} leaf file(s) written of 21\n`);
+// Total is derived from nav.js, never hardcoded — the 17-08-2026 menu
+// restructure took the leaf count from 21 to 31 and this line went stale
+// silently, reporting "31 of 21".
+console.log(
+  `\ncontent:check — ${writtenLeaves.length} leaf file(s) written of ${serviceLeavesBySlug.size}\n`
+);
 
 // Hero stat placeholders. A WARNING, not a failure: these were added
 // deliberately to evaluate the hero layout, so failing the build would just
@@ -144,16 +149,16 @@ if (unconfirmedQuotes.length > 0) {
 const unconfirmedArticles = unconfirmedInsights();
 if (unconfirmedArticles.length > 0) {
   console.log(
-    `  ⚠ UNCONFIRMED INSIGHTS (${unconfirmedArticles.length}) — must not ship (src/content/insights.js):`
+    `  ⚠ UNCONFIRMED INSIGHTS (${unconfirmedArticles.length}) — must not ship (src/content/insights/index.js):`
   );
   console.log(
-    "      No /insights/:slug route exists yet. Insights.jsx renders an unconfirmed entry as a"
+    "      /insights/:slug now exists (T10), so an unconfirmed entry is one whose article body is"
   );
   console.log(
-    "      non-interactive card rather than a Link, so these are NOT dead links — the risk is"
+    "      missing or unpublished. Insights.jsx renders it as a non-interactive card rather than a"
   );
   console.log(
-    "      placeholder copy visible on the homepage, not a 404. Verified against dist/ by link audit."
+    "      Link, so it is not a dead link — the risk is placeholder copy visible on the homepage."
   );
   for (const article of unconfirmedArticles) {
     console.log(`      ${article.slug}: "${article.title}"`);

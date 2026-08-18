@@ -1,6 +1,7 @@
 import { Hero } from "@/modules/home/sections/Hero";
 import { TrustStrip } from "@/modules/home/sections/TrustStrip";
 import { WhatWeDo } from "@/modules/home/sections/WhatWeDo";
+import { WhenToCallUs } from "@/modules/home/sections/WhenToCallUs";
 import { WhoWeWorkWith } from "@/modules/home/sections/WhoWeWorkWith";
 import { WhyThinkOrange } from "@/modules/home/sections/WhyThinkOrange";
 import { HowWeWork } from "@/modules/home/sections/HowWeWork";
@@ -33,6 +34,14 @@ import { CtaBand } from "@/modules/home/sections/CtaBand";
 // between them keeps the alternation and lets Testimonial keep its spec'd
 // surface. Both are still above DriverDownloads, which was the requirement.
 //
+// TrustStrip was REPLACED by WhenToCallUs (18-08-2026, Clinton) — the
+// "We work with" partner marquee is out of the homepage. Same slot (section
+// 2, straight after the hero), same light surface, so the cadence above is
+// unchanged. TrustStrip itself is NOT deleted, just commented out below: it
+// is the only surface on the site that names the eMudhra/SignX partnership,
+// and IMAGE-PLAN.md §7.4's approved-marks note lives in that file. It has no
+// other call site, so nothing else is affected.
+//
 // Testimonial (§11.1 row 9) and Insights are flag-gated per BUILD-PLAN.md
 // Phase 5: "wired, not shipped." Both return null today because
 // src/content/testimonials.js and src/content/insights.js are empty —
@@ -44,18 +53,19 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <TrustStrip />
+      <ComplianceCalendarHome />
       <WhatWeDo />
       <WhoWeWorkWith />
       <WhyThinkOrange />
       <HowWeWork />
-      <ComplianceCalendarHome />
+      <WhenToCallUs />
       <DscBand />
-      <Faqs />
-      <Testimonial />
-      <DriverDownloads />
       <PartnerProgramme />
+      <Testimonial />
+      <Faqs />
       <Insights />
+      {/* <TrustStrip /> */}
+      {/* <DriverDownloads /> */}
       <CtaBand />
     </>
   );

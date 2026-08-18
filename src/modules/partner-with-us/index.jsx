@@ -1,24 +1,18 @@
-// import { Container } from "@/components/layout/Container";
-// import { Section } from "@/components/layout/Section";
-// import { Eyebrow } from "@/components/layout/Eyebrow";
+import { Container } from "@/components/layout/Container";
+import { Section } from "@/components/layout/Section";
+import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
-import { ComingSoon } from "@/components/ui/ComingSoon";
-// import { Card } from "@/components/ui/Card";
-// import { ArcGlyph } from "@/components/ui/ArcGlyph";
-// import { Accordion } from "@/components/ui/Accordion";
-// import { Stagger } from "@/components/motion/Stagger";
-// import { CtaBand } from "@/modules/home/sections/CtaBand";
+import { Card } from "@/components/ui/Card";
+import { ArcGlyph } from "@/components/ui/ArcGlyph";
+import { FaqSection } from "@/components/ui/FaqSection";
+import { Stagger } from "@/components/motion/Stagger";
+import { CtaBand } from "@/modules/home/sections/CtaBand";
 import { partnerContent } from "@/content/partner-with-us";
-// import { PartnerEnquiryForm } from "@/modules/partner-with-us/PartnerEnquiryForm";
+import { PartnerEnquiryForm } from "@/modules/partner-with-us/PartnerEnquiryForm";
 
 // T6 — CONTENT-PLAN.md §10. See partner-with-us.js's own header comment for
 // why the commercial tiles state THAT commission/fee/timeline terms exist
 // and are confirmed on application, never a specific rate or promise.
-//
-// ⚠️ 13-08-2026: client preview request (Clinton) — hero only, then
-// <ComingSoon /> instead of the rest of the body (including the enquiry
-// form). Everything below is commented out in place, not deleted — see
-// ServiceLeaf.jsx's matching note.
 export default function PartnerWithUs({ path }) {
   return (
     <>
@@ -30,9 +24,6 @@ export default function PartnerWithUs({ path }) {
         cta={{ label: "Talk to us first", to: "/contact" }}
       />
 
-      <ComingSoon />
-
-      {/*
       <Section surface="light">
         <Container>
           <Eyebrow>Who it&apos;s for</Eyebrow>
@@ -114,18 +105,14 @@ export default function PartnerWithUs({ path }) {
       </Section>
 
       <Section surface="light">
-        <Container>
-          <Eyebrow>Common questions</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[32ch]">About the partner programme</h2>
-          <Accordion
-            className="mt-8 max-w-[76ch]"
-            items={partnerContent.faqs.map((faq, index) => ({ id: index, question: faq.q, answer: faq.a }))}
-          />
-        </Container>
+        <FaqSection
+          heading="About the partner programme"
+          intro="What partners ask before applying. Anything not answered here, ask us directly — we would rather set expectations now."
+          items={partnerContent.faqs.map((faq, index) => ({ id: index, question: faq.q, answer: faq.a }))}
+        />
       </Section>
 
       <CtaBand />
-      */}
     </>
   );
 }

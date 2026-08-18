@@ -1,0 +1,31 @@
+Insights article imagery. All four are IMAGE-PLAN.md §2 TIER 2 — licensed
+contextual stock, no people in any frame. None depicts ThinkOrange's own office,
+team, documents or clients, and none is presented as doing so: they are
+subject-matter photographs beside editorial articles, which is the narrow use §2
+permits. Tier 1 (own photography) supersedes these the moment it exists. No
+AI-generated imagery — §2 Tier 3.
+
+Downloaded 19-08-2026 from Unsplash at w=1600, q=80.
+License: Unsplash License (https://unsplash.com/license) — free for commercial
+use, no attribution required. Recorded here anyway, same as
+public/images/home/ATTRIBUTION.txt, so provenance is never a question later.
+
+private-limited-vs-llp-vs-opc.jpg
+  "white papers on table" - Lukas Blazek
+  https://unsplash.com/photos/white-papers-on-table-_eoobUKLFAI
+  CDN: https://images.unsplash.com/photo-1495364037436-fed1ba81ad3e
+
+class-3-dsc-or-aadhaar-esign.jpg
+  "macbook pro on brown wooden table" - Jonathan Kemper
+  https://unsplash.com/photos/macbook-pro-on-brown-wooden-table-zSCHyhiRSeQ
+  CDN: https://images.unsplash.com/photo-1589884629000-60c572c6ba7a
+
+when-gst-registration-stops-being-optional.jpg
+  "black calculator beside black pen on white printer paper" - Mediamodifier
+  https://unsplash.com/photos/black-calculator-beside-black-pen-on-white-printer-paper-I3HPUolh5hA
+  CDN: https://images.unsplash.com/photo-1625225233840-695456021cde
+
+gem-registration-tender-readiness.jpg
+  "brown cardboard boxes on white metal rack" - CHUTTERSNAP
+  https://unsplash.com/photos/BNBA1h-NgdY
+  CDN: https://images.unsplash.com/photo-1587293852726-70cdb56c2866

@@ -15,9 +15,29 @@ import { motion, useInView, useReducedMotion } from "motion/react";
 // Note the flag is live regardless of `reduceMotion`: useInView is
 // independent of the transition, so a render-prop child still learns when it
 // scrolled into view and can decide for itself whether to animate or snap.
-export function Reveal({ as = "div", delay = 0, className, children, ...props }) {
+// `margin`/`amount` default to the standard below-the-fold scroll reveal
+// (a -12% bottom margin so the trigger fires a beat after the element's top
+// edge crosses the fold, not the instant a sliver peeks in) — override only
+// for a Reveal whose content can legitimately already be ON SCREEN at mount,
+// like the hero's own trailing stat row. The -12% margin shrinks the root
+// used for intersection, and for viewport heights where the target sits just
+// inside the true viewport but within that shrunk-off 12% band, `amount`
+// (the fraction of the target that must overlap the shrunk root) is never
+// satisfied — so the element sits at opacity 0 FOREVER, despite being
+// genuinely visible, until an actual scroll event changes the geometry
+// enough to cross the threshold. Confirmed by measurement: at 1440×810–820
+// the hero stat row is on-screen at mount yet never reaches `inView`.
+export function Reveal({
+  as = "div",
+  delay = 0,
+  className,
+  children,
+  amount = 0.18,
+  margin = "0px 0px -12% 0px",
+  ...props
+}) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, amount: 0.18, margin: "0px 0px -12% 0px" });
+  const inView = useInView(ref, { once: true, amount, margin });
   const reduceMotion = useReducedMotion();
   const Comp = motion[as] ?? motion.div;
 

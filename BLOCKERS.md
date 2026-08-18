@@ -5,9 +5,57 @@ Not a backlog — only items that genuinely cannot proceed safely.
 
 ---
 
-## 1. ⛔ Income Tax Act, 2025 — blocks the ITR Filing and TDS Compliance pages
+## 1. ✅ WRITING UNBLOCKED 19-08-2026 — Income Tax Act, 2025 (CA REVIEW STILL OWED)
 
-**Raised** 10-08-2026, during Phase 3b · **Owner** Clinton + CA · **Blocks** 2 of 21 service leaves
+> **Status:** all four leaves are now written and live. What was blocking them —
+> the 1961 → 2025 section mapping — was researched on 19-08-2026 and recorded in
+> `src/content/statutory.js` under the `INCOME TAX ACT, 2025` heading, one key per
+> fact, each with its own `basis` and `source`. Nothing was recalled.
+>
+> **This does not close the item.** It downgrades it from "cannot be written" to
+> "written, needs sign-off". Every key in that block is newer and less settled
+> than anything else on the site, and each leaf's `review.notes` lists the
+> specific points to confirm. Items 2 and 3 below were decisions, not research,
+> and both were taken — see *What was decided*.
+>
+> Re-read the original writeup below before reviewing: it is the record of what
+> the risk actually was.
+
+### What was decided
+
+- **Item 2, how to present the transition → Option A**, as recommended. Every
+  leaf leads with the 2025 Act and states that income earned up to 31-03-2026 is
+  still governed by the 1961 Act. No page uses "Assessment Year" except to say it
+  has been abolished.
+- **Item 3, the AY 2026-27 due-date structure → researched and stated as
+  three-tier** (31 July / 31 August / 31 October, plus 30 November for transfer
+  pricing), which matches what the research below anticipated.
+  `itrDueDateNonAuditBusiness` carries a CONFIRM note because that middle tier is
+  the genuinely new one.
+
+### What is still owed, and by whom
+
+- **CA sign-off on the whole `INCOME TAX ACT, 2025` block in statutory.js.** The
+  per-leaf `review.notes` are the checklist; `npm run content:review` regenerates
+  `CONTENT-REVIEW.md` from them.
+- Two facts were **deliberately not published** rather than guessed, and need a
+  decision if they are wanted: the reassessment limitation periods
+  (`notices-assessments` says only that they are longer), and the first-appeal
+  form number (one secondary source reports Form 99 replacing Form 35 from April
+  2026; uncorroborated, so no form number appears).
+- No TDS rate table, no threshold amounts per payment code, no basic exemption
+  limit and no presumptive turnover ceiling appear anywhere. Rates reportedly
+  carried over unchanged, but "reportedly" is not the standard for a number a
+  client deducts on.
+
+---
+
+### Original writeup, 10-08-2026 — kept as the record of the risk
+
+**Raised** 10-08-2026, during Phase 3b · **Owner** Clinton + CA · **Blocks** 4 of 31 service leaves
+(`itr-filing`, `tds-compliance`, `tax-planning-advisory`, and `notices-assessments` — the last
+added to the Income Tax category by the 17-08-2026 services-menu restructure, blocked for the
+identical reason as the other three)
 
 ### What happened
 
@@ -74,8 +122,9 @@ The two **GST** pages were written and are complete: `gst-return-filing.js` and
 `gst-notices-litigation.js`. GST is governed by the CGST Act 2017 and is entirely
 unaffected by the income-tax re-codification, so that work was safe to do.
 
-Phase 3b therefore delivered 2 of 4 planned leaves. The remaining two move to a
-later session, once items 1–3 above are settled.
+Phase 3b therefore delivered 2 of 4 planned leaves. The remaining two moved to a
+later session — which happened on 19-08-2026, along with the other two leaves the
+category picked up in the meantime. See the status block at the top.
 
 ### Knock-on effects to check when this unblocks
 

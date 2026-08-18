@@ -5,6 +5,7 @@ import { ArrowRight, ChevronRight, Menu, Phone, X } from "lucide-react";
 import {
   serviceCategories,
   dscPanelColumns,
+  dscPartnerPromo,
   standalonePages,
   site,
 } from "@/content/nav";
@@ -33,13 +34,20 @@ const SECTIONS = [
   },
   {
     key: "dsc",
-    label: "DSC",
+    // 17-08-2026: "Digital Signatures" here too, matching the desktop
+    // primaryNav relabel — see nav.js's comment on `primaryNav`.
+    label: "Digital Signatures",
     hubPath: "/dsc",
     hubLabel: "View all DSC services",
     groups: dscPanelColumns.map((column) => ({
       label: column.label,
       items: column.items,
     })),
+    // Mobile equivalent of the desktop mega panel's promo card — same
+    // `dscPartnerPromo` data, rendered by `PromoCard` below rather than as
+    // one more `groups` entry (a promo card isn't a `{label, items}` link
+    // list, and `groups.map` below assumes every entry is).
+    promo: dscPartnerPromo,
   },
 ];
 
@@ -258,15 +266,24 @@ export function MobileNav({ className }) {
                                     <Link
                                       to={item.path}
                                       tabIndex={isExpanded ? undefined : -1}
-                                      className="flex min-h-12 items-center text-body-sm text-ink-300 transition-colors hover:text-canvas focus-visible:text-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
+                                      className="flex min-h-12 flex-col justify-center text-body-sm text-ink-300 transition-colors hover:text-canvas focus-visible:text-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
                                     >
                                       {item.label}
+                                      {item.note && (
+                                        <span className="font-mono text-[11px] leading-relaxed text-ink-400">
+                                          {item.note}
+                                        </span>
+                                      )}
                                     </Link>
                                   </li>
                                 ))}
                               </ul>
                             </div>
                           ))}
+
+                          {section.promo && (
+                            <PromoCard promo={section.promo} isExpanded={isExpanded} />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -274,9 +291,11 @@ export function MobileNav({ className }) {
                 );
               })}
 
-              {standalonePages.map((page) => (
-                <Row key={page.path} to={page.path} label={page.label} />
-              ))}
+              {standalonePages
+                .filter((page) => page.slug !== "partner-with-us")
+                .map((page) => (
+                  <Row key={page.path} to={page.path} label={page.label} />
+                ))}
             </nav>
 
             {/* Sticky footer — phone + primary CTA (DESIGN.md §10.4) */}
@@ -322,5 +341,54 @@ function Row({ to, label }) {
     >
       {label}
     </Link>
+  );
+}
+
+/**
+ * Mobile equivalent of MegaPanel.jsx's `PanelPromo` — same `dscPartnerPromo`
+ * data (nav.js), same `.panel-dark` surface (the "static content panel"
+ * treatment, not `.card-dark` — this box holds two distinct CTAs, not one
+ * click target, same reasoning as the desktop version). `tabIndex` on both
+ * links follows the same collapsed/expanded gating every other link in this
+ * accordion already uses, so a closed section can't be tabbed into.
+ */
+function PromoCard({ promo, isExpanded }) {
+  const whatsappHref = `${site.whatsappHref}?text=${encodeURIComponent(
+    `Hi ThinkOrange, I'm a DSC partner and need help with ${promo.secondaryLabel?.toLowerCase()}.`
+  )}`;
+
+  return (
+    <div
+      data-surface="dark"
+      className="panel-dark grain relative mt-4 overflow-hidden rounded-[var(--radius-sm)] p-4"
+    >
+      {/* `text-canvas` — see MegaPanel.jsx's `PanelPromo` for why this isn't
+          ember (matches the source mockup, and `.text-ember-300` would lose
+          to `[data-surface="dark"] h4`'s canvas rule anyway). */}
+      <h4 className="text-h4 text-canvas">{promo.heading}</h4>
+      <p className="mt-2 text-body-sm leading-relaxed text-ink-300">{promo.description}</p>
+      <div className="relative mt-4 flex flex-col items-start gap-3">
+        <Button
+          as={Link}
+          to={promo.cta.path}
+          tabIndex={isExpanded ? undefined : -1}
+          variant="primary"
+          className="min-h-0 px-4 py-2 text-body-sm"
+        >
+          {promo.cta.label}
+        </Button>
+        {promo.secondaryLabel && (
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noreferrer noopener"
+            tabIndex={isExpanded ? undefined : -1}
+            className="text-body-sm font-medium text-ink-300 underline-offset-4 transition-colors hover:text-ember-200 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
+          >
+            {promo.secondaryLabel}
+          </a>
+        )}
+      </div>
+    </div>
   );
 }

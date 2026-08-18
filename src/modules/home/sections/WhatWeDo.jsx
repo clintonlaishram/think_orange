@@ -14,25 +14,34 @@ import { serviceCategories } from "@/content/nav";
 // bullets, kept to the §16 word budget for a service card (20–30 words) and
 // written second-person/active per §16's voice rules. `slug` keys these
 // against `serviceCategories` in nav.js rather than duplicating labels/paths.
+//
+// 17-08-2026: updated for the services-menu restructure (nav.js) —
+// "registrations-licences" is new, "government-tenders" + "loans-finance"
+// merged into "tenders-finance". Both new lines are marketing copy only
+// (service names straight from nav.js, no rupee/day/threshold facts), same
+// register as every other entry here.
 const PROMISES = {
   gst: "Registration, monthly and annual returns, ITC reconciliation, and representation if a notice arrives.",
   "income-tax": "Returns for individuals, firms and companies, tax planning, TDS compliance, and notice handling.",
-  "business-setup": "Private limited, LLP, OPC or partnership — incorporated correctly, with PAN, TAN and statutory registrations sorted.",
-  "accounting-audit": "Bookkeeping on Tally or Zoho Books, reconciliation, and specialised audits including stock and concurrent audit.",
-  "government-tenders": "GeM registration, tender documentation, and portal navigation so a missed step doesn't cost you a bid.",
-  "loans-finance": "Loan documentation, CMA data and projections for business finance, plus personal debt and budgeting support.",
+  "business-setup": "Private limited, LLP, OPC, partnership or a trust, society or Section 8 company — incorporated correctly, statutory registrations sorted.",
+  "registrations-licences": "MSME/Udyam, Startup India, import-export code, ICEGATE, trademark and NGO Darpan — cleared before you need to trade on them.",
+  "accounting-audit": "Bookkeeping on Tally or Zoho Books, payroll, and specialised audits including stock and concurrent audit.",
+  "tenders-finance": "GeM registration and tender documentation, plus loan documentation, CMA data and personal finance support.",
 };
 
 // Bento positions per DESIGN.md §11.3's diagram — GST is the large 6-col
-// card carrying its own leaf links inline; Loans & Finance is the wide 6-col
-// closer; the remaining four sit as 3-col cards in between.
+// card carrying its own leaf links inline; the last category is the wide
+// 6-col closer; the remaining four sit as 3-col cards in between. Row 2
+// (Registrations & Licences 3 + Accounting, Payroll & Audit 3 + Tenders &
+// Finance 6) mirrors row 1's 6+3+3 shape, so the bento pattern is unchanged
+// by the restructure — only which category fills which slot moved.
 const SPANS = {
   gst: "md:col-span-6",
   "income-tax": "md:col-span-3",
   "business-setup": "md:col-span-3",
+  "registrations-licences": "md:col-span-3",
   "accounting-audit": "md:col-span-3",
-  "government-tenders": "md:col-span-3",
-  "loans-finance": "md:col-span-6",
+  "tenders-finance": "md:col-span-6",
 };
 
 // Background arc ladder. Absolute weight lives here; every value is BELOW
@@ -74,7 +83,7 @@ export function WhatWeDo() {
         <Reveal>
           <Eyebrow>What we do</Eyebrow>
           <h2 className="mt-3 text-h2 max-w-[24ch]">
-            Six ways we keep you compliant — and out of trouble
+            Ways we keep you compliant — and out of trouble
           </h2>
         </Reveal>
 

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import "tailwindcss";
 
 /* Self-hosted Satoshi — not on npm, pulled from Fontshare (free, commercial OK).
@@ -12,6 +13,7 @@
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
   font-family: "Satoshi";
   src: url("/fonts/satoshi-500.woff2") format("woff2");
@@ -19,6 +21,7 @@
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
   font-family: "Satoshi";
   src: url("/fonts/satoshi-700.woff2") format("woff2");
@@ -26,6 +29,7 @@
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
   font-family: "Satoshi";
   src: url("/fonts/satoshi-900.woff2") format("woff2");
@@ -92,6 +96,7 @@
   --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-montserrat: "Montserrat", sans-serif;
 
   --radius-xs: 4px;
   --radius-sm: 8px;
@@ -195,12 +200,10 @@
   --dur-slower: 700ms;
 
   --gradient-ember: linear-gradient(135deg, #f26522 0%, #fb8c1e 100%);
-  --gradient-deep: radial-gradient(
-    120% 90% at 50% -10%,
-    #16264f 0%,
-    #0b1329 45%,
-    #070c1c 100%
-  );
+  --gradient-deep: radial-gradient(120% 90% at 50% -10%,
+      #16264f 0%,
+      #0b1329 45%,
+      #070c1c 100%);
 }
 
 /* ============================================================
@@ -260,6 +263,7 @@ p {
   --surface-accent: var(--color-ember-600);
   --surface-border: var(--color-ink-100);
 }
+
 [data-surface="light"] h1,
 [data-surface="light"] h2,
 [data-surface="light"] h3,
@@ -275,10 +279,12 @@ p {
   --surface-accent: var(--color-ember-300);
   --surface-border: var(--color-ink-700);
 }
+
 [data-surface="deep"] {
   --surface-accent: var(--color-ember-300);
   --surface-border: var(--color-ink-800);
 }
+
 [data-surface="dark"] h1,
 [data-surface="dark"] h2,
 [data-surface="dark"] h3,
@@ -294,6 +300,7 @@ p {
   --surface-accent: var(--color-ink-950);
   --surface-border: var(--color-ember-500);
 }
+
 [data-surface="ember"] h1,
 [data-surface="ember"] h2,
 [data-surface="ember"] h3,
@@ -312,6 +319,7 @@ p {
 .section-pad {
   padding-block: clamp(72px, 9vw, 144px);
 }
+
 .section-pad-deep {
   padding-block: clamp(80px, 10vw, 160px);
 }
@@ -325,20 +333,20 @@ p {
   position: relative;
   overflow: hidden;
 }
+
 .btn-sweep::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    115deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.35) 50%,
-    transparent 60%
-  );
+  background: linear-gradient(115deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.35) 50%,
+      transparent 60%);
   transform: translateX(-120%);
   transition: transform var(--dur-base) var(--ease-out);
   pointer-events: none;
 }
+
 .btn-sweep:hover::after {
   transform: translateX(120%);
 }
@@ -349,15 +357,18 @@ p {
    already collapses this to a single frame when the user asks for it.
    ============================================================ */
 @keyframes chip-pulse-twice {
+
   0%,
   100% {
     box-shadow: 0 0 0 0 rgba(242, 101, 34, 0);
   }
+
   25%,
   75% {
     box-shadow: 0 0 0 4px rgba(242, 101, 34, 0.25);
   }
 }
+
 .chip-pulse {
   animation: chip-pulse-twice 900ms var(--ease-out) 2;
 }
@@ -375,16 +386,12 @@ p {
    ============================================================ */
 .whatsapp-fab {
   background:
-    radial-gradient(
-      circle at 32% 24%,
+    radial-gradient(circle at 32% 24%,
       color-mix(in srgb, var(--color-canvas) 65%, transparent) 0%,
-      transparent 52%
-    ),
-    linear-gradient(
-      155deg,
+      transparent 52%),
+    linear-gradient(155deg,
       var(--color-whatsapp) 0%,
-      color-mix(in srgb, var(--color-whatsapp) 45%, var(--color-ink-950)) 100%
-    );
+      color-mix(in srgb, var(--color-whatsapp) 45%, var(--color-ink-950)) 100%);
   box-shadow:
     inset 0 1px 1px color-mix(in srgb, var(--color-canvas) 50%, transparent),
     inset 0 -3px 5px color-mix(in srgb, var(--color-ink-950) 40%, transparent),
@@ -403,6 +410,7 @@ p {
 .to-figure {
   border-radius: var(--radius-sm);
 }
+
 .to-figure::after {
   content: "";
   position: absolute;
@@ -412,6 +420,7 @@ p {
   opacity: 0.1;
   mix-blend-mode: multiply;
 }
+
 /* Arc cut: SVG clipPath from Figure.jsx (cubic path, objectBoundingBox).
    Keeps the previous ~78%→22% top-right bite with rounded cut junctions
    and outer corners. Class is the hook for DESIGN.md §13's ember stroke. */
@@ -613,11 +622,9 @@ p {
 .arcfield__vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    100% 70% at 50% 45%,
-    transparent 40%,
-    color-mix(in srgb, var(--color-ink-950) 72%, transparent) 100%
-  );
+  background: radial-gradient(100% 70% at 50% 45%,
+      transparent 40%,
+      color-mix(in srgb, var(--color-ink-950) 72%, transparent) 100%);
 }
 
 /* Phone — the arc IS the brand mark, so it has to read here too. §8.2's
@@ -642,6 +649,7 @@ p {
     animation: none;
     filter: blur(46px);
   }
+
   /* Two things govern where the arc actually lands, and both are easy to get
      wrong:
      1. ROTATION. The conic runs `from 0deg` with its bright band at
@@ -668,9 +676,11 @@ p {
     rotate: 6deg;
     opacity: 0.46;
   }
+
   .arcfield__ring--b {
     display: none;
   }
+
   .arcfield__bloom {
     display: none;
   }
@@ -684,6 +694,7 @@ p {
     width: 150vw;
     top: -18vh;
   }
+
   .arcfield__ring--b {
     width: 92vw;
     top: 4vh;
@@ -696,16 +707,20 @@ p {
    floor only forces animation-DURATION, and a name of `none` means the
    frozen `rotate` declarations win. */
 @media (prefers-reduced-motion: reduce) {
+
   .arcfield__grid,
   .arcfield__ring {
     animation: none;
   }
+
   .arcfield__ring--a {
     rotate: 156deg;
   }
+
   .arcfield__ring--b {
     rotate: 24deg;
   }
+
   .arcfield__bloom {
     display: none;
   }
@@ -720,14 +735,17 @@ p {
    case in JS.
    ============================================================ */
 @keyframes hero-card-float {
+
   0%,
   100% {
     transform: translate3d(0, 0, 0);
   }
+
   50% {
     transform: translate3d(0, -6px, 0);
   }
 }
+
 .hero-card-float {
   animation: hero-card-float 7s var(--ease-inout) infinite;
 }
@@ -750,23 +768,144 @@ p {
 }
 
 @keyframes hero-chevron-bounce {
+
   0%,
   100% {
     transform: translate3d(0, 0, 0);
   }
+
   50% {
     transform: translate3d(0, 4px, 0);
   }
 }
+
 .hero-chevron {
   animation: hero-chevron-bounce 2.4s var(--ease-inout) infinite;
 }
 
 /* ============================================================
+   Scroll nav (components/layout/ScrollNav.jsx).
+
+   The sitewide down/up scroll control, stacked above the WhatsApp FAB. Same
+   surface logic as `.whatsapp-fab` — a two-layer gradient with inset shadows
+   standing in for a border, a lit rim at the top and a soft dark one at the
+   bottom — but in ink with an ember rim rather than brand green, so the FAB
+   stays the only colour exception in that corner (DESIGN.md §16).
+
+   TRANSLUCENT, NOT GLASS: no `backdrop-filter`. §7.5 keeps blur exclusive to
+   the sticky nav, and states that translucency without blur is a separate,
+   permitted thing — which is what this uses, so the section beneath reads
+   through the disc without adding a second large blur surface to the
+   compositor on mobile.
+
+   Hover is gated to a real pointer. Ungated, a tap on touch leaves the disc
+   stuck in its hover state — the same defect the dark cards had before their
+   own gate was added.
+   ============================================================ */
+
+.scroll-nav {
+  background:
+    radial-gradient(
+      120% 120% at 30% 12%,
+      color-mix(in oklab, var(--color-ink-700) 82%, transparent) 0%,
+      transparent 62%
+    ),
+    color-mix(in oklab, var(--color-ink-900) 88%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklab, var(--color-ember-300) 26%, transparent),
+    inset 0 -1px 0 0 color-mix(in oklab, var(--color-ink-950) 60%, transparent),
+    0 8px 20px -10px color-mix(in oklab, var(--color-ink-950) 70%, transparent);
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .scroll-nav:hover {
+    color: var(--color-ember-200);
+    box-shadow:
+      inset 0 1px 0 0 color-mix(in oklab, var(--color-ember-300) 42%, transparent),
+      inset 0 -1px 0 0 color-mix(in oklab, var(--color-ink-950) 60%, transparent),
+      0 10px 24px -10px color-mix(in oklab, var(--color-ink-950) 75%, transparent),
+      0 0 0 1px color-mix(in oklab, var(--color-ember-400) 34%, transparent),
+      0 0 18px -2px color-mix(in oklab, var(--color-ember-400) 28%, transparent);
+  }
+}
+
+/* ============================================================
+   Typewriter (components/motion/Typewriter.jsx).
+
+   EVERY character of the active sentence is always in flow; unwritten ones
+   are simply transparent. The caret is then emitted inline at the write
+   position, so it rides the last written glyph instead of parking at the end
+   of the sentence.
+
+   That "always in flow" rule is what keeps the heading's box constant — an
+   earlier version removed unwritten characters with `display: none` and let
+   the text grow into an empty line, which measured three different <h1>
+   heights in one cycle (line 3's emphasis word is Instrument Serif, whose
+   metrics no `min-height` on an empty line reproduces) and shunted the whole
+   left column twice per rotation.
+
+   Because the element never leaves flow, the fade can be a plain transition.
+   `data-on` selects the duration, since a transition is governed by the
+   state being transitioned TO: writing fades a glyph up gently, erasing
+   wipes it faster so the delete still reads as a backspace rather than a
+   dissolve. The global reduced-motion floor collapses both to 0.01ms.
+   ============================================================ */
+.typewriter-char {
+  display: inline-block;
+}
+
+.typewriter-char[data-on="true"] {
+  opacity: 1;
+  transition: opacity 300ms var(--ease-out);
+}
+
+.typewriter-char[data-on="false"] {
+  opacity: 0;
+  transition: opacity 120ms linear;
+}
+
+/* The caret's blink. Not given a reduced-motion branch here: the component
+   stops rendering the caret entirely under reduced motion, because the
+   global floor's `animation-iteration-count: 1` with no fill leaves it at
+   its BASE style — solid, not hidden — and a solid caret parked after a
+   heading that will never write or erase implies motion that is not
+   coming. */
+@keyframes typewriter-blink {
+
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 0.05em;
+  height: 0.85em;
+  margin-left: 0.06em;
+  vertical-align: -0.05em;
+  background: var(--color-ember-300);
+  animation: typewriter-blink 1s step-end infinite;
+}
+
+/* ============================================================
    Trust strip — DESIGN.md §9.3 "Logo marquee". `translateX(-50%)` is exact
-   because TrustStrip.jsx renders the track twice back-to-back: at the
-   halfway point the second (duplicate) copy sits exactly where the first
-   started, so the loop point is invisible. Only a distance transform, so it
+   because TrustStrip.jsx renders the track as two identical GROUPS back-to-
+   back: at the halfway point the second group sits exactly where the first
+   started, so the loop point is invisible. A group is `marks` repeated
+   GROUP_PASSES times, not once — see that file for why the group has to be at
+   least as wide as the visible window, or the loop shows dead space before it
+   restarts. Consequence for this keyframe: the travel distance scales with
+   GROUP_PASSES, so the duration at the call site has to scale with it too to
+   hold a constant scroll speed. Only a distance transform, so it
    composites without triggering the reduced-motion floor's opacity/scale
    assumptions — that floor still collapses the 40s duration to ~0, which is
    why TrustStrip renders a static wrapped grid instead of relying on this
@@ -776,6 +915,27 @@ p {
   to {
     transform: translateX(-50%);
   }
+}
+
+/* Edge fade for the (now Container-width, not full-bleed) trust marquee —
+   Clinton's call, 17-08-2026, supersedes the full-bleed decision above.
+   `mask-image`, not an overlay div: an overlay needs a hardcoded background
+   colour to fade INTO (breaks the moment this surface isn't `canvas`), where
+   a mask fades the element's own content to transparent regardless of what's
+   behind it — same technique this file already uses for the arc/line radial
+   masks. Also what keeps a mark caught mid-word at the boundary from reading
+   as a hard, accidental crop. */
+.marquee-fade {
+  -webkit-mask-image: linear-gradient(to right,
+      transparent 0%,
+      #000 10%,
+      #000 90%,
+      transparent 100%);
+  mask-image: linear-gradient(to right,
+      transparent 0%,
+      #000 10%,
+      #000 90%,
+      transparent 100%);
 }
 
 /* ============================================================
@@ -808,12 +968,10 @@ p {
    cap is followed here; the token is left alone since the hero depends on it.
    ============================================================ */
 .surface-ambient {
-  background-image: radial-gradient(
-    120% 92% at 50% -30%,
-    var(--color-ink-700) 0%,
-    var(--color-ink-900) 46%,
-    var(--color-ink-950) 100%
-  );
+  background-image: radial-gradient(120% 92% at 50% -30%,
+      var(--color-ink-700) 0%,
+      var(--color-ink-900) 46%,
+      var(--color-ink-950) 100%);
 }
 
 /* ============================================================
@@ -835,19 +993,18 @@ p {
    anyway. Measured ΔL* 6.7%, inside §7.2's 8% cap.
    ============================================================ */
 .panel-dark {
-  position: relative; /* contains .grain's ::after and the arc rings */
-  overflow: hidden; /* keeps both inside the corner radius */
-  background-image: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--color-ink-700) 55%, var(--color-ink-900)) 0%,
-    var(--color-ink-900) 46%,
-    color-mix(in srgb, var(--color-ink-950) 60%, var(--color-ink-900)) 100%
-  );
+  position: relative;
+  /* contains .grain's ::after and the arc rings */
+  overflow: hidden;
+  /* keeps both inside the corner radius */
+  background-image: linear-gradient(155deg,
+      color-mix(in srgb, var(--color-ink-700) 55%, var(--color-ink-900)) 0%,
+      var(--color-ink-900) 46%,
+      color-mix(in srgb, var(--color-ink-950) 60%, var(--color-ink-900)) 100%);
   border: 1px solid color-mix(in srgb, var(--color-ink-100) 12%, transparent);
   /* §6.4's light-catch — the single detail that makes a dark panel read as a
      real object rather than a hole cut in the page. */
-  box-shadow: inset 0 1px 0
-    color-mix(in srgb, var(--color-ink-100) 10%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink-100) 10%, transparent);
 }
 
 /* ============================================================
@@ -875,21 +1032,16 @@ p {
    ============================================================ */
 .footer-surface {
   background-image:
-    linear-gradient(
-      155deg,
+    linear-gradient(155deg,
       color-mix(in srgb, var(--color-ink-100) 6%, transparent) 0%,
-      transparent 42%
-    ),
-    radial-gradient(
-      120% 92% at 50% -30%,
+      transparent 42%),
+    radial-gradient(120% 92% at 50% -30%,
       var(--color-ink-700) 0%,
       var(--color-ink-900) 46%,
-      var(--color-ink-950) 100%
-    );
+      var(--color-ink-950) 100%);
   /* §6.4's light-catch, same recipe as `.panel-dark` — the seam where the
      page above hands off to the footer reads as an edge, not a cut. */
-  box-shadow: inset 0 1px 0
-    color-mix(in srgb, var(--color-ink-100) 8%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink-100) 8%, transparent);
 }
 
 /* Static ledger-hairline grid — a second, non-circular motif so the footer
@@ -906,16 +1058,12 @@ p {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(
-      to right,
+    linear-gradient(to right,
       color-mix(in srgb, var(--color-ink-200) 6%, transparent) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      to bottom,
+      transparent 1px),
+    linear-gradient(to bottom,
       color-mix(in srgb, var(--color-ink-200) 6%, transparent) 1px,
-      transparent 1px
-    );
+      transparent 1px);
   background-size: 64px 64px;
   -webkit-mask-image: radial-gradient(85% 70% at 80% 40%, #000 0%, transparent 72%);
   mask-image: radial-gradient(85% 70% at 80% 40%, #000 0%, transparent 72%);
@@ -940,12 +1088,14 @@ p {
   position: relative;
   display: inline-block;
 }
+
 .value-sizer::before {
   content: attr(data-value);
   visibility: hidden;
 }
+
 /* The single child is lifted out of flow onto the reserved box. */
-.value-sizer > * {
+.value-sizer>* {
   position: absolute;
   inset: 0;
 }
@@ -974,15 +1124,12 @@ p {
      ink-950-mixed corner at the bottom-right, so the card has a light
      direction instead of being one flat fill. 5% ember is under the
      threshold where it reads as "an orange card" — it reads as warmth. */
-  background-image: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--color-ember-400) 5%, var(--color-ink-800)) 0%,
-    var(--color-ink-800) 44%,
-    color-mix(in srgb, var(--color-ink-950) 42%, var(--color-ink-800)) 100%
-  );
+  background-image: linear-gradient(155deg,
+      color-mix(in srgb, var(--color-ember-400) 5%, var(--color-ink-800)) 0%,
+      var(--color-ink-800) 44%,
+      color-mix(in srgb, var(--color-ink-950) 42%, var(--color-ink-800)) 100%);
   border: 1px solid var(--color-ink-700);
-  box-shadow: inset 0 1px 0
-    color-mix(in srgb, var(--color-ink-100) 7%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink-100) 7%, transparent);
   transition:
     transform var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out);
@@ -995,7 +1142,8 @@ p {
 .card-dark::before {
   content: "";
   position: absolute;
-  inset: -1px; /* sits ON the border, not inside it */
+  inset: -1px;
+  /* sits ON the border, not inside it */
   border-radius: inherit;
   pointer-events: none;
   opacity: 0;
@@ -1003,8 +1151,7 @@ p {
   border: 1px solid color-mix(in srgb, var(--color-ember-400) 50%, transparent);
   /* Outer glow only — nothing is cast INTO the card, so §12.2's
      no-drop-shadow-on-dark rule still holds for the card surface. */
-  box-shadow: 0 16px 38px -20px
-    color-mix(in srgb, var(--color-ember-500) 42%, transparent);
+  box-shadow: 0 16px 38px -20px color-mix(in srgb, var(--color-ember-500) 42%, transparent);
 }
 
 /* The corner crescent — DESIGN.md §3.1's one repeated shape — STROKES ON
@@ -1017,8 +1164,10 @@ p {
 .card-dark {
   --card-arc-draw: 0.1;
 }
+
 .card-arc {
-  stroke-dasharray: 1; /* unit length — see ArcGlyph's pathLength="1" */
+  stroke-dasharray: 1;
+  /* unit length — see ArcGlyph's pathLength="1" */
   stroke-dashoffset: 1;
   opacity: 0;
   transition:
@@ -1033,15 +1182,15 @@ p {
 @media (hover: hover) and (pointer: fine) {
   .card-dark:hover {
     transform: translateY(-4px);
-    border-color: color-mix(
-      in srgb,
-      var(--color-ember-400) 28%,
-      var(--color-ink-700)
-    );
+    border-color: color-mix(in srgb,
+        var(--color-ember-400) 28%,
+        var(--color-ink-700));
   }
+
   .card-dark:hover::before {
     opacity: 1;
   }
+
   .card-dark:hover .card-arc {
     stroke-dashoffset: var(--card-arc-draw);
     opacity: 1;
@@ -1067,6 +1216,7 @@ p {
 .card-dark:has(:focus-visible)::before {
   opacity: 1;
 }
+
 .card-dark:focus-visible .card-arc,
 .card-dark:has(:focus-visible) .card-arc {
   stroke-dashoffset: var(--card-arc-draw);
@@ -1095,6 +1245,7 @@ p {
    (skip bloom loop, freeze arcs, render counter end-values, static marquee)
    still needs to happen per-component; this is the CSS backstop. */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

@@ -10,7 +10,7 @@ import { t } from "../turnaround.js";
 
 export default {
   slug: "msme-udyam",
-  category: "business-setup",
+  category: "registrations-licences",
   title: "MSME / Udyam Registration",
   h1: "MSME / Udyam Registration in Salem, Tamil Nadu",
 

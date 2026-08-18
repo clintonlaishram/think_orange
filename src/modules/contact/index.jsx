@@ -1,26 +1,19 @@
-// import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
-// import { Container } from "@/components/layout/Container";
-// import { Section } from "@/components/layout/Section";
-// import { Eyebrow } from "@/components/layout/Eyebrow";
+import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Container } from "@/components/layout/Container";
+import { Section } from "@/components/layout/Section";
+import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
-import { ComingSoon } from "@/components/ui/ComingSoon";
-// import { Card } from "@/components/ui/Card";
-// import { MapEmbed } from "@/components/ui/MapEmbed";
-// import { Reveal } from "@/components/motion/Reveal";
-// import { site } from "@/content/nav";
-// import { ContactForm } from "@/modules/contact/ContactForm";
+import { Card } from "@/components/ui/Card";
+import { MapEmbed } from "@/components/ui/MapEmbed";
+import { Reveal } from "@/components/motion/Reveal";
+import { site } from "@/content/nav";
+import { ContactForm } from "@/modules/contact/ContactForm";
 
 // T7 — CONTENT-PLAN.md §11. 6/6 split: contact details + click-to-load map
 // on the left, the 5-field enquiry form on the right. Office hours and the
 // full street address are both on §1.1's hold list — the left column shows
 // only what §1 confirms (phone, WhatsApp, email, city/state), never a
 // placeholder for the missing two.
-//
-// ⚠️ 13-08-2026: client preview request (Clinton) — hero only, then
-// <ComingSoon /> instead of the rest of the body (including the real
-// contact details/map/form). ComingSoon's own phone + WhatsApp buttons are
-// the only way to reach us while this is live. Everything below is
-// commented out in place, not deleted — see ServiceLeaf.jsx's matching note.
 export default function Contact({ path }) {
   return (
     <>
@@ -31,9 +24,6 @@ export default function Contact({ path }) {
         lede="Most enquiries in this line of work move fastest over WhatsApp — but phone, email and the form below all reach the same team."
       />
 
-      <ComingSoon />
-
-      {/*
       <Section surface="light">
         <Container>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
@@ -108,7 +98,6 @@ export default function Contact({ path }) {
           </div>
         </Container>
       </Section>
-      */}
     </>
   );
 }

@@ -12,11 +12,12 @@ import { cn } from "@/lib/cn";
 // Resolved the way this repo resolves those elsewhere — honour the accessible
 // outcome, keep the amber character, document the deviation. `warning-700` is
 // the same hue at a passing depth (5.1:1 on canvas), not a new brand colour.
+// Do not change this white text in active at all 
 const VARIANTS = {
   neutral: "bg-ink-50 text-ink-500",
   "due-soon": "bg-warning/12 text-warning-700",
   overdue: "bg-ember-100 text-ember-700",
-  active: "bg-ember-400 text-ink-950",
+  active: "bg-ember-400 text-white",
 };
 
 export function Chip({ variant = "neutral", pulseOnce = false, className, children, ...props }) {

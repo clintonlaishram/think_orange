@@ -9,11 +9,15 @@ import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Button } from "@/components/ui/Button";
 import { Figure } from "@/components/ui/Figure";
 import { Counter } from "@/components/motion/Counter";
-import { LineMask } from "@/components/motion/LineMask";
 import { Reveal } from "@/components/motion/Reveal";
+import { Typewriter } from "@/components/motion/Typewriter";
 import { Scramble } from "@/components/motion/Scramble";
 import { site } from "@/content/nav";
-import { heroCapabilities, heroStats } from "@/content/home-hero";
+import {
+  heroCapabilities,
+  heroHeadlines,
+  heroStats,
+} from "@/content/home-hero";
 
 // Homepage section 1 — DESIGN.md §11.2. Asymmetric 7/5 over the Arc Field
 // (§8), Deep surface.
@@ -102,25 +106,40 @@ export function Hero() {
                   </Eyebrow>
                 </Reveal>
 
+                {/* Rotating typewriter headline (17-08-2026, Clinton's call).
+                    Each headline types in, holds, erases and hands over to the
+                    next on a 10s cycle, in the H1 itself rather than a
+                    sub-line.
+
+                    Only the ACTIVE headline is ever mounted (see
+                    Typewriter.jsx), so this is NOT the "every variant's text
+                    concatenated into one h1" problem — the heading holds
+                    exactly one coherent sentence at any moment, and the
+                    prerendered HTML holds the first one. Phase 10's
+                    single-clean-h1 property is preserved; verified against
+                    dist/index.html.
+
+                    Every entry in heroHeadlines is pre-broken into three lines
+                    sharing "without" as line 2, which is what keeps the
+                    heading's height identical across the rotation so nothing
+                    below it shifts. See that export's comment — the shape is
+                    load-bearing. */}
                 <h1 className="text-display-xl text-canvas">
-                  {/* Three lines, not two: at display-xl (88px/900) over a
-                      7-column measure, "Compliance, without" rewraps inside
-                      its own mask wrapper, which reveals two visual lines as
-                      one block and loses the 80ms cascade. Each entry has to
-                      be a line that actually fits. */}
-                  <LineMask
+                  <Typewriter
                     className="pb-[0.1em]"
                     startDelay={0.12}
-                    lines={[
-                      "Compliance,",
-                      "without",
-                      <>
-                        the{" "}
-                        <em className="font-serif font-normal italic tracking-[-0.01em] text-ember-300">
-                          scramble.
-                        </em>
-                      </>,
-                    ]}
+                    cycleSeconds={10}
+                    sequences={heroHeadlines.map((headline) => [
+                      ...headline.lines.map((line) => [{ text: line }]),
+                      [
+                        { text: headline.lead },
+                        {
+                          text: headline.emphasis,
+                          className:
+                            "font-serif font-normal italic tracking-[-0.01em] text-ember-300",
+                        },
+                      ],
+                    ])}
                   />
                 </h1>
 
@@ -185,28 +204,7 @@ export function Hero() {
         </div>
       </div>
 
-      {/* ---- Scroll affordance (§11.2) --------------------------------
-          Deliberately NOT wrapped in Reveal: it sits at the hero's end,
-          outside Reveal's -12% bottom rootMargin, so it would stay at
-          opacity 0 until the user had already started scrolling past it. An
-          affordance that appears only once you no longer need it is worse
-          than one that never animates. */}
-      <div className="hidden sm:block absolute bottom-4 left-1/2 transform -translate-x-1/2 flex justify-center">
-        <button
-          type="button"
-          aria-label="Scroll to the next section"
-          onClick={() => {
-            const next = heroRef.current?.nextElementSibling;
-            if (next)
-              next.scrollIntoView({ behavior: "smooth", block: "start" });
-            else
-              window.scrollBy({ top: window.innerHeight, behavior: "smooth" });
-          }}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-ember-400/70 text-ember-300 transition-colors duration-[var(--dur-fast)] hover:border-ember-400 hover:bg-ember-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950"
-        >
-          <ChevronDown className="hero-chevron h-4 w-4" aria-hidden="true" />
-        </button>
-      </div>
+     
     </section>
   );
 }
@@ -293,10 +291,25 @@ function HeroStats() {
     // scrolls into view. 200ms still reads as part of the cascade on a tall
     // monitor, where the row IS above the fold at mount.
     //
+    // margin="0px" overrides Reveal's default -12% bottom exclusion — a real
+    // bug, not a tuning nitpick: at 1440×810–820 the row is genuinely on
+    // screen at mount, yet the default margin's shrunk root never gives it
+    // 18% overlap, so it sat at opacity 0 until an actual scroll changed the
+    // geometry (reported: "not shown ... only show when i scroll a little").
+    // That -12% exists so a normal below-the-fold reveal doesn't fire the
+    // instant its top sliver peeks in; it's a liability, not a feature, for a
+    // row that's the hero's own trailing content and can legitimately already
+    // be visible at load. Confirmed fixed at the exact failing heights: the
+    // row now reaches `inView` immediately whenever it's actually on screen.
+    //
     // Render-prop form: the tiles animate their own values, and they all hang
     // off THIS Reveal's single IntersectionObserver rather than installing
     // four more of their own.
-    <Reveal delay={0.5} className="mt-1 border-t border-ink-800 pt-6">
+    <Reveal
+      delay={0.5}
+      margin="0px"
+      className="mt-1 border-t border-ink-800 pt-6"
+    >
       {(inView) => (
         <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
           {heroStats.map((stat, index) => (

@@ -194,6 +194,131 @@ export const dscProducts = [
   },
 
   {
+    slug: "combo-dsc",
+    label: "Combo DSC (Sign + Encrypt)",
+    h1: "Combo Digital Signature Certificate — Sign + Encrypt",
+    meta: {
+      title: "Combo DSC (Sign + Encrypt) in Salem | ThinkOrange Consulting",
+      description:
+        "Signing and encryption certificates issued together on one token, for e-tendering portals that require both. eMudhra and SignX partner, Salem, Tamil Nadu.",
+      keywords: [
+        "combo dsc sign encrypt salem",
+        "dual certificate dsc e-tendering",
+        "encryption certificate digital signature",
+        "dsc for e-tendering portal",
+      ],
+    },
+    lede:
+      "For bidders on e-tendering and e-procurement portals that specifically ask for both a signing and an encryption certificate — issued together on one token, not two separate purchases.",
+    usedFor: [
+      "E-tendering and e-procurement portals whose technical requirements call for a separate encryption certificate alongside your signing certificate before a bid can be submitted",
+      "Company filings on the MCA21 portal, using the signing half of the combo the same way a standard Class 3 certificate works",
+      "GST and income tax portal filings for the organisation's authorised signatory",
+      "Encrypted document exchange with any department or portal that specifically asks for an encryption certificate, not just a signature",
+    ],
+    validityOptions: ["2 years", "3 years"],
+    tokenNote:
+      "Issued as two certificates — one for signing, one for encryption — loaded onto the same FIPS-compliant USB token, so you carry one token rather than two.",
+    documents: [
+      "Certificate of Incorporation or registration certificate, for an organisation applicant",
+      "PAN of the organisation",
+      "Board resolution or authorisation letter naming the signatory",
+      "PAN, Aadhaar and photograph of the authorised signatory",
+      "Active mobile number and email of the signatory, for video verification",
+    ],
+    verificationNote:
+      "Most bidders don't discover a tender wants an encryption certificate until a submission is rejected for missing one — check the specific tender's technical requirements before assuming a signing-only certificate is enough. An encryption certificate cannot be added onto an already-issued signing-only certificate afterward; it has to be issued as a combo from the start.",
+    process: [
+      { step: 1, title: "Confirm the tender needs both certificates", desc: "We check the specific portal's technical requirements so you're not buying a combo you don't need, or a signing-only certificate that gets rejected." },
+      { step: 2, title: "Application and documents", desc: "Organisation and signatory documents submitted together." },
+      { step: 3, title: "Video verification", desc: "The named signatory completes video verification, same as any Class 3 issuance." },
+      { step: 4, title: "Certificates and token handover", desc: "Both certificates issued onto one token, delivered and tested working before you rely on it for a submission." },
+    ],
+    fees: null,
+    driverSlugs: ["hyp2003", "epass-2003", "watchdata-proxkey", "mtoken"],
+    faqs: [
+      {
+        q: "What's the difference between this and a regular Class 3 certificate?",
+        a: "A standard Class 3 certificate — individual or organisation — gives you a signing certificate only. A combo adds a second, separate encryption certificate on the same token, needed specifically where a portal's technical requirements call for one, most often on e-tendering platforms.",
+      },
+      {
+        q: "How do I know if my tender actually needs a combo certificate?",
+        a: "Check the specific tender or portal's document requirements before you buy — not every e-tendering platform asks for encryption, but many still do, and a signing-only certificate will be rejected at submission if the portal expects both. We can check this against your specific tender before you order.",
+      },
+      {
+        q: "Can individuals buy a combo certificate, or is it only for organisations?",
+        a: "Individual bidders who face the same dual-certificate requirement can also get a combo — it isn't restricted to companies. Most demand for it comes from organisations bidding on tenders, but the certificate itself works the same way either way.",
+      },
+      {
+        q: "Do I need to buy a separate token for the encryption certificate?",
+        a: "No — both certificates are issued onto the same FIPS-compliant USB token you already carry for signing, not a second piece of hardware.",
+      },
+    ],
+  },
+
+  {
+    slug: "dsc-renewal-reissue",
+    label: "Renewal & Re-issue",
+    h1: "DSC Renewal & Re-issue",
+    meta: {
+      title: "DSC Renewal & Re-issue in Salem | ThinkOrange Consulting",
+      description:
+        "Renew a Class 3 certificate before it expires, or re-issue one after loss, damage or expiry — sorted before a filing deadline catches you without a working signature.",
+      keywords: [
+        "dsc renewal salem",
+        "digital signature certificate reissue",
+        "renew class 3 dsc",
+        "lost dsc token replacement",
+      ],
+    },
+    lede:
+      "Renewing an existing certificate before it expires, or re-issuing a fresh one after loss, damage or expiry — sorted out before a filing deadline catches you without a working signature.",
+    usedFor: [
+      "Your current certificate is nearing expiry and you want to keep signing without a gap",
+      "Your token is lost, stolen or physically damaged and your certificate needs replacing",
+      "Your certificate has already expired and you need a fresh one issued",
+      "You're switching certifying authority or token brand and need your certificate reissued accordingly",
+    ],
+    validityOptions: ["1 year", "2 years", "3 years"],
+    tokenNote:
+      "Renewing before expiry on a still-working token reuses that same token wherever the certifying authority allows it. A lost, damaged or already-expired case gets a fresh FIPS-compliant USB token.",
+    documents: [
+      "PAN and Aadhaar (individual), or organisation registration documents plus the authorised signatory's PAN and Aadhaar (organisation)",
+      "Your existing certificate's details, if renewing before expiry on the same token",
+      "A signed revocation request, if the token was lost, stolen or damaged",
+      "Active mobile number and email for video verification",
+    ],
+    verificationNote:
+      "Indian certifying authorities don't technically \"renew\" a certificate in the sense of extending its expiry — a fresh certificate is issued either way. What changes with timing is how much of the process repeats: apply before expiry and it moves faster with a working token you can reuse; wait until after expiry and it's treated as a brand-new application, full verification included, with no grace period once the old one has lapsed.",
+    process: [
+      { step: 1, title: "Confirm what you're dealing with", desc: "Renewal before expiry and replacement after loss, damage or expiry follow different paths — we confirm which applies before starting." },
+      { step: 2, title: "Documents, and revocation if needed", desc: "Renewal documents gathered, or a lost/damaged token revoked immediately to prevent misuse." },
+      { step: 3, title: "Video verification", desc: "Completed again regardless of route — every issuance needs it, renewal included." },
+      { step: 4, title: "Certificate and token", desc: "Issued onto your existing token where reuse is allowed, or a fresh token where it isn't." },
+    ],
+    fees: null,
+    driverSlugs: ["hyp2003", "epass-2003", "watchdata-proxkey", "mtoken"],
+    faqs: [
+      {
+        q: "Can I actually \"renew\" a DSC, or is it always a new certificate?",
+        a: "It's always a fresh certificate — Indian certifying authorities don't extend an existing one's expiry. \"Renewal\" describes doing this before your current certificate lapses, which usually lets you reuse a working token and moves faster since less has changed since your last verification.",
+      },
+      {
+        q: "How early should I start the renewal process?",
+        a: "Well before expiry, rather than close to it — a certificate simply stops signing the moment it lapses, with no grace period, and once that happens you're back to a full fresh application regardless of how close you were to renewing in time.",
+      },
+      {
+        q: "My token is lost — is my old certificate still usable by whoever finds it?",
+        a: "Only until it's revoked, which is why we treat this as urgent rather than something to batch with other paperwork. Revoking adds your certificate to the Certificate Revocation List immediately, after which it can no longer be used to sign anything, even by someone holding the physical token.",
+      },
+      {
+        q: "Does renewing reset my validity period, or extend what was left of the old one?",
+        a: "It resets. You choose a fresh 1, 2 or 3-year term starting from the new issuance date — it doesn't add on to whatever time was left on the certificate being replaced.",
+      },
+    ],
+  },
+
+  {
     slug: "buy-tokens",
     label: "Buy DSC Tokens",
     h1: "Buy DSC USB Tokens",
@@ -244,6 +369,68 @@ export const dscProducts = [
       {
         q: "Which token should I buy?",
         a: "HYP2003 tokens are what we stock directly and issue certificates onto as standard. If you need a different token brand for a specific reason, ask us — compatibility with your certificate and operating system matters more than the brand.",
+      },
+    ],
+  },
+  {
+    slug: "aadhaar-esign",
+    label: "Aadhaar eSign",
+    h1: "Aadhaar eSign — Sign Documents Online with Aadhaar",
+    meta: {
+      title: "Aadhaar eSign in Salem | ThinkOrange Consulting",
+      description:
+        "Sign contracts and agreements online using Aadhaar OTP or biometric authentication — no USB token, no software. Not a substitute for statutory portal DSC filings.",
+      keywords: [
+        "aadhaar esign salem",
+        "aadhaar based electronic signature",
+        "esign document online india",
+        "esign vs digital signature certificate",
+      ],
+    },
+    lede:
+      "Sign contracts and agreements online in minutes using your Aadhaar and a mobile OTP — no USB token, no software to install, and no certificate to keep track of afterward.",
+    usedFor: [
+      "Employment offer letters, appointment letters and HR onboarding paperwork",
+      "Vendor, NDA and client agreements where the other party accepts an Aadhaar-based signature",
+      "Loan and lending agreements where the lender's own platform accepts Aadhaar eSign",
+      "Any document both parties agree can be signed this way, rather than with a certificate on a token",
+    ],
+    validityOptions: null,
+    documents: [
+      "Aadhaar number, linked to an active mobile number for OTP authentication at the moment of signing",
+      "The specific document you need signed, finalised — eSign authenticates a signature on that exact document, not a certificate you hold in advance for future use",
+      "Email address, for the signed document and its audit trail to be delivered to",
+    ],
+    verificationNote:
+      "Aadhaar eSign does not replace a Class 3 DSC for statutory portal filings. The income tax e-filing portal, the GST portal, MCA21/ROC filings and e-tendering/GeM all specifically require a Class 3 certificate on a token, and will not accept an Aadhaar eSign in its place. This is for contracts and agreements where the other party accepts it, not for government filings.",
+    process: [
+      { step: 1, title: "Confirm eSign fits your document", desc: "Not every use case accepts it — we check that before setting anything up, since statutory portal filings need a Class 3 DSC instead." },
+      { step: 2, title: "Aadhaar-linked mobile confirmed", desc: "The number your OTP will be sent to, through our eMudhra/SignX partner's eSign service." },
+      { step: 3, title: "Document routed for signing", desc: "The signer receives a secure link, authenticates with Aadhaar OTP (or biometric where offered), and signs." },
+      { step: 4, title: "Signed document and audit trail", desc: "Delivered with a tamper-evident signature embedded — evidence of who signed and when, tied to that document." },
+    ],
+    fees: null,
+    driverSlugs: [],
+    faqs: [
+      {
+        q: "Is an Aadhaar eSign legally valid?",
+        a: "Yes. Section 3A of the Information Technology Act 2000 recognises an electronic signature made using an authentication technique notified in the Act's Second Schedule, and Aadhaar eSign is one of those — it carries the same legal standing as a Class 3 digital signature for the documents it's used on.",
+      },
+      {
+        q: "Can I use this instead of a Class 3 DSC for GST or income tax filing?",
+        a: "No. Statutory portals — income tax e-filing, the GST portal, MCA21/ROC and e-tendering/GeM — specifically require a Class 3 certificate on a token and don't accept Aadhaar eSign as an alternative. Use eSign for contracts and agreements instead.",
+      },
+      {
+        q: "Do I need a USB token for this?",
+        a: "No — that's the main difference from every other certificate we issue. Verification happens by Aadhaar OTP or biometric at the moment you sign, rather than through hardware you keep and maintain.",
+      },
+      {
+        q: "How long is the signature valid for?",
+        a: "It doesn't expire the way a DSC does. The signature and its audit trail are permanently tied to that one signed document, rather than sitting on a certificate you hold for future use — there's no renewal to think about afterward.",
+      },
+      {
+        q: "What if my Aadhaar-linked mobile number has changed?",
+        a: "The OTP goes to whichever number is currently linked to your Aadhaar in UIDAI's own records. If that's changed or you no longer have access to it, update it with UIDAI first — eSign can't authenticate to a number Aadhaar itself doesn't recognise.",
       },
     ],
   },

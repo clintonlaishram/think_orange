@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { ArcGlyph } from "@/components/ui/ArcGlyph";
+import { Button } from "@/components/ui/Button";
+import { site } from "@/content/nav";
 
 // DESIGN.md §10.2 / §10.3 — ONE flat panel, every level visible at once.
 // No cascading submenus anywhere: CONTENT-PLAN.md §2.2 is explicit that the
 // original 3-level hover cascade was the single worst usability risk in the
 // brief, so this must never regress into a nested flyout.
 //
-// `columns` shape: { label, path?, items: [{ path, label }], note?, group? }
+// `columns` shape: { label, path?, items: [{ path, label, note? }], note?, group? }
 
 function PanelColumn({ column, onNavigate }) {
   const Heading = column.path ? Link : "div";
@@ -30,17 +32,37 @@ function PanelColumn({ column, onNavigate }) {
         style={{ background: "var(--gradient-ember)" }}
       />
 
-      <ArcGlyph variant="rule" className="mb-2 h-2 w-4 text-ember-400" />
+      {/* <ArcGlyph variant="rule" className="mb-2 h-2 w-4 text-ember-400" /> */}
 
+      {/* 19-08-2026: the heading LOOK (ember-300, semibold, column layout) is
+          shared by every panel, and only the INTERACTIVE states are
+          conditional on `column.path`. It used to be the other way round —
+          the whole ember treatment hung off `column.path`, so the Services
+          panel's headings (real category routes) rendered ember and the DSC
+          panel's (groupings, not routes: "Digital Signature Certificates",
+          "Tokens & Resources", "eSign Solutions") fell back to plain canvas.
+          Two visibly different dropdowns from one component. The DSC groups
+          stay non-links, because there is no page for a grouping to link to. */}
       <Heading
         {...headingProps}
         className={cn(
-          "block text-h4 text-canvas",
+          "flex flex-col text-h4 font-semibold text-ember-300",
           column.path &&
             "rounded-sm transition-colors hover:text-ember-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
         )}
       >
         {column.label}
+        {/* Rendered only when there IS one — an empty span still occupies a
+            text-xs line box, which pushed the rule below down by a blank row
+            on every column without a subline (i.e. all three DSC columns). */}
+        {column.subline && (
+          <span className="text-xs font-normal text-ink-200">{column.subline}</span>
+        )}
+        <span
+          aria-hidden="true"
+          className="mt-2.5 block h-0.5 w-8 rounded-full"
+          style={{ background: "var(--gradient-ember)" }}
+        />
       </Heading>
 
       <ul className="mt-2 space-y-0.5">
@@ -49,9 +71,18 @@ function PanelColumn({ column, onNavigate }) {
             <Link
               to={item.path}
               onClick={onNavigate}
-              className="block rounded-sm py-2.5 text-body-sm text-ink-300 transition-colors duration-[var(--dur-fast)] hover:text-canvas focus-visible:text-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+              className="block rounded-sm font-medium py-2.5 text-body-sm text-ink-200 transition-colors duration-[var(--dur-fast)] hover:text-canvas focus-visible:text-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
             >
               {item.label}
+              {/* Per-item note — currently only "Buy DSC Tokens"' token-brand
+                  subtitle. Mono/muted/small, same register as the column-level
+                  note below, just scoped to one link instead of the whole
+                  column. */}
+              {item.note && (
+                <span className="mt-0.5 block font-mono text-[11px] leading-relaxed text-ink-300">
+                  {item.note}
+                </span>
+              )}
             </Link>
           </li>
         ))}
@@ -64,9 +95,71 @@ function PanelColumn({ column, onNavigate }) {
   );
 }
 
-export function MegaPanel({ id, ariaLabel, columns, hubPath, hubLabel, onNavigate, className }) {
+/**
+ * The mega panel's promo card — currently the DSC panel's "Partner
+ * Programme" slot, replacing the old primaryNav "Partner With Us" link
+ * (nav.js's `dscPartnerPromo`). Deliberately NOT `PanelColumn`: this isn't a
+ * list of links, it's a self-contained pitch with its own two CTAs, so it
+ * gets its own render path rather than overloading `column.items`.
+ *
+ * Reuses `.panel-dark` (theme.css) — the same "static content panel" surface
+ * PartnerProgramme's homepage panel uses, deliberately NOT `.card-dark`:
+ * this box isn't itself one big link (it holds two distinct CTAs), so a
+ * hover lift/glow on the whole card would signal a click target that isn't
+ * there, the exact trap `.panel-dark`'s own comment in theme.css warns
+ * about. `data-surface="dark"` is load-bearing, not decorative — the whole
+ * mega panel container never sets it, so without it here `var(--surface-
+ * accent)`/`var(--surface-border)` would resolve to their light-surface
+ * values a few levels up.
+ */
+function PanelPromo({ promo, onNavigate }) {
+  return (
+    <div
+      data-surface="dark"
+      className="panel-dark grain relative flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] p-8"
+    >
+      {/* <ArcGlyph variant="rule" className="mb-2 h-2 w-4 text-ember-400" /> */}
+      {/* `text-canvas`, matching PanelColumn's own `<Heading>` — not an ember
+          eyebrow. Two reasons: it's what the source mockup's `.col.panel h4`
+          actually does (plain white, same as every other column heading),
+          and `.text-ember-300` here would lose anyway to `[data-surface=
+          "dark"] h4`'s canvas rule (theme.css), which beats a plain class on
+          specificity — the exact trap this codebase already hit once on
+          PartnerProgramme's h3. */}
+      <h4 className="text-h4 text-canvas">{promo.heading}</h4>
+      <p className="mt-2 text-body-sm leading-relaxed text-ink-300">{promo.description}</p>
+
+      <div className="relative mt-6 flex flex-col items-start gap-3">
+        <Button
+          as={Link}
+          to={promo.cta.path}
+          onClick={onNavigate}
+          variant="primary"
+          className="min-h-0 px-4 py-2 text-body-sm text-white"
+        >
+          {promo.cta.label}
+        </Button>
+        {/* {promo.secondaryLabel && (
+          <a
+            href={buildPartnerLoginHref(promo.secondaryLabel)}
+            target="_blank"
+            rel="noreferrer noopener"
+            onClick={onNavigate}
+            className="inline-flex items-center gap-1.5 rounded-sm text-body-sm font-medium text-ink-300 underline-offset-4 transition-colors hover:text-ember-200 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+          >
+            <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
+            {promo.secondaryLabel}
+          </a>
+        )} */}
+      </div>
+    </div>
+  );
+}
+
+
+export function MegaPanel({ id, ariaLabel, columns, promo, hubPath, hubLabel, onNavigate, className }) {
   // Growth columns are hairline-separated from the statutory ones
-  // (DESIGN.md §10.2, CONTENT-PLAN.md §3.1 — Loans & Finance reads as an
+  // (DESIGN.md §10.2, CONTENT-PLAN.md §3.1 — Tenders & Finance reads as an
   // adjacent practice area, not one more statutory service).
   //
   // ONE grid across all columns, with the divider drawn as a border on the
@@ -92,7 +185,11 @@ export function MegaPanel({ id, ariaLabel, columns, hubPath, hubLabel, onNavigat
     >
       <div
         className="grid gap-2"
-        style={{ gridTemplateColumns: `repeat(${ordered.length}, minmax(0, 1fr))` }}
+        // `promo` is an extra track in the SAME grid, not a second grid next
+        // to it — same reasoning as the growth-column split above: two
+        // sibling grids let the promo card's width drift independently of
+        // the link columns as columns are added or regrouped.
+        style={{ gridTemplateColumns: `repeat(${ordered.length + (promo ? 1 : 0)}, minmax(0, 1fr))` }}
       >
         {ordered.map((column, index) => (
           <div
@@ -104,6 +201,11 @@ export function MegaPanel({ id, ariaLabel, columns, hubPath, hubLabel, onNavigat
             <PanelColumn column={column} onNavigate={onNavigate} />
           </div>
         ))}
+        {promo && (
+          <div className="pl-3">
+            <PanelPromo promo={promo} onNavigate={onNavigate} />
+          </div>
+        )}
       </div>
 
       {/* Utility rail (DESIGN.md §10.2). Also the only route to the hub page,
