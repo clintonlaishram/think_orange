@@ -22,7 +22,7 @@ export function Card({ surface = "light", interactive = true, className, childre
   return (
     <div
       className={cn(
-        "group relative rounded-[var(--radius-md)] lg:rounded-[var(--radius-lg)] p-6 md:p-8",
+        "group relative rounded-[var(--radius-xl)] lg:rounded-[var(--radius-2xl)] p-6 md:p-8",
         // .card-dark owns its own transition (180ms, hover-gated). Applying
         // the shared 280ms one on top would win on specificity order and
         // undo that.

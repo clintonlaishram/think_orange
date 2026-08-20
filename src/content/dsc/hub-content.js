@@ -11,14 +11,47 @@ export const dscHubContent = {
   meta: {
     title: "Digital Signature Certificates (DSC) in Salem | ThinkOrange Consulting",
     description:
-      "Class 3 DSCs for individuals and organisations, combo (sign + encrypt) certificates, DGFT certificates, renewals, USB tokens and Aadhaar eSign — issued through our eMudhra and SignX partnership. Salem, Tamil Nadu.",
+      // ⛔ eSign PAUSED — 21-08-2026. Original ended "…USB tokens and Aadhaar
+      // eSign — issued through…"; restore that clause with the rest of eSign.
+      "Class 3 DSCs for individuals and organisations, combo (sign + encrypt) certificates, DGFT certificates, renewals and USB tokens — issued through our eMudhra and SignX partnership. Salem, Tamil Nadu.",
   },
   heroLede:
-    "Class 3 Digital Signature Certificates for individuals and organisations, combo certificates for e-tendering, DGFT certificates for importers and exporters, renewals, USB tokens and Aadhaar eSign — issued through our eMudhra and SignX partnership.",
+    // ⛔ eSign PAUSED — 21-08-2026. Original: "…renewals, USB tokens and Aadhaar
+    // eSign — issued through…".
+    "Class 3 Digital Signature Certificates for individuals and organisations, combo certificates for e-tendering, DGFT certificates for importers and exporters, renewals and USB tokens — issued through our eMudhra and SignX partnership.",
   intro: [
     "A Digital Signature Certificate is what lets you sign legally on the income tax portal, the GST portal, MCA21, e-tendering platforms, EPFO and DGFT/ICEGATE — anywhere a physical signature isn't possible. Getting the wrong class, the wrong validity, or a certificate from an improperly authorised issuer causes more lost time than almost anything else in this line of work.",
-    "We issue every certificate through eMudhra and SignX, both licensed certifying authorities, so genuineness is never a question mark. Choose individual or organisation Class 3, a combo certificate if a portal asks for encryption alongside signing, DGFT for import-export, or a renewal if your current certificate is running out. Aadhaar eSign is below that, for contracts that don't need a certificate at all, followed by tokens, document checklists and driver downloads — or start from Documents Required if you're not sure which certificate you need.",
+    // ⛔ eSign PAUSED — 21-08-2026. Original had, after "running out.":
+    // "Aadhaar eSign is below that, for contracts that don't need a certificate
+    // at all, followed by tokens, document checklists and driver downloads — or
+    // start from Documents Required…".
+    "We issue every certificate through eMudhra and SignX, both licensed certifying authorities, so genuineness is never a question mark. Choose individual or organisation Class 3, a combo certificate if a portal asks for encryption alongside signing, DGFT for import-export, or a renewal if your current certificate is running out. Below that are tokens, document checklists and driver downloads — or start from Documents Required if you're not sure which certificate you need.",
   ],
+  // 20-08-2026 — the hero panel's list. NOT new content: these are exactly
+  // the portals already named in `intro[0]` above, as a list instead of
+  // prose, so the premium hero can show them above the fold. Kept in THIS
+  // file, adjacent to the paragraph they come from, so the two cannot quietly
+  // disagree — if a portal is added or removed, change both. The footnote is
+  // the same assertion the "Can Aadhaar eSign replace a DSC?" FAQ below makes,
+  // and the same one `aadhaar-esign`'s own verificationNote and the
+  // eSign-or-DSC comparison table make: it is the single most important
+  // correction in the DSC tree, so it is stated wherever a reader might stop.
+  heroHighlights: {
+    heading: "Where a certificate is accepted",
+    items: [
+      "Income tax portal",
+      "GST portal",
+      "MCA21 / ROC filings",
+      "e-Tendering platforms",
+      "EPFO",
+      "DGFT / ICEGATE",
+    ],
+    // ⛔ eSign PAUSED — 21-08-2026. Original footnote: "Aadhaar eSign is for
+    // contracts and agreements — statutory portals mandate a Class 3
+    // certificate." Restore it with eSign; the panel keeps its list either way.
+    footnote:
+      "Every one of these mandates a Class 3 certificate specifically.",
+  },
   faqs: [
     {
       q: "Which Class 3 certificate do I need — individual or organisation?",
@@ -36,10 +69,12 @@ export const dscHubContent = {
       q: "What does a combo certificate add over a standard Class 3?",
       a: "A combo certificate carries both a signing certificate and an encryption certificate on one token, issued together rather than bought twice. You need it where a portal's technical requirements specifically ask for an encryption certificate alongside your signing certificate before a bid can be submitted — common on e-tendering and e-procurement platforms. For income tax, GST and MCA filings a standard Class 3 signing certificate is what's used.",
     },
-    {
-      q: "Can Aadhaar eSign replace a Digital Signature Certificate?",
-      a: "Not on statutory portals. The income tax portal, the GST portal, MCA21 and e-tendering platforms mandate a Class 3 certificate specifically, and an Aadhaar-based eSign will not be accepted there. eSign is for contracts and agreements — offer letters, NDAs, vendor and client agreements — where the other party accepts an Aadhaar-based signature and nobody wants to wait for a token. See eSign or DSC for a side-by-side comparison.",
-    },
+    // ⛔ eSign PAUSED — 21-08-2026. This FAQ is the single most important
+    // correction in the DSC tree, so it comes straight back with eSign.
+    // {
+    //   q: "Can Aadhaar eSign replace a Digital Signature Certificate?",
+    //   a: "Not on statutory portals. The income tax portal, the GST portal, MCA21 and e-tendering platforms mandate a Class 3 certificate specifically, and an Aadhaar-based eSign will not be accepted there. eSign is for contracts and agreements — offer letters, NDAs, vendor and client agreements — where the other party accepts an Aadhaar-based signature and nobody wants to wait for a token. See eSign or DSC for a side-by-side comparison.",
+    // },
     {
       q: "My token isn't being detected — where do I find driver help?",
       a: "Every certificate ships on a USB token that needs its own driver installed first. See Token Driver Downloads for HYP2003, ePass 2003, Watchdata Proxkey and mToken — each driver page has installation steps and a troubleshooting section.",

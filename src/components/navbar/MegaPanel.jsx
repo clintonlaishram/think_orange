@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
-import { ArrowUpRight, MessageCircle } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { ArcGlyph } from "@/components/ui/ArcGlyph";
+import { ArcRings } from "@/components/ui/ArcRings";
 import { Button } from "@/components/ui/Button";
-import { site } from "@/content/nav";
 
 // DESIGN.md §10.2 / §10.3 — ONE flat panel, every level visible at once.
 // No cascading submenus anywhere: CONTENT-PLAN.md §2.2 is explicit that the
@@ -28,7 +27,10 @@ function PanelColumn({ column, onNavigate }) {
     >
       <span
         aria-hidden="true"
-        className="absolute inset-x-3 top-0 h-0.5 origin-left scale-x-0 rounded-full opacity-0 transition-all duration-[var(--dur-fast)] group-hover:scale-x-100 group-hover:opacity-100 group-focus-within:scale-x-100 group-focus-within:opacity-100"
+        // `transition-[transform,opacity]`, not `transition-all`: `all` makes
+        // the compositor watch every property on the element, and this one
+        // only ever changes two.
+        className="absolute inset-x-3 top-0 h-0.5 origin-left scale-x-0 rounded-full opacity-0 transition-[transform,opacity] duration-[var(--dur-fast)] ease-[var(--ease-out)] group-hover:scale-x-100 group-hover:opacity-100 group-focus-within:scale-x-100 group-focus-within:opacity-100"
         style={{ background: "var(--gradient-ember)" }}
       />
 
@@ -46,18 +48,13 @@ function PanelColumn({ column, onNavigate }) {
       <Heading
         {...headingProps}
         className={cn(
-          "flex flex-col text-h4 font-semibold text-ember-300",
+          "flex flex-col text-h4 font-semibold text-ink-100",
           column.path &&
             "rounded-sm transition-colors hover:text-ember-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
         )}
       >
         {column.label}
-        {/* Rendered only when there IS one — an empty span still occupies a
-            text-xs line box, which pushed the rule below down by a blank row
-            on every column without a subline (i.e. all three DSC columns). */}
-        {column.subline && (
-          <span className="text-xs font-normal text-ink-200">{column.subline}</span>
-        )}
+
         <span
           aria-hidden="true"
           className="mt-2.5 block h-0.5 w-8 rounded-full"
@@ -71,7 +68,12 @@ function PanelColumn({ column, onNavigate }) {
             <Link
               to={item.path}
               onClick={onNavigate}
-              className="block rounded-sm font-medium py-2.5 text-body-sm text-ink-200 transition-colors duration-[var(--dur-fast)] hover:text-canvas focus-visible:text-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+              // A row is a full-width target, so it now reads as one: a
+              // tint lighter than the column's own hover tint, on the row's
+              // real bounds (`-mx-2 px-2` claws back the column padding so
+              // the highlight spans the column rather than floating inside
+              // it). Colour alone left ~30 links with no shape.
+              className="-mx-2 block rounded-[var(--radius-sm)] px-2 py-2.5 font-medium text-body-sm text-ink-200 transition-colors duration-[var(--dur-fast)] hover:bg-ink-700/45 hover:text-canvas focus-visible:text-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
             >
               {item.label}
               {/* Per-item note — currently only "Buy DSC Tokens"' token-brand
@@ -116,7 +118,7 @@ function PanelPromo({ promo, onNavigate }) {
   return (
     <div
       data-surface="dark"
-      className="panel-dark grain relative flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] p-8"
+      className="panel-dark grain relative flex h-fit flex-col overflow-hidden rounded-[var(--radius-lg)] p-8"
     >
       {/* <ArcGlyph variant="rule" className="mb-2 h-2 w-4 text-ember-400" /> */}
       {/* `text-canvas`, matching PanelColumn's own `<Heading>` — not an ember
@@ -135,7 +137,11 @@ function PanelPromo({ promo, onNavigate }) {
           to={promo.cta.path}
           onClick={onNavigate}
           variant="primary"
-          className="min-h-0 px-4 py-2 text-body-sm text-white"
+          // NOT `text-white`: CLAUDE.md's first non-negotiable is ember-400
+          // bg with ink-950 text — white on ember measures 3.13:1 and fails
+          // AA. `Button`'s primary variant already carries the right colour,
+          // so the override is simply removed.
+          className="min-h-0 px-4 py-2 text-body-sm"
         >
           {promo.cta.label}
         </Button>
@@ -179,10 +185,25 @@ export function MegaPanel({ id, ariaLabel, columns, promo, hubPath, hubLabel, on
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        "rounded-[var(--radius-md)] border border-ink-700 bg-ink-900 p-10 shadow-[var(--shadow-lg)]",
+        "mega-panel grain relative isolate overflow-hidden rounded-[var(--radius-md)] border border-ink-700 p-10",
         className
       )}
     >
+      {/* The site's own arc, at panel weight, bled off the bottom-right so the
+          panel's one genuinely empty region carries the brand mark. Same
+          `[z-index:-1]` reasoning as the mobile sheet: `.arc-rings`' own z-0
+          would paint above in-flow text. Unique gradientId per instance —
+          `url(#id)` resolves document-wide — hence the panel's own `id`. */}
+      <ArcRings
+        gradientId={`${id}-arc`}
+        rings={[
+          { r: 140, width: 1, opacity: 0.085 },
+          { r: 108, width: 1.5, opacity: 0.05 },
+        ]}
+        className="[z-index:-1]"
+        svgClassName="-bottom-60 -right-44 h-[520px] w-[520px]"
+      />
+
       <div
         className="grid gap-2"
         // `promo` is an extra track in the SAME grid, not a second grid next
@@ -194,7 +215,9 @@ export function MegaPanel({ id, ariaLabel, columns, promo, hubPath, hubLabel, on
         {ordered.map((column, index) => (
           <div
             key={column.label}
+            style={{ "--i": index }}
             className={cn(
+              "mega-panel-col",
               index === firstGrowthIndex && firstGrowthIndex > 0 && "border-l border-ink-700 pl-3"
             )}
           >
@@ -202,7 +225,7 @@ export function MegaPanel({ id, ariaLabel, columns, promo, hubPath, hubLabel, on
           </div>
         ))}
         {promo && (
-          <div className="pl-3">
+          <div style={{ "--i": ordered.length }} className="mega-panel-col pl-3">
             <PanelPromo promo={promo} onNavigate={onNavigate} />
           </div>
         )}

@@ -13,7 +13,7 @@ import { Reveal } from "@/components/motion/Reveal";
 //
 // Same slot, same light surface, so DESIGN.md §11.1's alternation is
 // unchanged: deep hero → this → dark WhatWeDo. Where the marquee asserted
-// association, this section does work the hero can't: it names the six
+// association, this section does work the hero can't: it names the
 // situations people actually arrive with and hands each one straight to the
 // written service leaf that answers it, so the first thing under the fold is
 // a route into the site rather than a row of names.
@@ -75,8 +75,15 @@ export function WhenToCallUs() {
       <Container>
         <div className="max-w-[52ch]">
           <Eyebrow>When people call us</Eyebrow>
+          {/* ⚠️ The count is deliberately NOT in this heading (Clinton,
+              21-08-2026: "do not directly mention six"). The list below still
+              renders whatever `situations` holds, so the section says what it
+              does without asserting how many entries there are — which also
+              means adding or removing a row can never leave this line stale.
+              Same call as /about's "Every practice area, one point of
+              contact". */}
           <h2 className="mt-4 text-h2 text-ink-600">
-            Most engagements start with one of these six sentences.
+            Most engagements start with one of these sentences.
           </h2>
           <p className="mt-4 text-body text-ink-500">
             If one of them sounds like your week, the page it points to explains

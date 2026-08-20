@@ -4,6 +4,7 @@ import { Send } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/cn";
 import { sendEnquiry, emailjsConfigured } from "@/lib/emailjs";
 import { honeypotTripped, isRateLimited, recordSubmission, submittedTooFast, useMountedAt } from "@/lib/spamGuard";
 import { site } from "@/content/nav";
@@ -44,7 +45,14 @@ const initialForm = {
 // Same EmailJS + honeypot + time-gate + rate-limit hardening as Contact's
 // form (CONTENT-PLAN.md §11), reused here since this is a second public form
 // on the same spammable key.
-export function PartnerEnquiryForm() {
+// `tone` (21-08-2026) is additive and defaults to "light", so any other call
+// site is byte-identical. `tone="bare"` is the borderless treatment the contact
+// page established: no box around each field, so the form can sit directly on
+// the page instead of inside a card inside a card. Spacing opens up and the
+// submit button stops being full-bleed — a full-width bar under a borderless
+// form just redraws the card outline the tone exists to remove.
+export function PartnerEnquiryForm({ tone = "light" }) {
+  const bare = tone === "bare";
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const mountedAt = useMountedAt();
@@ -100,12 +108,13 @@ export function PartnerEnquiryForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Input label="Full name" required autoComplete="name" value={form.name} onChange={update("name")} />
-      <Input label="Firm / company name" required autoComplete="organization" value={form.firm} onChange={update("firm")} />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Input label="City" required autoComplete="address-level2" value={form.city} onChange={update("city")} />
+    <form onSubmit={handleSubmit} className={cn(bare ? "space-y-7" : "space-y-4")}>
+      <Input tone={tone} label="Full name" required autoComplete="name" value={form.name} onChange={update("name")} />
+      <Input tone={tone} label="Firm / company name" required autoComplete="organization" value={form.firm} onChange={update("firm")} />
+      <div className={cn("grid grid-cols-1 sm:grid-cols-2", bare ? "gap-7" : "gap-4")}>
+        <Input tone={tone} label="City" required autoComplete="address-level2" value={form.city} onChange={update("city")} />
         <Input
+          tone={tone}
           label="Phone / WhatsApp"
           type="tel"
           required
@@ -114,9 +123,10 @@ export function PartnerEnquiryForm() {
           onChange={update("phone")}
         />
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Select label="Practice type" options={PRACTICE_TYPES} value={form.practiceType} onChange={update("practiceType")} />
+      <div className={cn("grid grid-cols-1 sm:grid-cols-2", bare ? "gap-7" : "gap-4")}>
+        <Select tone={tone} label="Practice type" options={PRACTICE_TYPES} value={form.practiceType} onChange={update("practiceType")} />
         <Select
+          tone={tone}
           label="Expected monthly DSC volume"
           options={MONTHLY_VOLUMES}
           value={form.monthlyVolume}
@@ -140,7 +150,12 @@ export function PartnerEnquiryForm() {
         />
       </div>
 
-      <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
+      <Button
+        type="submit"
+        variant="primary"
+        className={cn(bare ? "w-full sm:w-auto" : "w-full")}
+        disabled={submitting}
+      >
         <Send className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
         {submitting ? "Sending…" : "Apply to partner with us"}
       </Button>

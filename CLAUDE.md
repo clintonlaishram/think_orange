@@ -2546,6 +2546,1510 @@ and asked for them to be fixed and made to look premium instead of "plain".
   on, but confirm its provenance and licence before launch. The token photo is
   a real product shot and raises no §2 question.
 
+## DSC module: premium pass + per-group backgrounds — 20-08-2026
+NOT a phase. Clinton: "optimise the DSC module and its pages and components,
+make the design clean and premium, right now it looks plain… add background
+texture shape… make the hero section premium… I want a different background
+design for each group, one design for the digital signature group, one for
+tokens and resources, and so on." All 14 `/dsc` routes plus the shared
+primitives they use.
+
+### ⛔ The biggest cause of "it looks plain" was a real bug, not a styling gap
+**`text-h1` was being SILENTLY DELETED, and the `<h1>` of every T2/T3/T4/T5
+page — 60-odd routes — was rendering at 16px / weight 400.** Found by measuring
+computed font sizes over CDP, not by reading source; the class was simply
+absent from `className` at runtime.
+- **Cause:** `tailwind-merge` has no access to the `@theme` block, so it
+  classifies a `text-*` utility by guessing from the value. A known t-shirt
+  size or number is a font size; **anything else falls through to text
+  COLOUR.** Every font-size token here is a semantic name, so `text-h1` landed
+  in the colour group, conflicted with `text-canvas`, and lost. Reproduced
+  directly: `twMerge("text-h1 text-canvas") === "text-canvas"`.
+- It only bit where a size and a colour went through `cn()` **together**. The
+  homepage was fine because its `<h1>` does not use `cn()`.
+- **Fix:** `src/lib/cn.js` now uses `extendTailwindMerge` and declares the
+  scale (`display-xl … stat`) into the real `font-size` group.
+- **Measured before/after across 13 routes: 207 headings unchanged, 25 fixed** —
+  12 `<h1>`s 16px/400 → 52px/700, and 13 StepFlow step titles 16px/400 →
+  18px/500. Homepage untouched at 88px/900. Verified `text-h1` is present in
+  the prerendered `dist/**/index.html`, so the heading is right before
+  hydration too.
+- ⚠️ **THE LIST IN `cn.js` MUST TRACK `theme.css`'s `--text-*` tokens.** Adding
+  a size token there without adding it here reintroduces this exact bug and
+  nothing errors — the text is just the wrong size. Recorded in DESIGN.md §5.2.
+
+### Per-group backgrounds — `components/ui/SurfaceTexture.jsx` (new)
+Four motifs — **see the REVISION block below for their final shape**, which is
+materially quieter and less literal than the first pass:
+`certificate` (guilloché — concentric crescents + a radial tick ring),
+`blueprint` (ledger grid + orthogonal hairlines terminating on the crescent),
+`signature` (one flowing stroke + one echo), `seal` (the hub hero: one wide
+band, two fine crescents, a tick rosette, a low-left ledger grid).
+Full rationale and the §3.1 / §16 reckoning are in **DESIGN.md §7.4b**.
+- **Colour is set ONCE on the wrapper and inherited via `currentColor`,
+  including the CSS grid** (`color-mix(… currentColor …)`). `tone: light` →
+  ink-400 on canvas, `tone: dark` → ember-400 on ink. **Tone is DERIVED** —
+  `Section` from its own surface, `PageHero` always `dark` — never passed by
+  hand, because an ink texture on an ink surface is invisible and looks exactly
+  like the prop being ignored. (First pass hardcoded `text-ink-400` per variant
+  and the eSign product hero's strokes were unreadable.) Light tone is now
+  `ink-300`, not `ink-400` — see the REVISION block.
+- ⛔ **`z-index: -1`, NOT `0`, and this is load-bearing.** A positioned
+  `z-index: 0` overlay paints at step 6 of the painting order and in-flow TEXT
+  paints at step 5 — i.e. it sits ON TOP of the copy. That is why every
+  `.arc-rings` call site has to remember `relative` on its content wrapper. At
+  `-1` the layer paints above the section background and below everything else
+  with nothing to remember; `Section`/`PageHero` add `isolate` so it stays
+  contained. Section `overflow` still must stay `visible` (StepFlow/HowWeWork
+  position labels outside their box), so the texture clips itself.
+- ⚠️ **`id` must be unique per mounted instance** — `url(#id)` resolves
+  document-wide. Verified: 0 duplicate gradient ids introduced. The one dupe
+  the scan reports (`cta-arc-fade`, on every page carrying `CtaBand`) is the
+  PRE-EXISTING defect CLAUDE.md already records for that file.
+- ⚠️ **The signature variant's first version was badly wrong and the lesson
+  generalises:** `inset-0 h-full w-full` with `preserveAspectRatio="slice"`
+  scales a 620-unit viewBox to the section's full height, so a 2.25-unit stroke
+  rendered ~7px and the "texture" read as a chart line drawn across the
+  headline. **Give every variant a fixed pixel box** or the stroke weights mean
+  nothing.
+
+### `content/dsc/groups.js` (new) — the group model
+`DscHub.jsx` held three private maps keyed by menu label, and **nothing outside
+that file knew groups existed**, so a product page shared no visual language
+with the group it was reached through. Now one module owns group presentation
+(eyebrow / heading / lede / texture) AND `dscGroupForSlug(slug)`.
+- **Membership is DERIVED from `dscPanelColumns`** (nav.js) — the same export
+  the mega panel renders from. Moving an item between menu columns moves its
+  background with it and there is nothing in any template to update.
+- Driver detail pages are the one indirection: they are children of the drivers
+  hub, not panel items, so they inherit their parent's group. Without that they
+  would be the only DSC pages with no treatment.
+- A group with no matching texture variant renders untextured rather than
+  crashing, so a fourth menu column is safe.
+- Verified derivation: certificates→certificate, tokens→circuit (incl. all four
+  driver pages, documents-required, validity-renewal-faqs), esign→signature.
+
+### What each template got
+- **`PageHero`** gained `texture` / `textureId` / `aside` / `spec`, **all
+  optional and additive** — pass none and the output is byte-identical, which
+  is what the ~40 non-DSC routes rely on (verified: 0 textures on `/services`,
+  `/about`, T2/T3 routes). A textured hero also picks up `.surface-ambient`,
+  i.e. §7.2 compliance; **the other ~40 heroes are still flat and can take the
+  same prop one at a time** — deliberately not switched on sitewide inside a
+  DSC-scoped change.
+- **`/dsc` hub hero is 7/5** with a `.panel-dark` aside listing the portals a
+  certificate is accepted on, and a 4-up hairline spec row. **Every spec value
+  is derived or already-asserted content** — `dscProducts.length`,
+  `dscDriversHub.children.length`, "On request" (the `fees: null` discipline),
+  and "eMudhra · SignX" which hub content already states three times. No client
+  count, no years, no turnaround: a row like this is the easiest place on the
+  site for one to slip in.
+- `hub-content.js` gained `heroHighlights` — **not new content**, the same
+  portals already named in `intro[0]`, as a list, kept in that file adjacent to
+  the paragraph they came from so the two cannot drift.
+- **Group sections** get their motif, plus a mono group index and a hairline
+  rule in the header (`GroupHeading`), which is what makes three near-identical
+  headers read as a sequence.
+- **T4 / T5** carry their group's motif in the HERO ONLY (revised — the first
+  pass also painted it on the first light section). T4's eyebrow is now the
+  group's, fixing two wrong labels: `aadhaar-esign` and `buy-tokens` both said
+  "Digital Signature Certificates".
+- **T5 discipline held:** no `Reveal`/`Stagger` added anywhere in
+  `UtilityPage.jsx`. A texture is one inert SVG plus a CSS gradient — no image
+  request, no JS, no layout work — so it does not touch that file's LCP brief.
+- **`.card-premium`** (theme.css) is the light-card counterpart to `.card-dark`
+  — see DESIGN.md §7.4c and the REVISION block: it is now surface quality only,
+  with no top rule and no pseudo-elements at all.
+- Hub hero eyebrow was the **same string as the H1 directly beneath it**; now
+  "DSC & eSign".
+
+### Deduplication done in passing
+- **`src/lib/arc.js` (new)** — the crescent had three definitions. `ArcRings`
+  and the textures now share one; verified byte-identical at r=140. `CtaBand`
+  still has the last local copy (out of scope, recorded in DESIGN.md §3.1).
+- **`src/lib/whatsapp.js` (new)** — the DSC module alone had three copies of the
+  deep-link formatter, each with its own inline message. `MegaPanel`/`MobileNav`
+  still have theirs; left alone rather than half-migrated.
+
+### Verification — and two audit bugs that produced phantom failures
+`npm run lint` (0 errors; the single warning is the pre-existing unused `site`
+import in `MegaPanel.jsx`), `content:check` (31/31 leaves, only the three
+standing unconfirmed-content warnings), `build` + prerender (68 routes + 404 +
+sitemap, unchanged), link integrity over `dist/` (**3,730 internal refs, 0
+broken**), `/dsc` JSON-LD 4/4 blocks valid with exactly one `<h1>`.
+
+Then a real Chrome over CDP against `npx serve dist` (never `vite preview`, and
+never the in-app preview pane — `visibilityState: "hidden"` there suspends
+`IntersectionObserver`, so every `Reveal` looks stuck). Confirmed
+`visibilityState: "visible"` and a hardware renderer (`ANGLE Metal Renderer:
+Apple M1`) before drawing any conclusion.
+- **Contrast, pixel-sampled** (hide text via `color: transparent`, screenshot,
+  decode in-page on a canvas, sample p95/p05 luminance under each box): **0
+  failures** across 13 folds, re-run after the revision. It found ONE real failure, which was mine — the
+  hero spec labels at `ink-400` 11px on the ambient radial measured **2.86:1**
+  against the 4.5:1 floor; now `ink-300` at 5.8:1. Same failure class Phase 10
+  recorded, and invisible to a static resolver because the surface is a
+  gradient.
+- **Ember coverage** by hue census: **0.70–1.81% per fold** after the revision
+  (ceiling ~12%).
+- ⚠️ **AUDIT BUG 1 — `html { scroll-behavior: smooth }` silently invalidates
+  the whole run.** A bare `window.scrollTo` has not finished when the next
+  command runs, so `getBoundingClientRect()` is taken at one position and the
+  screenshot at another. That reported a 40px ink-600 heading on canvas at
+  1.08:1. **Force `scrollBehavior = 'auto'` and assert `window.scrollY`
+  landed.** A sanity check comparing a decoded pixel against the section's own
+  `getComputedStyle().backgroundColor` did NOT catch it, because both sides of
+  that check were computed post-scroll in the same call.
+- ⚠️ **AUDIT BUG 2 — read the FOREGROUND colour BEFORE injecting the
+  `color: transparent` probe.** Read it after and every colour comes back
+  `rgba(0,0,0,0)`, luminance 0, and every ratio is fiction.
+- Two remaining reported failures were correctly excluded, not waved away: text
+  scrolled UNDER the fixed header samples its `rgba(7,12,28,.72)` glass (the
+  trap Phase 10 documented — require `rect.top >= 130`), and StepFlow's step
+  numbers are inside an `aria-hidden="true"` subtree resting at 0.3 opacity by
+  design, which WCAG contrast does not apply to and which this pass never
+  touched.
+- **375px, 15 routes: `documentElement.scrollWidth === 375` on every one** — no
+  horizontal overflow. Decorative SVGs do bleed past `innerWidth`; they are
+  inside `.surface-texture`'s `overflow: hidden` frame, which is what the
+  scrollWidth result proves.
+- **Reduced motion** via `Emulation.setEmulatedMedia`: 0 running animations, 0
+  elements stuck mid-opacity, card-rule transition collapsed to 1e-05s.
+  Textures still render, correctly — they are static line work, not motion.
+- **Regression:** T2 leaf, T3 hub, `/services`, `/about`, `/` all render with 0
+  textures and their original single-arc hero, and the homepage `<h1>` is
+  unchanged.
+- ⚠️ **Pre-existing and NOT from this change: React error #418 (hydration) logs
+  on every route including `/about` and `/`, which this pass never touched.**
+  Already recorded as sitewide and unexplained (Phase 9's `vite preview`
+  explanation does not cover it — this reproduces under `npx serve dist`).
+  Deliberately not chased here.
+- All CDP/audit scripts lived in the session scratchpad and are gone; nothing
+  was added under `scripts/`. **Kill the background `npx serve` when done** — an
+  orphaned child holds `dist/` and the next `vite build` fails with `EPERM`,
+  which reads like a permissions problem and is not.
+
+### REVISION, same session — Clinton's second round of notes
+"here design is repeated to hero section and next page. and design also look
+prominent and look cheap. take the design idea from home page design. fixed the
+design of card of light also do not use thick top border at all. and make the
+card look premium."
+
+All three criticisms were fair. The fixes are structural rather than tweaks, and
+the reasoning is worth keeping because the first pass failed in a way that is
+easy to repeat.
+
+1. **REPETITION — a motif now appears ONCE per page.** The first pass painted a
+   group's motif in the hero *and* on that page's first light section, which is
+   the same picture twice in one scroll. T4/T5 pages now carry it in the hero
+   only; the `/dsc` hub's three group sections each carry a *different* one,
+   which is a sequence, not a repeat. Verified per route: every T4/T5 page has
+   exactly **1** `.surface-texture`, in the hero; the hub has 4 (hero + 3
+   groups); non-DSC routes have 0.
+
+2. **PROMINENT / CHEAP — every figurative element is gone.** The first pass drew
+   a rounded-rect USB-token silhouette, circuit trace pads and a dashed signing
+   rule. That is *illustration*, not texture, and at 2–4× the homepage's weight.
+   `circuit` was replaced by **`blueprint`** — the ledger grid plus orthogonal
+   hairlines that terminate **on** the crescent (the endpoints are real points
+   on r=150, computed, so a line stops exactly where the curve is rather than
+   near it): a technical drawing measuring the brand shape. `signature` lost its
+   third stroke and its dashed baseline. `certificate` lost its bottom-left
+   echo. Opacities now sit at or below CtaBand's own 0.045–0.12 ladder; light
+   tone dropped `ink-400` → `ink-300`.
+
+3. **HOME-PAGE IDIOM was the right reference and I had not actually applied
+   it.** The homepage's light sections — `WhoWeWorkWith`, `WhyThinkOrange` —
+   carry **no background art at all**: they get their depth from hairlines, the
+   type scale, big quiet mono numerals and whitespace, with exactly ONE ember
+   element per block. That is why the DSC cards read as cheap: each one had
+   THREE small ember accents (top rule, mono index, "Read more") on a plain
+   white box.
+   - The 2px growing top rule is **removed outright**. `.card-premium` is now
+     surface quality only — one directional canvas wash, no pseudo-elements.
+     Verified: `::after` computes `content: none`.
+     ⚠️ **Do not reintroduce a coloured bar on this card.**
+   - The mono index is `ink-300`, not ember. A hairline above the action row
+     supplies the structure the colour was doing.
+   - The action row is `mt-auto` inside a `flex-col` Card, so it lands on the
+     card's floor in every card regardless of teaser length — rows landing at
+     different heights across a grid is the detail that makes a set look
+     untended.
+   - Hover is unchanged and untouched: `shadow-sm` → `shadow-md`, border →
+     `ember-200`, corner crescent fade-in, -4px lift. A fifth signal was the
+     bar's real problem.
+
+Re-verified after the revision: **0 contrast failures**, ember coverage
+**0.70–1.81%**, `scrollWidth === 375` on 15 routes, reduced motion 0 running
+animations, lint/`content:check`/build+prerender clean at 68 routes.
+
+### SECOND REVISION — icons, images, and a real dark band (20-08-2026)
+Clinton: "improve the design of section of dsc page, include icon, images make
+it clean and look premium still most of section is look too plain."
+
+The diagnosis was that after the restraint pass the sections were *clean* but
+carried nothing but type. Four changes, all taking the homepage as the
+reference rather than inventing a new language:
+
+- **`src/content/dsc/icons.js` (new) — one icon per DSC page.** This map used to
+  live privately inside `home/sections/DscBand.jsx`, which is why the hub had no
+  icons at all: adding them would have forked the pairing. Now shared, extended
+  to cover the T5 pages the homepage map never had, and resolved through
+  **`dscIcon(slug)` with a fallback** — `DscBand` iterates every product in
+  nav.js and renders `<Icon />`, so an unmapped slug evaluated to
+  `<undefined />`, a HARD React crash. That was a real bug caught before
+  shipping once already (17-08-2026); the helper makes the class of bug
+  impossible. ⛔ **Never index that object directly.**
+  ⚠️ It is a **component-side module under `src/content/`** (it imports lucide),
+  same caveat as `content/insights/images.js` — never import it from `nav.js`,
+  `seo.js`, or anything the Node scripts load.
+- **Group cards are now icon-led,** in a circle — **filled (`bg-ember-50`, no
+  border) on the light cards, ringed on the dark ones** (Clinton, same session:
+  "in icon of light card do not use border use bg only"). A ring plus a tint on
+  a white card is two treatments doing one job, and the ring read as an outline
+  around a shape rather than as the shape. The dark cards keep their ring
+  because no ink-surface tint is pale enough to register as a disc without
+  lifting the card's warmth — which is why the homepage DSC band rings its own.
+  Verified: all 9 light discs at `border-width: 0` with `rgb(255,243,232)`
+  fill; both dark discs unchanged at a 1px ember ring on a transparent
+  background. The per-card mono index is GONE —
+  `GroupHeading` already numbers the groups, so numbering items inside them was
+  structure for its own sake. §16 tell 6 is unaffected: its detector correctly
+  excludes glyphs inside `a, button, label, [role=button]`, and a circle that IS
+  the click target is an affordance, not the decorative motif the tell is about.
+- **The eSign group is now a DARK band with the signed-document render.** The
+  page ran `deep → light → light-alt → light → light-alt → light → light-alt →
+  ember`: six light surfaces in a row with only a tonal shift between them,
+  which is the real reason it read as plain. The homepage never does that
+  (DESIGN.md §11.1 puts a genuinely dark band between light ones). Now measured
+  off the live DOM: **`deep > light > light-alt > dark > light-alt > light >
+  light-alt > ember`**, zero consecutive repeats.
+  - ⚠️ **`DARK_GROUP_KEY` is position-independent on purpose.** `dark` differs
+    from BOTH `light` and `light-alt`, so the override cannot create two
+    consecutive identical surfaces at ANY index — which keeps
+    `GROUP_DISPLAY_ORDER` free to move and a future menu column safe.
+  - Cards there use `.card-dark` on the Link ITSELF, as `DscBand` does — that
+    class's hover ring, lift and arc-draw are written for the hovered element,
+    and `:is(a, button):active` only fires when the card really is the target. A
+    hand-rolled `.card-dark` must also pass its own `.card-arc` child, which
+    `<Card surface="dark">` supplies for itself. Verified rest → hover: ring
+    0→1, arc 0→1, lift −4px.
+- **At most ONE image per group, and only where the card count leaves room.**
+  `GROUP_ASIDE` is data-driven, and only eSign (2 cards) has an entry. An image
+  squeezed beside a five-card grid reads as "an image was added", not as a
+  layout that wanted one, so Certificates and Tokens get icons and no picture.
+  Rendered with plain `<Img>` and no plinth — `ProductShot`'s dark panel exists
+  for a transparent PNG on a LIGHT section (the token, in the intro); on ink it
+  would be a box around a box.
+- **Why-ThinkOrange row** was three plain paragraphs in a divided row — the
+  flattest thing a light section can be. Now the homepage's own archetype for
+  this exact content: a big mono ember numeral beside the copy
+  (`WhyThinkOrange`, DESIGN.md §11.4). **No headings were invented** above those
+  sentences; each `whyUs` entry is already one reviewed claim, and a three-word
+  label derived from its own opening would say the same thing twice.
+- **T4 got the same treatment on its three plainest sections:** validity pills →
+  icon-led option cards with the token note in a `.panel-dark` beside them
+  (not under them); the documents list → a two-column checklist on one card,
+  still an `<ol>`, plus an `Info` glyph on the verification callout; and Pricing
+  gained a three-up row naming what a quote depends on. **`PRICING_FACTORS`
+  contains no amounts, ranges or "from" prices** — `fees` is null on every DSC
+  product and stays that way; naming the variables the paragraph already names
+  is honest, implying a number is not.
+
+### Two real defects this revision introduced, both found by measurement
+1. **`GroupHeading` hardcoded light-surface colours.** The eyebrow and h2 are
+   handled for free (`var(--surface-accent)`, `[data-surface="dark"] h2`) but
+   the mono index, the hairline rule and the **lede** are plain utilities, so
+   the dark eSign band got an `ink-500` lede on `ink-900` — measured ~1.5:1,
+   all but unreadable — and an `ink-100` rule that read as a bright white line.
+   Now takes a `dark` prop. **Any component dropped onto both surface families
+   needs this check; the surface system covers headings and accents, not
+   arbitrary utilities.**
+2. **The documents-checklist ordinals at `ink-300` on white measured
+   3.40–3.49:1** against the 4.5:1 floor. They are visible ordinals, not
+   decoration, so they carry the floor — now `ink-400` at 7.2:1.
+
+### ⚠️ HARNESS BUG that produced 18 phantom contrast failures — read this
+`cdp.mjs` used a FIXED debug port (9333) and a fixed `--user-data-dir`. With a
+leftover Chrome from a previous script still listening, `launch()` spawns a
+process that immediately exits and then happily attaches to the **old browser**,
+inheriting its viewport, its emulated media and whatever page it was left on.
+The run reported 18 failures that were really a 375px browser sitting on the
+homepage — including impossible ones (a homepage Compliance-Calendar section
+reported on a DSC product route, which is what gave it away).
+**Fixes, both now in the harness: randomise the port and profile per run, and
+ASSERT `innerWidth`/`visibilityState`/`location.pathname` before measuring
+anything.** With the assertion in place the same run reported 6 failures, all
+real, all fixed above. Also: `pkill -9 -f "Google Chrome --headless"` between
+sessions — an orphan does not die with the script.
+
+### Re-verified after this revision
+Surface cadence off the live DOM (zero consecutive repeats), **0 contrast
+failures** across 20 folds with the widened selector set, ember coverage
+**0–3.46% per fold** (ceiling ~12%), `scrollWidth === 375` on 15 routes,
+reduced motion 0 running animations and 0 elements stuck mid-opacity, dark-card
+hover states, link integrity **3,731 internal refs / 0 broken**, `npm run lint`
+(0 errors), `content:check` clean, `build` + prerender 68 routes.
+
+### MOTION PASS — motion/react on the DSC pages (20-08-2026)
+Clinton: "use frammer motion and available screen and animation and
+transition." Built with the repo's existing primitives and `motion/react`
+(the renamed framer-motion already in `package.json`), not a new library.
+
+- **Scroll-linked parallax on every texture layer** (`SurfaceTexture`). The
+  motif travels ±28px over the whole time its section is on screen, so the
+  background reads as sitting further away than the copy. Transform only, so it
+  composites. Same construction `StepFlow` already uses on these prerendered
+  pages: `useScroll({ target, offset: ["start end", "end start"] })`, no
+  listener of our own. Measured across 6 scroll depths per layer: all four
+  layers step through real intermediate values (+28 → −28), so it tracks live
+  scroll rather than animating to completion on entry.
+- ⛔ **THE PARALLAX STARTS AT ZERO AND IS ONLY DRIVEN AFTER MOUNT, and that is
+  a hydration fix, not a style choice.** Deriving the offset straight off
+  `scrollYProgress` with `useTransform` makes the FIRST render emit
+  `transform: translateY(28px)` — and `useReducedMotion()` is **false on the
+  server** (there is no matchMedia), so a reduced-motion client renders `none`
+  against a server that said 28px: a mismatch on every textured section.
+  Fixed with `useMotionValue(0)` plus a `scrollYProgress.on("change", …)`
+  subscription in an effect, primed once post-hydration. **Verified in the
+  built output: all 4 texture wrappers in `dist/dsc/index.html` ship
+  `style="transform:none"`,** which is what the server, a normal client and a
+  reduced-motion client all render on first paint.
+- **The group heading's hairline rule now DRAWS** from the mono index outward
+  as its section arrives — the same "a line draws on scroll" device
+  `HowWeWork`'s connector and `StepFlow`'s progress line already use, which is
+  why it reads as part of the system rather than a new effect. `scaleX` on a 1px
+  element (composited; animating `width` would relayout the row every frame).
+  `GroupHeading` takes `Reveal`'s **render-prop form** so the rule hangs off the
+  ONE IntersectionObserver the container already needs instead of installing a
+  second. Measured: scaleX steps 0 → 0.113 → 0.309 → 0.471 → … → 0.987 → 1,
+  10 intermediate values — a real draw, not a snap.
+  - Under reduced motion the rule renders **drawn** (`initial={false}`), not
+    absent: it is structure, and a missing divider looks like a bug.
+- **`PageHero` animates ONLY its optional parts** — the `aside` panel
+  (`delay 0.12`) and the `spec` row (`delay 0.24`). The breadcrumb, h1 and lede
+  are deliberately untouched: they are above the fold on all ~40 routes this
+  hero serves, animating them would delay the LCP text, and it would spend the
+  T1 hero's entrance cascade a second time (§16). Measured on the spec row:
+  opacity 0 → 0.88 → 0.97 → 1.
+  - **`margin="0px"` on the spec row is a bug fix, not tuning.** It is the
+    hero's own trailing content and can legitimately be ON SCREEN at mount,
+    where `Reveal`'s default −12% root shrink never grants the 18% overlap
+    `amount` needs — the documented dead zone that left the homepage stat row
+    invisible until a scroll. Verified at the exact failing heights
+    (780/800/810/815/818/820/822/900/1200 × 1440): on screen, opacity 1,
+    scrollY 0, every time.
+  - **No `Counter`/`Scramble` here on purpose.** Those are the T1 hero's
+    signature, and two of the four spec values are not numbers anyway.
+- **T4:** each section's eyebrow+h2 pair reveals; validity option cards
+  `Stagger`; the token panel reveals beside them at `delay 0.12`.
+  ⛔ **The documents checklist is deliberately NOT animated** — CLAUDE.md is
+  explicit that body copy and tables never animate, and it is the one section a
+  reader lands on to copy a list down. Verified: 4 items, none carrying a
+  transform or sub-1 opacity.
+- **Press feedback for light DSC cards** (`a:active > .card-premium`), filling a
+  real gap: every other affordance on those cards (lift, shadow, border swap,
+  corner crescent) lives behind `hover:`, which Tailwind v4 wraps in
+  `@media (hover: hover)` — so **a touch user got nothing back from a tap.**
+  `:active` is a genuine press on touch so it is deliberately NOT hover-gated,
+  exactly as `.card-dark:is(a, button):active` already is. Selected through the
+  parent `a` because the card is a div INSIDE the link.
+
+### Verification notes from this pass
+- **The production build was broken mid-session by another session's
+  in-flight work**, not by this one: `home/sections/Hero.jsx` imported
+  `HeroShowcaseFloaters` from the new `components/hero/HeroFloaters.jsx`, which
+  only exported `HeroFloaters`. I verified the motion work against the DEV
+  server in the meantime (valid for motion/layout/contrast, NOT for hydration —
+  nothing is prerendered there) and left their files alone. It was fixed
+  upstream before this pass ended and the full production suite then ran clean.
+- ⚠️ **Counting hydration exceptions needs a settle BEFORE clearing the
+  buffer.** A first attempt reported 2 on `/dsc` and 1 everywhere else, which
+  looked exactly like a new mismatch on the one page this pass changed most. It
+  was a leak: an exception from the PREVIOUS navigation landing after
+  `ex.length = 0`. With a settle before the clear and three trials per route,
+  every route reports **exactly 1** — including `/about` and `/`, which this
+  pass never touched. That one is the long-standing sitewide #418
+  (`args[]=HTML`, i.e. a mismatch at the `<html>` level, outside any of these
+  components). **No new hydration mismatch was introduced.**
+- Re-verified on the production build: **0 contrast failures**, ember coverage
+  unchanged, `scrollWidth === 375` on 15 routes, reduced motion 0 running
+  animations / 0 stuck mid-opacity / texture transform `none` uniformly / rule
+  drawn, link integrity 3,731 refs / 0 broken, lint 0 problems,
+  `content:check` clean, build + prerender 68 routes.
+
+### HERO TEXT CASCADE + REVEALS ON EVERY SECTION (20-08-2026)
+Clinton: "in the hero section add animation showing text and all added
+reveling animation of all the section." This reverses the restraint decision
+recorded in the motion pass above — that pass deliberately left the hero's
+breadcrumb/h1/lede static and only animated the optional aside and spec row.
+Asked for explicitly, so it is built.
+
+- **`PageHero` now cascades its whole text block**: breadcrumb 0 → eyebrow
+  0.06 → h1 0.12 → lede 0.20 → cta/children 0.28 → aside 0.36 → spec 0.44.
+- **`margin="0px"` on EVERY one of them, not just the spec row.** `Reveal`'s
+  default -12% bottom root-shrink exists so a below-the-fold section does not
+  fire the instant a sliver peeks in; hero content is above the fold at mount,
+  where that margin is a liability — it is the documented dead zone that left
+  the homepage stat row at opacity 0 until a scroll.
+- **Sections revealed on the hub**: the intro prose and its ProductShot, the
+  "pricing on request" note, the why-us eyebrow, and the Partner Programme
+  panel. `FaqSection` already reveals both of its columns — NOT double-wrapped.
+- **Sections revealed on T4**: every eyebrow+h2 pair, the documents card, the
+  verification callout, the pricing lede and button, and the driver-support
+  lede. `StepFlow` is already scroll-linked.
+- **The documents CHECKLIST reveals as one block; its list items do NOT
+  stagger.** That is the distinction CLAUDE.md's "body copy never animates"
+  rule is actually protecting — a one-shot fade-up of a container before you
+  reach it is fine, a dozen lines resolving one by one while you are trying to
+  read them is not.
+
+⛔ **THE H1 RISES BUT NEVER FADES, and this is the important detail of the whole
+pass.** The first cut faded it like everything else, which puts `opacity: 0` on
+the H1 wrapper in the prerendered HTML of **~40 routes** — gating the page's
+largest paint behind hydration. CONTENT-PLAN.md §9 sets LCP < 1.2s on mobile
+throttling for the T5 driver pages, where the H1 IS the LCP element, so that is
+a knowingly bad trade.
+
+`Reveal` gained an additive **`fade={false}`** prop (rise only, opacity
+untouched; all 20+ existing call sites unaffected) and `PageHero`'s H1 uses it.
+Verified in the built output on 4 routes: the H1 wrapper now ships
+`style="transform:translateY(16px)"` with **no opacity**, so the text paints
+straight from static HTML and still animates into place. Everything else in the
+cascade fades normally — none of it is an LCP candidate. Confirmed live: the
+H1's opacity reads 1 on the very first sample after navigation while its
+translateY steps 16 → 14.1 → 7.3 → 4.3 → 1.9 → 0.
+
+⚠️ **The LCP A/B I ran to justify this was INCONCLUSIVE, and the reason matters
+for anyone re-running it.** Applied DevTools throttling (1.6Mbit/150ms + 4× CPU)
+over plain HTTP/1.1 with no compression gave a ±800–1000ms spread on 3 runs, and
+on `/dsc/drivers/hyp2003/` the animation-disabled arm measured *slower* than the
+animated one (3004ms vs 2412ms) — causally impossible, i.e. pure noise. Its
+absolute numbers are also not comparable to Phase 10's 1088–1208ms, which came
+from Lighthouse's SIMULATED throttling over HTTP/2 + brotli. **To measure LCP in
+this repo, rebuild Phase 10's harness (`_serve-h2.mjs` + Lighthouse
+median-of-3); do not use applied throttling over `npx serve`.** Also:
+`performance.getEntriesByType('largest-contentful-paint')` returned an EMPTY
+array on every run — use a `PerformanceObserver` installed through
+`Page.addScriptToEvaluateOnNewDocument`. The fix above removes the risk
+structurally, so the measurement was not needed in the end.
+
+### ⚠️ SECOND HARNESS BUG — `primeReveals` never fired the reveals it existed for
+The helper walked the page in ONE synchronous in-page loop
+(`while (y < h) { window.scrollTo(0, y); y += step }`) and then scrolled back to
+0. **IntersectionObserver delivers asynchronously, so the observer only ever saw
+the FINAL position** — every reveal below the fold stayed at opacity 0. It
+reported "27 of 34 wrappers still hidden after a full scroll", which reads
+exactly like broken reveals.
+
+Fixed by awaiting each step from Node (one round-trip per 500px, 90ms settle).
+Re-measured: `/dsc/` goes 27 hidden at load → **0 still hidden**. On T4 pages 3
+remain, and they are correct — StepFlow's node circles rest at 0.3 opacity by
+design (`aria-hidden`) until the scroll-linked line reaches them.
+
+Consequence worth knowing: **every earlier audit in this session that called
+`primeReveals` under-primed the page.** The contrast results still stand,
+because that pass scrolls to each fold and waits before sampling, which fires
+the observers naturally — and it was re-run after the fix with the same result
+(0 failures).
+
+### T4 "Validity & token" + "Documents required" rebuilt — 20-08-2026
+Clinton: "for token and validity it look so empty… make the design look
+premium." Both sections were sparse for the same structural reason, and the fix
+was to build for the data rather than spread it:
+
+- **These sections have almost no data.** Validity is 2–3 short strings plus one
+  token sentence; documents are 2–5 short strings. Laid out across an 1800px
+  container inside a full `section-pad` band, that can only ever look empty —
+  three ~180px icon cards and a panel occupying the top 220px of a 700px
+  section, with a lake of canvas underneath.
+- **Validity & token is now ONE full-width spec panel**, a real `<dl>` with
+  three hairline-separated rows: **Certificate** (`product.label`), **Validity**
+  (`product.validityOptions`, hairline-divided mono values), **Token**
+  (`product.tokenNote`). Nothing invented — `product.label` simply was not being
+  shown in this section before, and it is the most useful of the three. Three
+  rows in one object read as considered where four small boxes read as an
+  unfinished grid. `SPEC_ROWS` + `specValue()` are declared at module level so
+  a product missing a field DROPS that row instead of rendering an empty one.
+  - Values are hairline-divided, **not pills**: a pill beside body copy reads as
+    a button, and these panels sit near real CTAs.
+- **Documents required is now a 7/5 pair**: the checklist as ONE column of
+  hairline-separated rows (which gets taller rather than sparser as a product
+  needs more documents — verified at both 4 and 5 items), and the verification
+  note promoted from a footnote underneath to a `.panel-dark` panel beside it
+  under a "Before you apply" label. Both columns carry weight, so there is no
+  dead half. `self-start` on the note so it does not stretch to match a long
+  checklist.
+- The checklist container reveals as one block; **its list items still do not
+  stagger** — a dozen lines resolving one by one while a reader is copying them
+  down is exactly what the "body copy never animates" rule protects against.
+- Ordinals stay `ink-400`, not `ink-300`: they are visible ordinals, not
+  decoration, so they carry the 4.5:1 floor (ink-300 measured 3.40–3.49:1 on
+  this card, ink-400 is 7.2:1).
+
+Verified: **0 contrast failures** across 20 folds including both rebuilt
+sections on two products (4-doc and 5-doc, 3-option and 2-option variants);
+375px `scrollWidth === 375` with both panels stacking to full width on all
+three products checked; reduced motion 0 running animations / 0 stuck
+mid-opacity; lint 0 problems; `content:check` clean; build + prerender 68
+routes; link integrity 3,731 refs / 0 broken.
+
+### T5 validity page — card grid → matrix table, prose column → 7/5 — 20-08-2026
+Clinton: "fixed the design of these section" (the `/dsc/validity-renewal-faqs`
+Validity-by-certificate and Renewal sections).
+
+- **"Validity by certificate" is now a MATRIX TABLE** (certificate × validity
+  period) instead of five cards in a 2-column grid. The grid was three rows with
+  a hole in the last one, each card holding a title and two or three pills, so
+  most of it was white space. A table is the right shape because the data IS a
+  matrix and the reader's actual question — "which periods can I get for this
+  certificate?" — is answered at a glance. It also surfaces what the cards hid:
+  **Combo has no 1-year option.**
+  - **Columns are DERIVED** from the union of every product's options, ordered
+    by leading number (`parseFloat("2 years")` → 2; stable sort keeps insertion
+    order for anything unparseable). A product offering a period nobody else
+    does adds a column instead of being silently dropped.
+  - Matches the two tables already in this file (driver compatibility, eSign
+    comparison), including the `overflow-x-auto` + `min-w-[640px]` pair.
+    Verified at 375px: the page's `scrollWidth` is 375 while the table's own
+    wrapper scrolls (client 325 / scroll 640) — the table scrolls, the page
+    does not.
+  - Semantics: `th[scope=col]` per period, `th[scope=row]` per certificate
+    (5 of them), and each cell pairs an `aria-hidden` glyph with an `sr-only`
+    "Available" / "Not available" (15 total) — otherwise a screen reader hears
+    an unlabelled tick in a grid of identical cells.
+  - Nothing here animates: tables never do (CLAUDE.md), which is also T5's own
+    no-motion brief, so this section stays compliant with both.
+- **"Renewal, re-issue & revocation" is now 7/5.** The prose was a lone
+  `max-w-[68ch]` column leaving the right two thirds empty. The next step —
+  previously a trailing sentence after three paragraphs, i.e. the most useful
+  line and the easiest to miss — is now a `.panel-dark` panel beside the copy
+  with a real Button. `self-start` so it does not stretch to the prose height.
+
+⚠️ **A contrast failure my own pixel audit was designed to skip.** The
+"not available" em-dash is `aria-hidden` (correctly — the accessible answer is
+the `sr-only` word next to it), and the audit excludes `aria-hidden` subtrees,
+so it reported 0 failures. But for a SIGHTED reader that dash is the only signal
+a period is unavailable, so it is not incidental text and it carries the 4.5:1
+floor: `ink-300` on canvas is **3.35:1**, `ink-400` is 6.48:1. Found by
+computing the pair directly rather than trusting the sweep.
+**Lesson: `aria-hidden` means "not announced", not "exempt from contrast" — a
+glyph that is the sole visual carrier of meaning still needs the ratio.**
+
+### Harness fixes forced by this pass (all three cost real time)
+1. **CDP calls had no timeout.** A dead socket left the promise pending forever
+   and the script died with "Detected unsettled top-level await" and no useful
+   error — indistinguishable from "still running". `send()` now rejects after
+   30s naming the method.
+2. **`scrollTo` referenced `document` in NODE scope** (`at < document?.body?.
+   scrollHeight`), so it threw `ReferenceError: document is not defined` — but
+   only on the branch where a scroll clamps, which is why it lay dormant for
+   most of the session. Removed; it now just returns where it landed.
+3. **`pkill -f "node.*serve"` kills the static server out from under a running
+   audit.** An audit then measures `about:blank` and reports nonsense (`env`
+   showed `path: "/"`). Always re-check `curl` returns 200 before trusting a
+   run, and prefer killing by port.
+
+### Still open — needs a decision from Clinton
+**Route-level page transitions were NOT built.** "transition" could have meant
+that, and it is materially different work: an `AnimatePresence` exit/enter
+around `<Outlet />` in `RootLayout` interacts with Phase 9's prerendering and
+with the hydration path, so it is not a change to make silently on a guess.
+Everything above is section- and interaction-level motion.
+
+### Left undone, deliberately
+- The homepage `DriverDownloads` section was not touched — the request was the
+  `/dsc` module, and the homepage had its own polish pass. `DscBand` was touched
+  only to consume the shared icon map (no visual change).
+- The ~40 non-DSC `PageHero`s are still flat `bg-ink-950` with the single arc.
+  `texture`/`spec` are ready for them; that is a separate, sitewide call.
+- ✅ **Correction, not a gap:** this file has claimed since the Phase 5
+  refinement pass that `Card`'s LIGHT surfaces have an *ungated*
+  `hover:-translate-y-1` (i.e. sticky on touch). **They do not.** Tailwind v4
+  wraps every `hover:` variant in `@media (hover: hover)` — verified by reading
+  the built CSS, where `.hover\:-translate-y-1:hover` sits inside that query.
+  Nothing to fix; the earlier note was wrong.
+
+## Hero floaters — Zoho MCP's scatter-and-float, re-expressed — 20-08-2026
+NOT a phase. Clinton: analyse the hero of https://www.zoho.com/mcp/ and add a
+floating design that suits this site. New `src/components/hero/HeroFloaters.jsx`
+(two exports) + `.hero-float-tile` / `hero-float-rise` / `hero-float-sink` in
+theme.css, wired into `Hero.jsx` at two points.
+
+- **What the reference actually does, measured in its own DOM rather than
+  guessed from the screenshot:** flat black hero, centred H1 + one CTA, and two
+  decorative families. Six `.star-icon1–6` spans (14–24px, one shared SVG
+  sprite, absolutely positioned around the headline) which are **static** — no
+  animation at all — plus two 72px rounded tiles as `::before`/`::after` on the
+  content wrapper, each running `3s ease-in-out infinite` with counter-phased
+  `floatDown`/`floatUp` keyframes. That is the whole effect: a static scatter
+  and one counter-phased pair.
+- **What was borrowed and what was refused.** Borrowed: the two-family
+  structure, the counter-phase, static small marks. Refused: its three
+  off-palette accent hues (violet/cyan/orange sparkles — DESIGN.md §16's first
+  tell) and its 3s tempo, which nothing on this page shares. Rhythm here is
+  **±7px over 7s and 9s**, sitting beside `.hero-card-float`'s 6px/7s so the
+  satellites breathe with the composition. The two periods are deliberately
+  unequal so the pair never locks into step.
+- ⛔ **THE OBVIOUS SHAPE CHOICE WAS WRONG, and §3.1 pushes you straight into
+  it.** First pass used the crescent for all five marks — "repeat one specific
+  shape" says to. Screenshotted at 1440px, **every one read as a loading
+  spinner**: a hairline arc with a gap, centred in a small rounded tile, is that
+  silhouette exactly, so the hero looked like a page that had failed to finish
+  loading. The crescent is right at 140px as a backdrop and wrong at 18px in a
+  chip. Split by role instead: tiles carry ArcGlyph's **`rule` variant** (the
+  Eyebrow's double-curve wave — unmistakably this site's mark, nothing like a
+  spinner), and the small marks are **hairline registration crosses**, which is
+  not a new shape either — §7.4b's certificate/blueprint textures already
+  establish `radialTicks` hairlines as the arc's companion detail, and a cross
+  is two of them. Do not "fix" these back to crescents.
+- **The tiles are anchored to the SHOWCASE IMAGE FRAME, not to the section, and
+  that is load-bearing.** The H1 rotates through three headlines of different
+  widths, so any absolute position inside the copy column is a collision
+  waiting for the longest one. Hanging both tiles off the image frame makes
+  clearance a function of the grid instead: at 1440px the copy column ends at
+  x 799 and the image starts at 847, so a 48px tile pulled 24px outboard spans
+  823–871 and keeps 24px of clearance from the widest possible headline, at
+  every headline in the rotation. Both sit on the image's LEFT edge at two
+  heights on purpose — the capabilities card already hangs off the
+  bottom-right, so left-side satellites balance it.
+- **The scatter layer is `z-[-1]`, the tiles are `z-10`.** Marks paint above the
+  section background and below in-flow text (the same reasoning
+  `SurfaceTexture` records), so a mark can never sit on top of copy even if a
+  future edit moves one; tiles match the capabilities card and paint in front
+  of the photograph, which is the point. Both rely on the section's existing
+  `isolate`.
+- ⚠️ **md+ ONLY, and measured rather than lazy.** At 375px the hero is a dense
+  vertical stack with no margin to float anything into, and mobile ember
+  coverage is already 6.5% against the ~12% ceiling (desktop ~4%) — adding
+  ember marks to the viewport with the least space AND the least colour
+  headroom is the wrong trade. It also keeps two more animating transforms off
+  the mobile compositor. Verified hidden (zero-size rects) below md.
+- **No `will-change`,** deliberately: Phase 4 measured that an actively
+  animating transform is composited regardless, so the hint would only add
+  bookkeeping to a hero that already exceeds §9.5's layer budget for reasons
+  documented there. **No `backdrop-filter`** either — §7.5 keeps blur exclusive
+  to the sticky nav, and the veil reading through these tiles is why they float
+  at all. `.hero-float-tile` reuses `.hero-card` / `.scroll-nav`'s
+  translucent-ink recipe rather than defining a third dark surface.
+- ⛔ **Real bug, found by measuring rects and not by reading the JSX:
+  `RegMark` swallowed `style`.** G3 is the one mark positioned with an inline
+  `top: calc(var(--header-h) + 18px)` (no Tailwind offset expresses it), and
+  without `...props` it fell to its static position at y=0 — behind the fixed
+  header, invisible. Same class of bug as `ArcGlyph` dropping `style` before
+  Phase 5. Fixed; G3 now measures y=102 with the header ending at 84 and
+  content starting at 124.
+- **Reduced motion needs no branch.** Only `transform` animates, so §9.6's
+  global floor collapses each keyframe set to its 100% frame — translate 0,
+  i.e. the resting composition. Verified via
+  `Emulation.setEmulatedMedia`: **0 running animations, both tiles parked at
+  translateY 0, still full size, all four marks still rendering.**
+- **Verification** in a real Chrome over CDP against the dev server (never the
+  in-app pane — `visibilityState: "hidden"` there suspends rAF, so the drift
+  cannot be observed at all; confirmed `visible` and `ANGLE Metal Renderer:
+  Apple M1` before drawing any conclusion):
+  - **Drift is real, not a fixed reveal**: 14 samples over 7s show tile A
+    stepping `-6.97 → -0.01` and tile B `+6.99 → +0.01` through 14 distinct
+    intermediate values each, in counter-phase, at 7s/9s.
+  - **Zero intersections with any text box** at 1920/1440/1024/768/500px —
+    bounding-box tested against every heading, paragraph, link and stat tile in
+    the hero, not eyeballed. So the contrast audit is untouched by this change
+    by construction; the added ember is one 14px hairline cross plus one 24×8
+    wave stroke, ≈0.008% of the fold by arithmetic.
+  - `npm run lint` (0 errors; the single warning is the pre-existing unused
+    `site` import in `MegaPanel.jsx`), `content:check` (clean apart from the
+    three standing unconfirmed-content warnings), `build` + prerender (68
+    routes + 404 + sitemap, unchanged).
+- **Left undone deliberately:** the intensity is dialled to "quiet structure" —
+  two tiles and four marks against the reference's two tiles and six sparkles.
+  A third tile fits in the free region right of the image and above the
+  capabilities card (x 1297–1425, y 175–323 at 1440px) if it ever wants to be
+  louder. An ember glow on the tiles is NOT available: Phase 10's §16 tell 9
+  audited "0 ember box-shadows sitewide" and adding one here breaks that
+  property.
+
+## Layout-jump fix: heading + testimonial heights are now RESERVED — 20-08-2026
+Clinton, on mobile and tablet (where the hero's 7/5 grid stacks): the sections
+below were "jumping up and down" because of the typewriter's height change.
+Measured, that turned out to be **three** separate unreserved heights, only one
+of which was the typewriter. All three are fixed; **all 13 homepage sections are
+now height-stable at 375 / 768 / 1440px over ~1,200 rAF samples each, on the
+production build.**
+
+### 1. The H1's box was inferred, not reserved (`Typewriter.jsx` + theme.css)
+- This file has claimed since 17-08-2026 that "everything below the H1 is
+  pixel-stable" because every glyph stays in flow. **That makes ONE sentence's
+  box constant; it does not make the box constant across the rotation.** The
+  heading's height was simply the SUM of whatever its line boxes measured, and a
+  line containing the serif emphasis word measures taller than an all-sans line
+  — **51.4 vs 50.4px at 375px, 73.1 vs 70.1px at 768px**. That the three current
+  headlines all totalled the same height was a property of the COPY (all three
+  are 2 sans lines + 1 sans+serif line), not of the layout.
+- **`.typewriter-line { height: calc(1lh + 0.1em) }`** makes one line's box
+  independent of which font renders it. `1lh` is the box the display-xl token
+  already produces, so it tracks that token instead of restating it; the +0.1em
+  is the descender allowance the hero used to carry as a per-line `pb-[0.1em]`,
+  moved into the class so the box has one definition (Hero no longer passes it).
+  Verified byte-identical to the old SANS line box (50.4 @375, 70.08 @768) — the
+  serif line just stops being 1–3px taller, its descender overflowing visually
+  instead of pushing layout. h1: 152.2 → **151.2** @375, 213.2 → **210.2** @768,
+  281 → **277.2** @1440, and every line now measures the same.
+- **`.typewriter { min-height: calc(var(--typewriter-lines) * (1lh + 0.1em)) }`**,
+  with `--typewriter-lines` set from the LONGEST sequence in the rotation (not
+  the active one — that would be no reservation at all). Currently redundant
+  since all three headlines are 3 lines; it is what makes a future headline of a
+  different line count safe.
+- ⛔ **`white-space: nowrap` on the line is the other half, and without it the
+  reservation is reserved for the wrong number of lines.** Two things could make
+  a pre-broken line wrap into two:
+  1. **The caret.** It is emitted inline at the write position and is 0.11em
+     wide (0.05em + 0.06em margin) — enough to tip a line already filling its
+     measure onto a second visual line, and because it MOVES, that wrap appears
+     and disappears *as the sentence types*. A whole line box of jump, repeating.
+     This is the most likely thing Clinton actually saw.
+  2. **The fallback face.** Every `@font-face` here is `font-display: swap` with
+     no `size-adjust`, and `.typewriter-char` is `inline-block`, which makes
+     every character its own break opportunity — so an overlong line does not
+     overflow, it breaks MID-WORD and adds a line, then reflows when Satoshi
+     arrives.
+  With `nowrap`, an over-wide line bleeds a few pixels into the gutter instead;
+  `<main>`'s `overflow-x: clip` contains it and no scrollbar appears. Verified
+  `scrollWidth === innerWidth` and exactly 3 equal-height lines at
+  **320/360/375/390/414/430/480/540/640/768/900/1024/1280/1440**. (At 320px the
+  widest line is 3px over the measure and is contained — 320 is below any
+  supported target.)
+- The `<h1>` still holds exactly ONE sentence in the prerendered HTML with no
+  other variant present, so Phase 10's single-clean-h1 property is intact.
+  Caret re-verified after the line-box change: constant gap (2.9px @375, 5.3px
+  @1440), **0 misplaced in 1,257 samples**, write stepping through all 32
+  distinct counts.
+
+### 2. The testimonial carousel had no reserved height at all — the biggest jump
+- Found by sampling every `main section`'s height over 20s: of the homepage's 13
+  sections, **`Testimonial` was the only one whose height was not constant**, and
+  it moved by up to **~107px every 3 seconds** (sampled at 375px it walked
+  788 → 895px). Insights, the CTA band and the footer all shifted with it. This
+  is almost certainly the "remaining section is jumping up and down" — and it is
+  nothing to do with the typewriter.
+- Cause: quotes are different lengths, `AnimatePresence mode="wait"` mounted only
+  the active one, and `min-h-[9rem]` (144px) was far short of what any of them
+  occupy.
+- Fix: **every quote is mounted, stacked in one grid cell**
+  (`col-start-1 row-start-1`), so the container is exactly as tall as the longest
+  — nothing measured, no magic number to drift from the copy, and **the
+  prerendered HTML already has the right height, so there is no shift at
+  hydration either**, which a measure-on-mount approach could not give.
+  `AnimatePresence` is gone; with both items mounted the crossfade is two
+  simultaneous opacity transitions, which also beats mode="wait"'s
+  fade-out-then-in. Inactive quotes are `aria-hidden` + `pointer-events-none`.
+- ⚠️ **Consequence: all eight quotes are now in the static HTML, not just the
+  first** (verified: 8 `<blockquote>`, 7 `aria-hidden`). They are still the
+  FICTIONAL placeholders `content:check` warns about every run
+  (`confirmed: false`) — launch blocker 1 below is unchanged and slightly more
+  urgent, not less.
+
+### 3. The avatar row animated its own height (same file)
+- Residual ~9px wobble every 3s after fixing (2). The active avatar animates
+  44px → 64px under `transition-all`, and **height is a layout property**; the
+  row's max also dips mid-transition because the outgoing avatar shrinks while
+  the incoming one grows. Row pinned to `h-16` with the rest centred.
+
+### Verification notes worth keeping
+- **`document.querySelectorAll('main section')` + per-section height over 20s is
+  the right instrument for "something is jumping" reports.** It found the real
+  culprit in one run, after two rounds of probing the hero found nothing wrong
+  with it. Reach for it before theorising.
+- ⚠️ **On the DEV server, four unrelated sections appeared to "vary" — all
+  changing at the same instant (13,981ms into one run) and never again.** That is
+  a single page-wide reflow during the load phase (dev serves fonts unbundled),
+  not a repeating jump, and it does not reproduce on the production build over
+  `npx serve dist`, where all 13 sections are stable. **Judge layout stability on
+  the built output, and treat a set of sections that all change on the same frame
+  as one load event rather than N bugs.**
+- ⚠️ zsh does not word-split unquoted variables, so `for wh in "375 812"; do node
+  probe.mjs $wh` passes ONE argument and every measurement comes back `NaN`-wide.
+  Cost a whole confusing run.
+
+## Hero floater tiles removed; image + card now carry the motion — 20-08-2026
+NOT a phase. Clinton, on the same day the floaters landed: "in the middle image
+two eyebrow is not good remove it. also added animation in right image and card
+section."
+
+- ⛔ **The two floating tiles on the showcase image are GONE, and the criticism
+  was correct.** Each tile carried ArcGlyph's **`rule` variant — which IS the
+  Eyebrow's mark**, sitewide. Two of them sitting on the photograph therefore
+  read as two stray eyebrows rather than as floating objects. Note the shape
+  choice for those tiles had ALREADY been revised once, away from the crescent
+  (which read as a loading spinner at chip size); the second attempt failed for
+  the opposite reason — the mark was too recognisable as something else. **Both
+  rejections are recorded at the top of `HeroFloaters.jsx`; do not re-add tiles
+  carrying either mark.**
+  - `.hero-float-tile` and the `hero-float-rise` / `hero-float-sink` keyframes
+    were deleted along with them rather than left as dead CSS.
+  - **The hairline registration-cross scatter (`HeroFloaters`) stays** — it is a
+    separate family, lives in the gutters rather than on the image, and was not
+    what the note was about. Verified still 4 marks, 0 tiles.
+- **The motion moved onto the two things that were actually static, which is a
+  better answer than the tiles were:** it gives the composition depth instead of
+  adding objects to it.
+  - ⚠️ **`.hero-card-float` was already defined and applied to NOTHING.** It has
+    existed in theme.css since Phase 4, DESIGN.md §11.2 / §9.4 specify "a 6px
+    idle float on a 7s loop" for this card, and `Hero.jsx`'s own header comment
+    has described that behaviour all along — the class was simply never put on
+    the element. Found while wiring this up. Now on the card's inner div (not on
+    Reveal's wrapper, so the CSS animation and Reveal's transform never contend
+    for the same element).
+  - **`hero-image-drift` (new)** on the Figure: translateY 0→7px plus
+    scale 1→1.012 over **11s**, against the card's **7s**. The unequal periods
+    are the point — the card overlaps the image's bottom-right corner, so the
+    relative drift between them is the effect; matched periods would move the
+    pair as one block. Same reasoning the removed tiles' 7s/9s pairing used.
+  - **It sits on the Figure, never on the frame.** The card is positioned
+    against that frame, so animating the frame would carry the card along and
+    the relative drift would vanish.
+  - **The image gets NO entrance animation, deliberately.** It is the
+    homepage's LCP element (Phase 10 measured it), so a fade or a mask reveal
+    would push first paint back. A transform on an already-painted element does
+    not move the LCP timestamp; that is why drift was the right treatment and a
+    reveal was not.
+  - The 1.2% scale is inside the arc clip-path, so the arc bite breathes with
+    the image rather than the image sliding under a static mask. Checked for
+    overflow: at lg it grows ~2.7px per side (image 847–1297 → 844–1300), well
+    clear of the copy column's 799 edge, and `scrollWidth === innerWidth` at all
+    14 widths tested.
+- **The card's six capability rows now cascade** at Stagger's established 60ms
+  step, starting at 0.62s — after the card's own 0.44s spring has settled rather
+  than while the whole card is still travelling.
+  - **NOT wrapped in `<Stagger>`, on purpose:** that component wraps each child
+    in its own `motion.div`, which would put a `<div>` between the `<ul>` and its
+    `<li>`s and break the list's semantics. `Reveal`'s render-prop form drives
+    `motion.li` directly instead, so `<ul> > <li>` is intact and no second
+    IntersectionObserver is installed.
+- **Verified in a real Chrome over CDP** (never the in-app pane — it suspends
+  IntersectionObserver, so the card's Reveal never fires there and the card
+  looks missing):
+  - Image drift is genuinely running, not a fixed reveal: **16 distinct
+    translateY values and 14 distinct scale values** across 16 samples.
+  - Card float likewise **16 distinct translateY values**, 7s.
+  - The row cascade is real, caught mid-flight: `[0.95, 0.86, 0.64, 0.18, 0, 0]`
+    — a clean descending gradient across the six rows, **11 samples in a partial
+    state**, settling to all-1 at ~2.56s.
+  - **Reduced motion** via `Emulation.setEmulatedMedia`: **0 running
+    animations**, image parked at translateY 0 / scale 1, card at 0, all six
+    rows at opacity 1. Only transform animates, so §9.6's global floor handles
+    both CSS animations with nothing to special-case; the rows use
+    `useReducedMotion` the same way `Reveal`/`Stagger` do.
+  - 0 console errors. `lint` clean, `content:check` clean, `build` + prerender
+    68 routes.
+- **Not re-measured: Lighthouse.** Two more composited layers land on a hero
+  that Phase 10 already accepted at 93/100 with §9.5's layer budget knowingly
+  exceeded. Both are transform-only and neither touches the LCP element's paint
+  timing, so no regression is expected — but that is reasoning, not a
+  measurement. Rebuild Phase 10's `_serve-h2.mjs` median-of-3 harness before
+  trusting the homepage's Performance score again.
+
+## Mega panel: switching between Services and DSC no longer blinks — 20-08-2026
+NOT a phase. Clinton, on a large screen: moving between the Services and Digital
+Signatures dropdowns had a "blinking effect". Real, and measurable.
+
+### The cause, measured before touching anything
+Each panel had its **own** `AnimatePresence`, so a switch ran two independent
+transitions: the outgoing panel's 120ms exit and the incoming panel's 180ms
+enter, both fading and both translating. Sampling each panel's computed opacity
+every frame through a real CDP pointer move, the crossover frame read
+**Services 0.471 / DSC 0.380 — combined coverage 0.672, i.e. a third of the page
+showing through the menu.** The outgoing panel emptied out before the incoming
+one had filled in. That is the blink.
+
+### The fix
+- **The incoming panel fades up over 140ms while the outgoing HOLDS AT FULL
+  OPACITY**, and the outgoing only starts fading (130ms) once the incoming has
+  reached 1 and is covering it. Coverage is then
+  `1 - (1 - a)(1 - 1) = 1` at every frame — **the gap is closed by construction,
+  not by tuning two durations until it looks acceptable.**
+- ⚠️ **This needs to distinguish a SWITCH from a plain open/close, and the
+  exiting element cannot be re-rendered** — `AnimatePresence` animates the LAST
+  element it saw, so a `switching` flag read inline from props is the stale
+  pre-switch value. `AnimatePresence`'s **`custom` prop** exists for exactly
+  this: it is re-read at exit time. Hence variants-as-functions, with `custom`
+  passed on BOTH the `AnimatePresence` (for the exiting panel) and the
+  `motion.div` (for the entering one). Inline `initial`/`animate`/`exit` objects
+  cannot express this.
+- **`seq` (monotonic, from `useHoverIntent`) is the panel's z-index**, so the
+  incoming always paints above the outgoing however many times the two
+  alternate. A plain 0/1 pair ties on the second switch and DOM order decides
+  instead — and with the outgoing on top the switch reads as lag, because
+  nothing appears to happen for 140ms.
+- **Neither panel travels during a switch.** The -6px drop is the gesture of a
+  panel coming out of its trigger; on a switch the surface is already there and
+  only its contents change. Open-from-closed keeps the drop (verified: it steps
+  through translateY -6 → 0).
+- **`OPEN_DELAY` is now skipped when a panel is already open** — standard
+  mega-menu behaviour, and it matters here because paying 120ms of hover intent
+  on top of the 140ms hold made the switch feel sluggish. `useHoverIntent` now
+  holds one state object (`key` / `from` / `seq`) so a consumer can tell a switch
+  from an open or a close, and exposes `switching`.
+  - The "is anything open" ref is synced in an **effect**, not assigned during
+    render — `react-hooks/refs` rejects the latter (same rule that caught
+    `useMountedAt` in Phase 8).
+
+### ⛔ A REAL BUG I INTRODUCED AND ALMOST SHIPPED — read this before touching the variants
+Writing the `shown` variant as `transform: "none"` **collapsed the Services
+panel to `scale(0)`**. Motion decomposes a transform STRING into components and
+interpolates each; it does NOT read `"none"` as `translateY(0) scale(1)`, so
+animating `translateY(-6px) scale(0.995)` → `"none"` resolved the end state to
+`matrix(0, 0, 0, 0, 0, 0)`.
+
+**What makes this dangerous is how it presented.** The panel reported
+`opacity: 1`, computed `width: 1680px`, `display: block`, correct `position` and
+`offsetParent`, and **zero console errors** — every probe said it was open and
+fully visible. Only `getBoundingClientRect()` (0×0) and a screenshot (no panel
+at all) disagreed, and only dumping the **inline** `transform` explained it. It
+also silently invalidated a whole verification pass: the "gap-free" coverage
+numbers I had just measured were of an invisible panel.
+
+Every state now spells out `translateY(...) scale(...)` via a shared
+`REST_TRANSFORM` constant. **Never use `"none"` in a transform variant here.**
+(The pre-existing inline code sidestepped this by writing
+`translateY(0px) scale(1)` explicitly on the animate leg — that was load-bearing,
+not verbosity.)
+
+### Verified in a real Chrome over CDP
+- Both panels render at real sizes: Services **1536×518**, DSC **1536×450** (68px
+  apart, so no height animation is warranted).
+- **minCoverage 1.000 on every frame** of services→dsc, dsc→services, AND a
+  second services→dsc alternation (the z-index tie case). Was 0.672.
+- Open-from-closed still drops in (translateY -6 → 0, 8 distinct values); under
+  emulated `prefers-reduced-motion` translateY is **only ever 0**.
+- Leaving the nav unmounts both panels; Enter opens (exactly 1 click), Escape
+  closes and restores focus to the trigger. 0 console errors.
+- `lint` clean, `content:check` clean, `build` + prerender 68 routes.
+
+### Two verification traps that produced false failures
+1. ⚠️ **`Input.dispatchKeyEvent` keyDown-with-text PLUS a keyUp fires TWO
+   activations on Enter** — the panel opened and immediately closed, reporting
+   "Enter is broken". CLAUDE.md's existing note (use `type: "keyDown"` with
+   `text: "\r"` and both virtual key codes) is right and **complete: do not add
+   a keyUp**. Confirmed by counting click events: 2 with the keyUp, 1 without.
+2. ⚠️ **Parking the test cursor near the panel's bottom edge closes the panel by
+   itself, and it is not a bug in the transition.** The header shrinks 84px →
+   64px when a panel opens, which moves the panel's `top-full` origin up 20px —
+   so a cursor a few px inside the pre-resize box ends up outside the post-resize
+   box, fires `pointerleave`, and `hoverClose` runs. Park the cursor well clear
+   (y ≥ 800) when testing keyboard behaviour. Pre-existing consequence of the
+   header resize, unrelated to this change, but worth knowing it exists.
+
+## Bug fix: the closed mobile sheet cast a shadow into the viewport — 20-08-2026
+Real bug, reported with a screenshot (Clinton, on a phone): a dark fade down the
+right-hand edge of the page **while the menu is closed**.
+
+- **Cause.** `MobileNav`'s sheet stays mounted so it can slide, and closed it
+  sits exactly off-screen (`translate: 100%`, left = viewport width). An
+  off-screen element paints nothing — **but its OUTER box-shadow does.**
+  `.mobile-sheet` carried `-32px 0 64px -24px` at 85% ink unconditionally, so
+  the shadow was cast leftward, back INTO the viewport, on every route.
+  `inert` and the scrim's `opacity: 0` were both already correct; neither hides
+  a shadow on a different element.
+- **Measured, not eyeballed.** Screenshot decoded in-page on a canvas, sampling
+  the pixel row at mid-height on a light section at 390px:
+  **rgb 128 one pixel from the edge — 50% grey on a white surface** — then 147 at
+  8px, 178 at 22px, 206 at 32px, 229 at 45px, and not clean until ~90px in. So
+  roughly a 90px darkening strip down the full height of every mobile page.
+- **Fix: the cast shadow belongs to the OPEN state.** Only the inset light-catch
+  is unconditional (it is inside the box and cannot escape); the outer leg moved
+  to `.mobile-sheet[data-open="true"]`.
+  - ⚠️ **`[data-open="false"]` now writes the full `transition` shorthand, not
+    just a duration/timing override.** The box-shadow leg needs its own delay,
+    and the old `transition-duration: var(--dur-base)` would have applied to it
+    too. It is held for the WHOLE exit and then dropped in one 1ms step
+    (`box-shadow 1ms linear var(--dur-base)`), so the sheet keeps its depth
+    while it travels and nothing is left painting afterwards. Deliberately not
+    animated: box-shadow is a paint property, and by the time it switches the
+    sheet is entirely off-screen, so there is nothing to see.
+- **Verified on the production build over `npx serve dist`** at 390px and 375px:
+  closed = **1 shadow leg** (inset only), cast absent, sheet at left = viewport
+  width, `inert`, scrim 0. Open = **2 legs**, cast present, scrim 1. Mid-close at
+  120ms = **still 2 legs** with the sheet at left 34/27 — i.e. the exit keeps its
+  shadow while travelling, which was the point of the delay. Closed again = back
+  to 1 leg.
+  Re-sampled the same pixel row on three routes: `/services/gst/registration`,
+  `/contact` and `/about` all now read a flat surface token from 1px to 195px in
+  (`/about` is 245,241,234 at every sample — dead flat, no gradient).
+  `scrollWidth === innerWidth` at both widths, 0 console errors. `lint` clean,
+  `build` + prerender 68 routes.
+- ⚠️ **Verification note: the dev server died mid-session** (it belonged to
+  another chat, and this session's `preview_start` cannot claim port 5183). The
+  symptom is `document.title === "localhost"` and every selector returning
+  null/0, which reads exactly like the component having disappeared. **Check
+  `document.title` before believing a "component is missing" result.** Switched
+  to `npx serve dist` — which is this repo's standing preference for
+  verification anyway — and remember to kill it afterwards, or an orphaned child
+  holds `dist/` and the next `vite build` fails with `EPERM`.
+
+## Article template: light editorial header + fixed "More insights" cards — 20-08-2026
+NOT a phase. Clinton: the T10 article hero should be LIGHT, not dark, laid out as
+tag / heading / (subheading · date · read time) / rule / photo — and the "More
+insights" cards needed fixing.
+
+### ⛔ A light opening section breaks half the layout contract, so the header got the variant the contract itself prescribes
+CLAUDE.md's layout contract requires every page's opening section to be dark,
+because the header is `fixed` and transparent over it and renders
+canvas-coloured text. Its own stated remedy is "the header needs a per-route
+solid variant — **not a local hack**". That is what was built:
+- `nav.js` marks `insightArticlePages` with **`lightTop: true`** and exports
+  `hasLightTop(path)`. Declared in nav.js rather than in the template so the
+  answer is derivable from ONE source during Phase 9's SSR pass and on client
+  navigation, **with no state and no effect** — server and client cannot
+  disagree.
+- `Header.jsx` adds it to the condition it already had: `scrolled || openKey ||
+  lightTop` renders the existing 64px ink-950/0.88 glass bar from scroll
+  position 0. No new visual state was invented.
+- ⚠️ **First version silently did nothing, and the cause is a trap for anything
+  keyed off `location.pathname`.** Route paths in nav.js are canonical and
+  slash-free (`/insights/foo`), but Phase 9 prerenders to
+  `dist/insights/foo/index.html`, so a static host serves the directory form and
+  the pathname arrives as `/insights/foo/`. The lookup missed and the header
+  stayed transparent (measured: 84px, `rgba(0,0,0,0)`) over a light hero — i.e.
+  exactly the invisible-nav-text failure the flag exists to prevent. Both URL
+  forms reach real users. `hasLightTop` now normalises the trailing slash;
+  verified identical on both forms. Every other nav.js consumer receives a
+  canonical `entry.path` from the route config, so only this one needed it —
+  **anything new that keys off a live pathname does too.**
+
+### The header is NOT PageHero, deliberately
+`PageHero` is the shared compact DARK hero for T2/T3/T4/T5 — `data-surface="deep"`,
+`text-canvas` h1, ink-300 lede — and giving it a light mode would put a second
+surface family inside a component ~40 routes depend on. An editorial header is a
+different archetype, so T10 hand-rolls its own. `PageHero` is untouched and still
+serves `PendingArticle` and the `/insights` index.
+- **ONE section carries the header, the rule, the photo AND the body.** Splitting
+  the header out would put two `light` sections back to back — one surface to the
+  eye, and a consecutive repeat in the cadence audit (it counts
+  `section[data-surface]`). Verified in all four prerendered files: `light →
+  light-alt → ember → deep(footer)`, zero consecutive repeats, one `<h1>`, 4
+  ld+json blocks (unchanged).
+- **`Breadcrumbs` gained a `tone` prop, and it is not cosmetic.** Every colour in
+  it was a hardcoded dark-surface utility (ink-200 / ink-300 / ember-200,
+  `ring-offset-ink-950`) — correct in ~60 dark heroes, unreadable on canvas.
+  Third instance of the trap this file already records for `GroupHeading` and
+  `PartnerProgramme`: **the surface system covers headings and
+  `var(--surface-*)` accents, not arbitrary utilities.** Default stays `"dark"`,
+  so every existing call site is byte-identical.
+- **The photo is NOT wrapped in a `Reveal`, and the H1 uses `fade={false}`.** On
+  this page the photo is the LCP element; an opacity-0 start would gate the
+  largest paint behind hydration. Same reasoning PageHero's own h1 already
+  carries.
+- The rule uses `border-[var(--surface-border)]` rather than a literal ink-100,
+  so it tracks the surface system like every other hairline on the site.
+
+### "More insights" cards — three real defects, all fixed by matching the index
+Rebuilt to the SAME construction as `/insights`' own cards rather than being a
+second design for the same content type on an adjacent page:
+1. **No thumbnail**, while the index cards and the homepage list both carry one —
+   so one article looked like a different kind of thing depending on where you
+   met it.
+2. **`h-full` stretches the CARD but not its contents**, so with three different
+   excerpt lengths the row had no common floor. Now `flex h-full flex-col` with
+   `mt-auto` on the action row. Measured at 1440px: heights 483/483/483 and
+   "Read the article" at y=711 on **all three**. (At 375px the heights
+   legitimately differ — single column, each card its own row, nothing to
+   equalise against.)
+3. **No read time and no action affordance** on something that IS a link.
+
+### Verified
+Real Chrome over CDP against `npx serve dist` (never `vite preview`), asserting
+`innerWidth` / `visibilityState` / `location.pathname` before measuring:
+- **Layout matches the brief**, measured off the live DOM at 1440px: breadcrumb
+  y=124, eyebrow y=178, h1 y=218 (953px wide), excerpt y=363 at x=72,
+  meta y=406 at x=1154 with `metaRightOfExcerpt: true`, rule spanning the full
+  1296px container, photo y=495 with `photoIsAfterRule: true`.
+- **Contrast, pixel-sampled** (read foreground FIRST, then inject
+  `color: transparent`, screenshot, sample p95 luminance under each box): h1
+  **12.8:1**, excerpt **9.77:1**, meta **6.48:1**, eyebrow **4.97:1** — all pass.
+- **Header over the light hero**: 64px, glass, bordered, nav links **13.76:1**.
+  ⚠️ The probe also reported two logo "failures" at 1.05:1 and 1.41:1 — **not
+  real**: both are wrapper spans with `ownText=false` (the "TO" mark's container
+  and the wordmark's flex wrapper), so a text-contrast ratio is meaningless for
+  them. Every element that actually renders text passes (13.76 / 4.59 / 7.68:1),
+  and a control — a T2 page scrolled until its header is the same glass — is
+  byte-identical in structure and colour, so this page's header is the
+  already-audited scrolled state rather than a new condition. **Restrict a
+  contrast sweep to elements with their own text nodes.**
+- No regressions: T2, the homepage and `/insights` itself all still render the
+  84px transparent header over a `deep` opening section.
+- `scrollWidth === innerWidth` at 1440 and 375. `lint` clean, `content:check`
+  clean, `build` + prerender 68 routes.
+- Console: exactly **1** error, the long-standing sitewide React #418
+  (`args[]=HTML`) this file already records as reproducing on untouched routes.
+
+### Left as-is
+The `/insights` INDEX still opens with the dark `PageHero`. The request was the
+article page, and the flag is per-route — add `lightTop` to `insightsIndexPage`
+and give it the same header treatment if that should match.
+
+## Contact page: one continuous LIGHT surface, form with no card — 21-08-2026
+NOT a phase. Clinton: "hero and section are separate and have different bg
+colour — make it look like one continuous page, change it into light theme,
+make the design premium. Do not keep the form inside a card, blend it to the
+page." Supersedes the whole-page DARK treatment of 20-08-2026 entirely. Run
+against the `design-taste-frontend` and `emil-design-eng` skills (Redesign —
+Preserve mode: brand tokens, copy voice, IA, form field names and order all
+unchanged).
+
+- ⛔ **THE PAGE OPENS LIGHT, which breaks half of the layout contract on
+  purpose — via the contract's OWN prescribed remedy, not a local hack.** The
+  header is fixed and transparent over each page's opening section and renders
+  canvas-coloured text; the contract says a template that must open light needs
+  "a per-route solid variant". That variant already exists from the T10 article
+  work: `nav.js` marks `/contact` **`lightTop: true`** and `Header.jsx` renders
+  the solid/glass state it already owns from scroll position 0. Verified: 64px
+  glass header at scrollY 0 on `/contact`, while `/`, `/about`,
+  `/partner-with-us` and a T2 leaf all still show the 84px transparent header
+  over a `deep` surface.
+- **ONE `<section>` carries the whole page**, which is what actually answers the
+  brief. The old shape was `PageHero` (deep) + `Section` (dark) — two surfaces,
+  therefore a seam at the fold. Splitting the header into its own `light`
+  section would NOT fix it: two `light` sections back to back read as one
+  surface anyway AND register as a consecutive repeat in the cadence audit
+  (which counts `section[data-surface]`). Measured cadence for the route is now
+  simply `light` → `deep` (footer). Same construction the T10 article template
+  already uses, including `page-top` for the header clearance and a
+  `pb-[clamp(72px,9vw,144px)]` matching `.section-pad`.
+  - Deliberately NOT `PageHero`: that primitive is the shared compact DARK hero
+    for T2/T3/T4/T5, and giving it a light mode would put a second surface
+    family inside a component ~40 routes depend on.
+  - `Breadcrumbs` gets `tone="light"` — load-bearing, its default dark palette
+    is ink-200/ink-300 on canvas.
+- **`.field-bare` (theme.css) is the new third field tone**, additive on
+  `Input`/`Select`/`Textarea` alongside `light` (default) and `dark`, so all
+  ~6 other call sites are byte-identical (verified: 0 bare fields and unchanged
+  white fields on `/partner-with-us` and a T2 leaf). Transparent, no side or top
+  border, one hairline along the bottom, **zero horizontal padding** so the
+  input text sits on the same left margin as the copy around it. A bordered
+  white input on a canvas page IS a card; five of them is five cards.
+  - ⚠️ **The focus state is a `box-shadow`, and that is load-bearing.** Tailwind
+    implements `focus-visible:ring-2` as a box-shadow, and `.field-bare` is
+    UNLAYERED CSS (same as `.field-dark`), so it beats `@layer utilities` and
+    would silently ERASE the ring. The rule therefore has to carry the whole
+    focus affordance itself: `0 1px 0` doubles the hairline to a 2px ember rule
+    and a soft drop supplies the halo. Never reduce this to a colour change.
+  - ⚠️ **`.field-bare` also sets `border-color: transparent`, which beats the
+    `border-danger` utility the primitives add** — an error state would be
+    invisible. Restated as `.field-bare[aria-invalid="true"]`, an attribute the
+    primitives already set, so the two cannot disagree.
+  - `select.field-bare` keeps `padding-right: 1.75rem` for its chevron, which
+    moves flush to the right edge on this tone.
+  - Labels are mono/uppercase here where the other tones are sentence-case sans:
+    with the input's box gone, the label is the only thing marking where the
+    field begins. `fieldLabelClass()` (`components/ui/fieldLabel.js`) is the one
+    definition, shared by all three primitives.
+  - Placeholders drop to **ink-400 (7.2:1)**, not the light tone's ink-300
+    (~3.4:1 on canvas): with no field background to sit in, a placeholder is
+    body text on the page surface.
+- **`.surface-ambient-light` (theme.css)** is the light counterpart to
+  `.surface-ambient`. §7.2 requires dark sections not be flat slabs; a single
+  continuous canvas with no surface change to mark the fold has the same
+  problem. A whisper of ember (brightest stop 5% ember mixed into canvas) at
+  the top of the page, gone by the time the form starts.
+- **EXACTLY ONE EYEBROW on the page**, in the header. The old version had three
+  ("Get in touch" / "Send a message" / "Reach us directly") — the templated
+  rhythm `design-taste-frontend` calls its single most-violated rule, and on a
+  page that is now one continuous surface they also implied section breaks that
+  no longer exist.
+- **The three channels are a full-width hairline row, not a right rail.** They
+  are the page's primary actions; beside the form they put the two fastest
+  routes to a human below the fold. `divide-*` rather than per-item borders so
+  the outer edges stay clean. Discs are FILLED ember-50 (the light half of the
+  filled-on-light / ringed-on-dark pairing), and `:active` is deliberately NOT
+  hover-gated — Tailwind wraps every `hover:` in `@media (hover: hover)`, so
+  without it a touch user gets nothing back from a tap.
+  - ⚠️ **Real bug caught by screenshot: `md:first:pl-0` on the `<a>` zeroed the
+    left gutter on EVERY cell.** The anchor is the only child of its own `<li>`,
+    so `:first-child` matched all three. The gutter belongs on the `<li>`. Any
+    first/last-of-row exception has to be expressed on the element that really
+    is a sibling of the others.
+  - The arrow glyph moved INLINE beside each value. Pinned to the cell's far
+    edge it stranded itself ~350px from the text it belongs to and read as a
+    stray mark — these cells are ~430px wide against two or three words.
+- Form spacing opens from `space-y-4` to `space-y-7` on this tone, and the
+  submit button stops being `w-full`: a full-bleed bar under a borderless form
+  re-draws the card outline the tone exists to remove.
+- **Verified** in a real Chrome over CDP against `npx serve dist` (never
+  `vite preview`, never the in-app pane), asserting
+  `innerWidth`/`visibilityState`/`pathname` before measuring, and priming
+  reveals by step-scrolling from Node:
+  - **Pixel-sampled contrast** (read foreground colours FIRST, then inject
+    `color: transparent`, screenshot, decode in-page on a canvas, sample
+    p95/p05 luminance under each box): **0 failures**, 19 samples at 1440px and
+    9 at 375px, tightest 6.44:1. A static resolver cannot judge this page — the
+    surface is a `color-mix` radial.
+  - One `section[data-surface]`, value `light`. One `<h1>`. 5 `.field-bare`
+    fields, **0 card/panel classes inside the form**. 0 reveals left hidden.
+  - `scrollWidth === innerWidth` at 1440 and at an emulated 375 (channels stack
+    to one column). Reduced motion via `Emulation.setEmulatedMedia`: 0 running
+    animations, 0 elements stuck mid-opacity.
+  - Exactly **1** console exception, the long-standing sitewide React #418
+    (`args[]=HTML`) — confirmed byte-identical on `/about`, which this change
+    never touched. No new hydration mismatch.
+  - `npm run lint` (0 problems), `content:check` (clean apart from the three
+    standing unconfirmed-content warnings), `build` + prerender 68 routes.
+- ⚠️ **Verification trap, new: `el.focus()` in headless Chrome does not apply
+  `:focus` or `:focus-visible` unless focus emulation is on.** The probe
+  reported the bare field's focus indicator as completely absent — no border
+  change, no shadow — which looks exactly like the CSS never matching. Call
+  `Page.bringToFront` + `Emulation.setFocusEmulationEnabled({enabled:true})`
+  first, and settle ~400ms afterwards or the transition is still mid-flight and
+  reads back the resting value. With both, the indicator measures correctly:
+  hairline ink-100 → ember-400 plus the doubling and the halo.
+
+### Bug fix, same session: the embedded map was pointed at the SHARE link
+Clinton: "map is not load properly". Real bug, and it predates the contact
+redesign — `MapEmbed.jsx` set the iframe's `src` to
+`site.registeredAddress.mapsUrl`, the `maps.app.goo.gl` SHORT SHARE LINK.
+
+- ⛔ **`maps.app.goo.gl` can never be framed.** It 302s to google.com/maps,
+  which serves `X-Frame-Options` / `frame-ancestors 'none'`, so the iframe
+  renders as a blank box with a browser-level refusal and **no error the
+  component can catch** — nothing throws, nothing logs to React, the element
+  is simply empty. Both `/contact` and `/about` were shipping this.
+- **The framable one is the plain KEYLESS embed endpoint**, which needs
+  `output=embed` and takes the COORDINATE PAIR, not the address string:
+  `https://www.google.com/maps?q=<lat,lng>&z=17&hl=en&output=embed`. That is
+  exactly what this file's own comment block has described since 20-08-2026 —
+  the code had drifted from its own documentation, which is the reason it read
+  as correct on inspection.
+- `mapsUrl` stays, and stays correct, for the "Get directions" anchor: opened
+  in a new tab (or handed to the native app) a share link is the right thing;
+  it is only the `src` that it can never be. **The two URLs are not
+  interchangeable — do not collapse them into one field.**
+- The pill moved `bottom-3` → `bottom-7`. Once loaded, Google draws its own
+  ~20px attribution bar along the bottom edge plus a control in the right
+  corner, and at 12px the pill covered both. Keeping "Map data ©… / Terms /
+  Report a map error" legible is a condition of using the embed, not a
+  preference.
+- Verified on the production build in a real Chrome: clicking "Load map" on
+  BOTH `/contact` (503x377) and `/about` (743x464) loads a real tiled map with
+  the marker on Ramakrishna Road, `src` resolving to the embed endpoint, the
+  pill still pointing at the share link, and 28px of clearance above the
+  attribution bar. Screenshotted, not inferred from the URL.
+
+⚠️ **Then Clinton said "still it is not showing" — and the map was NOT broken.
+He was looking at the click-to-load PLACEHOLDER.** Driving his own dev server
+(`:5174`) proved the iframe rendered correctly the moment the button was
+clicked. A dashed box saying "Load map of Balaji Towers" reads as a map that
+failed, not as a control, and that is a design failure regardless of what the
+code does. So the map now **loads itself via an `IntersectionObserver`**
+(`rootMargin: "200px 0px"`) and the button survives only as the pre-observer
+state and the no-JS/no-IO fallback; its copy changed from a call to action to
+"Loading map…".
+
+- ⚠️ **This is a REAL, deliberate deviation from CONTENT-PLAN.md §10/§11**,
+  which both ask for the map to be "lazy-loaded behind a click-to-load
+  placeholder" — i.e. no Google iframe and no Google cookies until a visitor
+  asks. Auto-loading means Google gets the request without a click. The other
+  half of the requirement IS preserved: the iframe is still never fetched on
+  page view, only when the map is about to scroll into frame, and on both
+  routes it sits well below the fold. **To restore the privacy behaviour,
+  delete the effect in `MapEmbed.jsx` — nothing else changes.**
+- Initial state stays `false`, so the placeholder is what Phase 9 prerenders
+  and what the client's first pass renders. The observer only runs in an
+  effect, so there is no hydration mismatch to introduce.
+- Verified with **NO CLICK** on the production build AND on the live dev
+  server, `/contact` and `/about` (4 combinations): scroll normally and the
+  iframe appears at 503x377 / 743x464 with the embed `src` and the placeholder
+  gone. Console on `dist` shows only the long-standing sitewide React #418.
+  ⚠️ A coarse scroll step (400px with a 120ms settle) missed `/about` on dev
+  once — the observer needs the element to actually rest near the viewport, so
+  step finer or settle longer before calling an auto-load broken.
+
+## About page: premium pass, measured against Home and /dsc — 21-08-2026
+NOT a phase. Clinton: "analyse the home and dsc pages and fix the about us page,
+make it look premium." Run against `design-taste-frontend` and
+`emil-design-eng` (Redesign — Preserve: every sentence of copy, the IA and the
+route are unchanged; nothing new is asserted).
+
+### What the analysis actually found — four structural faults, one cosmetic
+1. ⛔ **SIX EYEBROWS ON SIX SECTIONS.** A mono uppercase label above every
+   heading is the most templated rhythm a page can have, and it is the single
+   thing that made this page read as generated. Now **three across eight
+   sections** (hero, the dark band, "What we do") — the rest carry their
+   heading alone, which is what the homepage's own light sections do. Count it
+   mechanically: mono + uppercase + no children + no previous sibling.
+   ⚠️ `PageHero`'s spec-row `<dt>`s match that signature too — exclude
+   `.hero-spec` before believing a count.
+2. ⛔ **NO DARK BAND.** The page ran `deep → light → light-alt → light →
+   light-alt → light → ember`: six light surfaces in a row separated only by a
+   tonal shift. Exactly the diagnosis the /dsc premium pass recorded for its own
+   plainness, and DESIGN.md §11.1 puts a genuinely dark band between light ones
+   on the homepage for the same reason. "What we believe" is now that band
+   (`Section surface="dark"` + `.surface-ambient` + `ArcRings`; `Section`
+   supplies `.grain` for dark surfaces itself). Measured off the live DOM:
+   **`deep → light → dark → light-alt → light → light-alt → light → ember`,
+   zero consecutive repeats.**
+3. ⛔ **THREE NEAR-IDENTICAL 3-UP CARD GRIDS** (pillars, categories, how we
+   work) — Section-Layout-Repetition. Every section now uses a different
+   family: two-column editorial prose, a hairline-divided dark trio, the
+   oversized-numeral block, the scroll-linked stepper, a hairline link list,
+   and a 5/7 split.
+4. ⛔ **NONE OF THE SITE'S OWN VOCABULARY.** No mono numerals, no arc rings, no
+   ember discs, no `StepFlow` — the four devices Home and /dsc are built from.
+   All four are here now and **each is used exactly once**, which is why the
+   pillars are icon-led and the differentiators are numeral-led rather than
+   both reaching for the same treatment (§16: a designed page applies each
+   effect in one place).
+5. The hero was the bare `PageHero`. It now carries a `spec` row.
+   ⚠️ **Every value is DERIVED**: two counts read off `serviceCategories` at
+   render (6 practice areas / 31 services — so the 17-08-2026 "twenty-one
+   services" staleness class of bug cannot recur here) and two facts this
+   page's prose already asserts. No client count, no years, no turnaround — a
+   spec row is the easiest place on the site for an invented number to slip in.
+
+### Decisions worth keeping
+- **`StepFlow` replaces the hand-rolled 3-column divide for "How we work".**
+  That content is the arc of an engagement and StepFlow is the site's one step
+  treatment; `surface="light"` keeps the cadence alternating after the dark
+  band above it.
+- **The pillars are hairline-divided columns, NOT cards.** A panel inside a
+  dark section is a box in a box, and they are static content — a card's hover
+  ring would signal an interaction that does not exist. Discs are RINGED
+  (the dark half of the filled-on-light / ringed-on-dark pairing).
+- **"What we do" is derived from `serviceCategories` and now renders each
+  category's real `subline`.** The six bare label pills it replaced were
+  identical boxes saying nothing the nav does not already say.
+- **`aboutContent.differentiators` (new, in `about.js`)** is the four bullets
+  that used to be an unmarked `<ul>` inside a card, split into title + body.
+  Same wording, no new claim. ⚠️ They stay SEPARATE from `WhyThinkOrange.jsx`'s
+  own longer `differentiators`; both trace to CONTENT-PLAN.md §1. If they are
+  ever unified, unify them into a shared content module — do not let one page
+  reach into the other's private array.
+- **No `texture` on the hero, deliberately.** The four `SurfaceTexture`
+  variants are DSC motifs (a guilloché means "certificate"), so one here would
+  say something untrue about the page. The ~40 non-DSC heroes stay flat; that
+  is still a separate, sitewide call.
+- ember-500, not ember-400, on the numerals: ember-400 on `canvas-alt` is
+  2.8:1, under the 3.0 floor even as large text. Body copy on the dark band is
+  ink-200, never ink-400 (2.86:1 on ink, fixed sitewide in Phase 10).
+
+### ⛔ THE `Stagger` GRID-ITEM TRAP, THIRD OCCURRENCE — read before using it
+The dark band's three columns rendered with **zero gutter**: the icons sat
+directly on the dividers. `Stagger` wraps every child in its own `motion.div`,
+so **those** become the grid items — `divide-x` resolves against them, while
+`first:` / `last:` on the element inside match **always**, because each one is
+the only child of its own wrapper. So `md:px-8 md:first:pl-0` zeroed the
+padding on all three.
+- Fix: a plain grid + per-item `Reveal`, which forwards `className` onto the
+  element it renders, so `Reveal` IS the grid item and the exceptions resolve.
+  Same fix Phase 6's bento hub grid needed.
+- This is the same family as the `md:first:pl-0`-on-an-only-child bug found on
+  /contact the same day. **Any first/last-of-row exception must sit on the
+  element that is genuinely a sibling of the others** — check what the real
+  grid item is before writing one.
+- Found by screenshot, not by reading the diff: the classes are all present and
+  correct in the source.
+
+### Homepage: "When people call us" no longer states its own count — 21-08-2026
+Clinton: "in home page when people call us section do not directly mention six."
+`WhenToCallUs.jsx`'s h2 read "Most engagements start with one of these six
+sentences"; it now reads "…one of these sentences."
+
+- The list still renders whatever `situations` holds, so the section says what
+  it does without asserting how many rows there are — which also means adding
+  or removing a situation can never leave the heading stale. Same call as
+  /about's "Every practice area, one point of contact" (below).
+- Only copy changed. The row list, the mono indices, the surface and the
+  section's place in DESIGN.md §11.1's alternation are untouched.
+- The word survives in that file only inside a code comment. Verified in the
+  built `dist/index.html`: the rendered heading is
+  "Most engagements start with one of these sentences."
+
+### Follow-up, same session: client count, the heading, and the hero circle
+Clinton: "do not mention 6 practice directly", "say 1000+ client serve instead
+of 6 practice area", "fixed this hero section including circle effect".
+
+- **The "What we do" heading no longer states a count** — "Every practice area,
+  one point of contact". The grid below still derives every row from
+  `serviceCategories`, so the page shows the practice areas without asserting
+  how many there are, and a category added or merged cannot leave the line
+  stale.
+- ⛔ **THE CLIENT COUNT LIVES IN `home-hero.js`, AND /about READS IT — it is
+  NOT typed on the About page.** The homepage hero already renders that same
+  stat, so a figure asserted from two places is a contradiction waiting to
+  ship; the value has already moved 250+ → 500+ once. It is now **1000+ in one
+  place**, and both pages move together. The About tile is dropped entirely if
+  the entry is ever deleted rather than confirmed, and the spec row degrades to
+  three.
+  - ⚠️ **`confirmed` stays FALSE and `content:check` still warns.** A client
+    count is named explicitly by CLAUDE.md's non-negotiables and
+    CONTENT-PLAN.md §1.1's hold list, and this number was given in passing
+    while judging a layout — the same circumstance that produced 250+ and 500+.
+    That flag is the only thing between this site and a published claim. Set it
+    to `true` only when the figure is deliberately signed off for launch. **The
+    figure is now on TWO pages instead of one, so the launch blocker is more
+    urgent than before, not less.**
+  - ⚠️ Verification gotcha: `document.body.innerText` reports NEITHER "1000+"
+    nor "500+" on the homepage, which looks like the stat vanished. It has not
+    — `.value-sizer` holds the final string in a pseudo-element
+    (`content: attr(data-value)`) precisely so it never enters the text
+    content. Grep the built HTML for `data-value` instead.
+- **The hero "circle effect" is fixed by construction, not by nudging.**
+  `PageHero` gained an additive **`ringsId`** prop: pass a unique id and it
+  renders `ArcRings` — the concentric, gradient-faded set the CtaBand and the
+  /dsc sections use — instead of the default lone crescent. Only /about opts
+  in; the other ~40 heroes are byte-identical.
+  - What was wrong: the default arc is a single 16px stroke at a flat 12%
+    ember, hung off the top corner at a size that puts its brightest section
+    behind the fixed header. With no other backdrop on the page it does not
+    read as a corner composition — it reads as one dull circle that has been
+    cut off, which is exactly what Clinton saw.
+  - Why rings fix it: the shared `userSpaceOnUse` gradient fades each stroke
+    along its own length, so the composition resolves into the surface instead
+    of ending at the clip edge, and two radii read as depth where one reads as
+    an object. Same crescent geometry either way (`lib/arc.js`), so §3.1's "one
+    specific shape" still holds. Positioned bled off the RIGHT and centred on
+    the hero's height rather than hung off the top corner, so the bright part
+    lands beside the copy and not behind the header.
+  - A ringed hero also picks up `.surface-ambient` + `isolate`, the same as a
+    textured one — §7.2 compliance, so the fold is not a flat slab.
+  - `ringed` is `false` whenever `texture` is set, so the two backdrops can
+    never both render.
+- Re-verified: contrast **0 failures** (50 samples @1440 tightest 5.17:1, 56
+  @375 tightest 4.83:1), spec row `1000+ / 31 / Salem, Tamil Nadu / Pan-India`
+  with all four tiles single-line at 375px, `scrollWidth === innerWidth` at
+  both widths, reduced motion 0 running / 0 stuck, 3 ring paths in the hero and
+  the single arc gone, the only duplicate gradient id sitewide still the
+  pre-existing `cta-arc-fade`, and a T2 leaf / `/dsc` / `/partner-with-us` all
+  keeping their original hero backdrop. Lint 0, `content:check` clean apart
+  from the standing warnings, build + prerender 68 routes.
+- ⚠️ Harness note, cost two confusing runs: `npx serve` had DIED, and the probe
+  reported `path: "/"` rather than a connection error — which reads exactly
+  like an app-side redirect. `curl` the URL before believing any "wrong page"
+  result.
+
+### Verified
+Real Chrome over CDP against `npx serve dist` (never `vite preview`, never the
+in-app pane), asserting `innerWidth`/`visibilityState`/`pathname` first and
+priming reveals by step-scrolling from Node:
+- **Pixel-sampled contrast** (read foreground colours FIRST, then inject
+  `color: transparent`, screenshot, decode in-page, sample p95/p05 luminance
+  under each box, fold by fold): **0 failures — 50 samples at 1440px, tightest
+  5.53:1; 56 samples at 375px, tightest 4.83:1.** A static resolver cannot
+  judge the dark band — it is a `color-mix` radial.
+- Cadence and repeat count off the live DOM (above), one `<h1>`, spec row
+  reading `6 / 31 / Salem, Tamil Nadu / Pan-India`, 0 reveals left hidden,
+  `scrollWidth === innerWidth` at 1440 and an emulated 375.
+- **Reduced motion** via `Emulation.setEmulatedMedia`: 0 running animations,
+  0 elements stuck mid-opacity, StepFlow's progress line fully drawn.
+- **No regressions**: `/`, `/dsc`, a T2 leaf and `/contact` all render their
+  original surface cadence, one `<h1>` each, and the correct header height
+  (84px transparent / 64px glass on `/contact`).
+- `npm run lint` 0 problems, `content:check` clean apart from the three
+  standing unconfirmed-content warnings, `build` + prerender 68 routes.
+- ⚠️ Harness note: launching headless Chrome in rapid succession races on the
+  debug port and fails as "chrome did not start" or a bare WebSocket
+  ErrorEvent. `pkill -9 -f "Google Chrome"` and retry — it is not the page.
+  Also set `Emulation.setDeviceMetricsOverride` AFTER `Page.navigate`; before
+  it, the width came back as 642 rather than the requested 375.
+
 ## Session discipline
 - One phase per session. Start fresh between phases — see BUILD-PLAN.md §5.
 - Load only the plan sections a phase actually needs, not the whole document.
@@ -2898,3 +4402,292 @@ article's header.
   `npm run build` + prerender (68 routes), all four images returning 200 as AVIF
   with correct natural sizes, and an asset+link integrity scan of `dist/` —
   **3,730 internal refs, 0 broken.**
+
+## Mobile nav trigger: morphing hamburger — 20-08-2026
+NOT a phase. Clinton supplied the Uiverse.io (JulanDeAlb) hamburger and asked
+for it on the small-screen navbar. New `src/components/navbar/HamburgerIcon.jsx`
++ `.hamburger-icon*` in theme.css; wired into `MobileNav.jsx` at both the
+trigger and the panel's close button.
+
+- **Controlled, NOT the snippet's `<input type="checkbox">`.** The overlay's
+  open state already lives in `MobileNav` and is closed by Escape, the
+  backdrop and navigation as well as by this control — a self-owning checkbox
+  is a second source of truth that desyncs on every one of those paths. It
+  also has to stay a real `<button>` for the existing `aria-expanded` /
+  `aria-controls` / focus-restore wiring. The icon reads `data-open`, written
+  from that state, so it can never disagree with the panel.
+- **`stroke: currentColor`**, so it inherits `text-canvas` / `hover:text-ember-200`
+  like every other icon there and no raw colour enters theme.css.
+  `--dur-slow` (420ms) `--ease-inout`, not the snippet's 600ms: this is a
+  tap-tier control and 600ms outruns the panel's own `--dur-base` slide.
+- ⚠️ **The dash numbers ARE the animation.** The long path is one continuous
+  S-curve; `12 63` windows the top bar out of it, and `20 300` at offset
+  `-32.42` slides that window onto the diagonal that the svg's `-45deg`
+  rotation lands as the X. Editing `d` without re-deriving them leaves a
+  stroke ending mid-air.
+- **The same component is the panel's close button, mounted in the open
+  state** — that's the half of the morph the trigger can't show, since the
+  full-width panel covers it while open. The `X` import is gone.
+- **Reduced motion needs no branch**: only transitions are involved, so
+  §9.6's floor collapses them and the icon lands on its correct END state.
+  Verified via `Emulation.setEmulatedMedia`: X fully formed, 0 running
+  animations.
+- ⚠️ **The in-app preview pane CANNOT verify this** — `visibilityState:
+  "hidden"` there freezes the transition mid-flight, so computed styles read
+  the previous state indefinitely and it looks like the CSS never applied.
+  Verified in a real Chrome over CDP (`visibilityState: "visible"`): sampling
+  every 70ms through both directions shows the transform stepping
+  `identity → …0.87/-0.49… → 0.707/-0.707` and the dasharray `12,63 →
+  17.2,217 → 20,300` with the offset tracking to `-32.42`, then the exact
+  reverse on close, settling precisely on both end states.
+- `npm run lint` (0 errors; the one warning is the pre-existing unused `site`
+  import in `MegaPanel.jsx`), `npm run build` + prerender (68 routes,
+  unchanged).
+
+### Follow-up: the sheet itself — surface, asymmetric slide, row cascade
+Same session. Clinton: "make the sidebar of small screen look premium, smooth in
+opening." The panel was a flat `bg-ink-950` rectangle sliding 280ms in both
+directions with no content motion — the flattest dark surface left on the site,
+and the one thing a phone visitor looks at with nothing else on screen.
+
+- **Surface (`.mobile-sheet`, theme.css)**: directional wash over ink tokens, a
+  hairline left edge, §6.4's inset light-catch, and a cast shadow so the sheet
+  reads as lifted rather than pasted on. Plus `.grain` (§7.4) and ONE quiet
+  `ArcRings` pair bled off the top-right corner. **No `backdrop-filter`** — §7.5
+  keeps blur exclusive to the sticky nav, and a full-height blur surface is the
+  most expensive thing you can hand a phone compositor mid-transition.
+  - `ArcRings` is given `[z-index:-1]`, not its own `z-index: 0`: a positioned
+    z-0 layer paints ABOVE in-flow text, which is why every other call site has
+    to remember `relative` on its content wrapper. At -1 inside the sheet's
+    `isolate` there is nothing to remember. Unique `gradientId` as always.
+- ⚠️ **`translate`, NOT just `transform`, in the transition list.** Tailwind
+  v4's `translate-x-*` utilities compile to the INDIVIDUAL `translate`
+  property, so the first version — `transition: transform …`, replacing
+  Tailwind's own `transition-transform` — animated nothing and the sheet
+  teleported. Caught by reading `getComputedStyle(panel).translate` over CDP,
+  not by looking at it. Same family as the `rotate-[135deg]` trap recorded above.
+- **Enter and exit are asymmetric on purpose**: open is `--dur-slow` (420ms)
+  decelerating, close is `--dur-base` accelerating, and the scrim's exit is
+  `--dur-fast`. A transition is governed by the state being transitioned TO, so
+  the `[data-open="false"]` rules ARE the exit. Measured: `100% → 67 → 19.5 →
+  4.7 → 0.8 → 0` opening, `2.6 → 13 → 38 → 100` closing.
+- **Row cascade is one CSS rule, not a motion component per row.**
+  `.mobile-sheet-item` rests at `opacity 0 / translateX(14px)`; the open rule
+  adds `transition-delay: calc(90ms + var(--i) * 45ms)`. **The delay lives only
+  in the OPEN rule** so closing collapses the list at once — unwinding row by
+  row would hold the sheet on screen long after the tap.
+  - ⚠️ **§9.6's floor collapses durations but says NOTHING about delays**, so
+    the cascade would survive reduced motion as a staircase of late-appearing
+    rows — worse than the animation it removes. A local
+    `prefers-reduced-motion` rule zeroes the delay. Verified: 0s delays,
+    instant open, 0 running animations.
+  - `Row` deliberately drops its `transition-colors` utility and the item rule
+    carries the colour leg instead: a later `transition` utility replaces the
+    shorthand wholesale and kills the cascade.
+- `overscroll-contain` on the scrolling nav so a flick at the end of the list
+  doesn't chain to the page behind it.
+- Verified in a real Chrome over CDP at 375px (the in-app pane freezes these
+  transitions mid-flight — `visibilityState: "hidden"`): the slide, scrim and
+  per-row cascade all stepping through real intermediate values; reduced motion
+  clean; `scrollWidth === 375`; 0 console errors. Lint 0 errors, build +
+  prerender 68 routes.
+
+## Desktop mega panel: surface + enter/exit motion — 20-08-2026
+NOT a phase. Clinton: make the large-screen dropdown premium. Run against
+Emil Kowalski's design-engineering framework (the `emil-design-eng` skill), so
+every value below is the answer to one of its questions rather than a guess.
+
+- ⛔ **The panel had NO entrance or exit animation at all** — `openKey === key &&`
+  mounted ~30 links on one frame and unmounted them on another. That, plus a flat
+  `bg-ink-900`, was the whole of "it looks plain". Now `AnimatePresence` +
+  `motion.div` in `Header.jsx`: **enter 180ms, exit 120ms**, both `--ease-out`
+  (`cubic-bezier(0.22,1,0.36,1)`), from `translateY(-6px) scale(0.995)` with
+  `origin-top` — it drops OUT of its trigger, and never from `scale(0)`.
+  - Framework, applied: frequency is "occasional-to-often" → a short animation,
+    under the 300ms UI ceiling and inside the 150–250ms dropdown band; the
+    element is ENTERING → `ease-out`, never `ease-in`; exit is faster than
+    enter.
+  - `transform` is animated as a **full string**, not motion's `x`/`scale`
+    shorthands, which run on the main thread via rAF rather than being
+    hardware-accelerated.
+  - ⚠️ **`pointerEvents: "none"` in the exit variant is load-bearing.**
+    AnimatePresence keeps the panel mounted for the exit's 120ms, and without
+    it a cursor crossing a closing panel hits `onPointerEnter` → `hoverOpen`
+    and reopens it. Verified closing: `aria-expanded` false, opacity
+    `1 → 0.13 → 0`, unmounted by ~180ms.
+  - Reduced motion drops the transform legs and keeps only the opacity fade
+    (§9.6 plus `useReducedMotion`), which is what reduced motion should mean —
+    gentler, not nothing. Verified via emulated media: `transform: none`
+    throughout, 0 running animations.
+- **`.mega-panel` (theme.css)** gives the panel the surface every other dark
+  surface already has: directional ink wash, §6.4 inset light-catch, deeper cast
+  shadow, `.grain`, and one quiet `ArcRings` pair bled off the bottom-right.
+  Same construction as `.panel-dark` / `.mobile-sheet` rather than a fourth
+  recipe. No `backdrop-filter` — §7.5 keeps blur on the header bar itself.
+  `gradientId` is derived from the panel's own `id`, since `url(#id)` resolves
+  document-wide and both panels can be in the DOM during an exit.
+- **`.mega-panel-col` cascade is deliberately tiny: 22ms per column** (~110ms
+  across the widest panel, inside the container's own 180ms). Stagger guidance is
+  30–80ms, but this is a nav opened tens of times a day, where a visible stagger
+  reads as lag; it exists only so six columns don't snap in as one block.
+  - ⚠️ **Same delay trap as the mobile sheet**: §9.6's floor collapses
+    durations, not delays, and with `animation-fill-mode: backwards` a column
+    would sit invisible through its delay. Zeroed under
+    `prefers-reduced-motion`.
+- **Link rows are now real targets, not colour-only.** `-mx-2 px-2` claws back
+  the column padding so the tint spans the column rather than floating inside
+  it, at `ink-700/45` — lighter than the column's own `ink-800` hover so the two
+  levels read as nested. Contrast computed over the exact composite: **8.48:1**
+  resting (ink-200) and **15.18:1** hovered (canvas). The column indicator bar
+  went from `transition-all` to `transition-[transform,opacity]`.
+- ⛔ **Fixed a live non-negotiable violation, unrelated to the polish: the DSC
+  promo's CTA carried `text-white` on the primary (ember) button** — 3.13:1,
+  the exact combination CLAUDE.md's first non-negotiable forbids. Override
+  removed; verified rendering `rgb(7, 12, 28)` (ink-950).
+- The long-standing unused `site` import in `MegaPanel.jsx` is gone with it, so
+  **`npm run lint` is now 0 errors AND 0 warnings.**
+- Left as found, deliberately: the working tree's own uncommitted change to the
+  column headings (`text-ember-300` → `text-ink-100`, and the `subline` span
+  removed). That is a design decision made outside this session, not a
+  regression to revert.
+- Verified in a real Chrome over CDP at 1440px (the in-app pane cannot be
+  trusted here — `visibilityState: "hidden"` freezes both the motion enter and
+  the CSS cascade): enter stepping opacity `0.22 → 0.86 → 1` with translate
+  `-4.66 → 0` and scale `0.996 → 1`, columns cascading `0.99/0.97/0.92/0.81/
+  0.58/0.17` mid-flight, exit and unmount as above, both panels' screenshots,
+  1 arc instance per panel, no new duplicate gradient ids (the one dupe is the
+  pre-existing `cta-arc-fade` already recorded), 0 console errors.
+  `npm run lint`, `content:check`, `build` + prerender (68 routes) all clean.
+
+## CIN + registered address published — 20-08-2026
+Clinton supplied both, so **CIN and the registered street address came OFF
+CONTENT-PLAN.md §1.1's hold list.** `nav.js`'s own header comment listed both as
+never-render and has been corrected — read it before assuming anything else on
+that list has moved; nothing else has (GSTIN, year established, office hours,
+client count, years of experience, team names, fees all still held).
+
+- **`site.cin` + `site.registeredAddress`** (nav.js). The address is stored as
+  PARTS as well as a pre-joined `full`: the footer prints the parts across
+  lines, schema.org needs `streetAddress`/`postalCode` separately, and the
+  postcode is held twice on purpose — `636007` for schema, `636 007` for
+  display.
+- **Footer, two placements, both deliberate.** The address goes in the
+  "Get in touch" column under a mono "Registered office" label, as a real
+  `<address>` element (`not-italic` — the UA default italicises it). CIN goes
+  in the bottom bar beside the copyright, not in the contact column: it is a
+  statutory identifier in the same register as the legal links opposite it.
+  Both mono + `tabular-nums` so the digits align and neither reads as prose.
+- ⚠️ **First pass put both labels at `ink-400`, which measures 2.86:1 on the
+  footer's ink-950 and fails AA** — the exact colour Phase 10 already
+  fixed sitewide for this reason. Now `ink-300` (5.53:1). `ink-400` is not a
+  body-text colour on dark in this codebase; treat it as decorative only.
+- **`localBusinessJsonLd()` now carries the real `streetAddress` and
+  `postalCode`**, since the footer states them on all 68 routes and schema
+  asserting less (or more) than the visible page is a defect. Still no `geo`
+  coordinates — never supplied. Verified in the built `dist/index.html`.
+- Verified in a real Chrome over CDP at 1440px and 375px: address renders as
+  five lines with the correct content, CIN reads `CIN U69200TZ2025PTC035876`,
+  `scrollWidth` equals the viewport at both widths, 0 console errors, lint
+  clean, build + prerender 68 routes.
+  - **Pre-existing, cosmetic, not introduced here:** at 1440px the ScrollNav
+    disc clips the last ~4px of the footer's `thinkorange.in` link while that
+    row is mid-scroll. `elementFromPoint` confirms the link is still hittable,
+    and CLAUDE.md already accepts this class of overlap for fixed controls
+    over scrolling content. (The same probe reports the first link in each
+    footer column as "blocked" — that is the column's own gradient rule span
+    under the hit point, also pre-existing and unrelated.)
+
+## Contact page: whole-dark theme + real office map — 20-08-2026
+NOT a phase. Clinton supplied a dark reference layout (form left, details right)
+and the Google Maps share link for the office, asking for a premium dark
+treatment in THIS palette rather than the reference's green one.
+
+- **The page is now dark end to end**: `deep` hero → `dark` body → `deep`
+  footer. The body section is **`dark` (ink-900), not `deep`** — a `deep`
+  section directly under the `deep` hero is a consecutive-surface repeat (the
+  property the cadence audit checks on `section[data-surface]`) and would read
+  as one unbroken slab with no seam at the fold. Measured off the live DOM:
+  `deep → dark`, zero consecutive repeats. `surface-ambient` is on the section
+  for §7.2 compliance (dark sections "are not flat #0B1329"); `Section` already
+  supplies `.grain`.
+- ⛔ **The form is NOT a light card dropped on an ink page.** `Input`, `Select`
+  and `Textarea` gained an additive **`tone` prop** (default `"light"`, so all
+  ~6 other call sites — Partner With Us, EnquiryCard — are byte-identical), and
+  `ContactForm` threads it through. `tone="dark"` swaps the surface for
+  **`.field-dark`** in theme.css: ONE definition of the dark recess shared by
+  all three primitives, same reason `.card-dark` is a single class. Same
+  construction as `.panel-dark` (directional ink wash + §6.4 inset light-catch),
+  no `backdrop-filter` — §7.5 keeps blur on the sticky nav, and a form is the
+  last place to hand a phone compositor a stack of blur surfaces.
+  - ⚠️ **`.field-dark` is UNLAYERED CSS, so it beats Tailwind's `@layer
+    utilities`** — that is why it also owns the focus ring (`focus-visible:ring-2`
+    would be overridden) and the transition list. Verified rendering: ember
+    border at 60% + a 2px ember ring on focus.
+  - **`.field-dark option, optgroup` pins the native list to the LIGHT palette.**
+    The `<option>` popup is drawn by the OS, not by us; without this some
+    engines render white-on-white on a dark `<select>`.
+  - Labels `ink-100`, values `canvas`, placeholders `ink-300`. **Never `ink-400`
+    as text on dark** — Phase 10 measured it at 2.86:1 and fixed it sitewide.
+- **Right column carries only confirmed facts.** Phone / WhatsApp / email as a
+  hairline-divided row list (ringed ember disc per row — the dark half of the
+  filled-on-light / ringed-on-dark pairing the DSC group cards established),
+  then the registered address as a real `<address not-italic>`, then the map.
+  Office hours are still on §1.1's hold list and are simply ABSENT, not stubbed.
+  **The reference's testimonial card is deliberately not reproduced** —
+  inventing a quote is the first item on this file's non-negotiables, and
+  `testimonials.js` is still the launch blocker it always was.
+- **Placeholders are examples only** ("e.g. Ramesh Kumar"); every field keeps its
+  real `<label>` per §12.4 — a placeholder disappears the moment you type.
+
+### The map (`MapEmbed.jsx`) — now the real office, and why by coordinates
+- `site.registeredAddress` gained `placeName` / `mapsUrl` / `mapsQuery`. The
+  short link Clinton supplied resolves (checked, not assumed) to **Balaji
+  Towers, `11.6685447,78.1513129`** — which matches the founder-confirmed
+  street address already in that object, so the two corroborate each other.
+- ⚠️ **The pin is dropped on lat/lng, NOT on the address string.** Geocoding
+  "Ramakrishna Road" puts the marker anywhere along its length; the coordinate
+  pair lands on the building. Verified by screenshotting the bare iframe at
+  600×400 — the red marker sits centred on Ramakrishna Rd. `z=17` frames the
+  street rather than the district. A `&ll=` variant was tested and is
+  unnecessary: the plain `q=` form already centres the marker.
+- **`mapsUrl` is used verbatim for a new always-present "Get directions" pill**
+  (loaded or not). An embedded map cannot give turn-by-turn directions, and a
+  phone visitor wants the native app rather than pinch-zoom inside an iframe.
+- Click-to-load is UNCHANGED (CONTENT-PLAN.md §10/§11 both require it — no
+  Google iframe or its cookies on page view). `tone="dark"` restyles only the
+  placeholder and the frame border; `/about` still renders the light branch and
+  picks up the better pin for free.
+- ⚠️ **The LOADED map is light grey, and that is left alone deliberately.** The
+  keyless `output=embed` endpoint cannot be dark-styled (that needs the JS API
+  plus an API key), and `filter: invert()` on the iframe wrecks label legibility
+  and every brand colour on the tiles. Click-to-load means the page is dark
+  until the visitor asks for the map, which is the honest outcome.
+- `className` now sits on a positioned WRAPPER (the pill is absolute inside it)
+  rather than on the button/iframe itself. Both call sites pass an aspect ratio,
+  which still gives the wrapper its height and the `h-full` child fills it —
+  verified 507×317 on contact, 743×464 on about.
+
+### Verification
+`npm run lint` (0 errors — one transient error mid-run was ESLint linting the
+`dist-server/` bundle a failed prerender left behind; the standing gotcha, not a
+real finding), `content:check` (clean apart from the three long-standing
+unconfirmed-content warnings), `build` + prerender (68 routes, unchanged). Then a
+real Chrome over CDP against `npx serve dist` (never `vite preview`, never the
+in-app pane), asserting `innerWidth`/`visibilityState`/`pathname` before
+measuring:
+- **Pixel-sampled contrast** (read foreground colours FIRST, then inject
+  `color: transparent`, screenshot, decode in-page, sample p95/p05 luminance
+  under each box): **0 failures across 21 samples**, tightest 5.29:1. A static
+  resolver cannot do this page — the surfaces are `color-mix` gradients.
+- One `<h1>` at 52px, cadence `deep → dark`, 0 reveals left hidden after a
+  step-scroll primed from Node, `scrollWidth === innerWidth` at 1440 and 375.
+- **Reduced motion** via `Emulation.setEmulatedMedia`: 0 running animations, and
+  the 3 elements reported "mid-opacity" are the hero's static arc (0.12) and the
+  two ArcRings paths (0.06/0.10) — decorative, `aria-hidden`, at their designed
+  resting weight, not stuck reveals.
+- ⚠️ **The stale-Chrome harness bug bit again** (already recorded once): a
+  leftover headless Chrome makes `launch()` attach to the OLD browser, and a
+  `querySelector` that exists returns null. Randomise the debug port AND the
+  profile dir per run, and `pkill -9 -f "Google Chrome --headless"` between
+  sessions. Also: `npx serve` DIES when `vite build` replaces `dist/` under it —
+  restart it after every rebuild, and the symptom is curl returning `000`.

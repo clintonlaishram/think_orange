@@ -27,6 +27,16 @@ import { motion, useInView, useReducedMotion } from "motion/react";
 // genuinely visible, until an actual scroll event changes the geometry
 // enough to cross the threshold. Confirmed by measurement: at 1440×810–820
 // the hero stat row is on-screen at mount yet never reaches `inView`.
+// `fade={false}` animates the RISE ONLY, leaving opacity alone — added
+// 20-08-2026 and it exists for exactly one reason: an element that is a page's
+// LCP candidate must not be hidden at first paint.
+//
+// A prerendered page ships whatever `initial` says, so the default
+// `{opacity: 0}` means the element's pixels wait for hydration. That is fine
+// for a lede or a card; it is not fine for the `<h1>`, which is the largest
+// text on ~40 routes and the LCP element on the T5 driver pages that carry
+// CONTENT-PLAN.md §9's LCP < 1.2s budget. With `fade={false}` the text paints
+// straight from the static HTML and still animates into place.
 export function Reveal({
   as = "div",
   delay = 0,
@@ -34,19 +44,22 @@ export function Reveal({
   children,
   amount = 0.18,
   margin = "0px 0px -12% 0px",
+  fade = true,
   ...props
 }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, amount, margin });
   const reduceMotion = useReducedMotion();
   const Comp = motion[as] ?? motion.div;
+  const from = fade ? { opacity: 0, y: 16 } : { y: 16 };
+  const to = fade ? { opacity: 1, y: 0 } : { y: 0 };
 
   return (
     <Comp
       ref={ref}
       className={className}
-      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-      animate={reduceMotion ? undefined : inView ? { opacity: 1, y: 0 } : {}}
+      initial={reduceMotion ? false : from}
+      animate={reduceMotion ? undefined : inView ? to : {}}
       transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1], delay }}
       {...props}
     >

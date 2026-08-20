@@ -34,6 +34,8 @@ export function organizationJsonLd() {
     email: site.email,
     address: {
       "@type": "PostalAddress",
+      streetAddress: `${site.registeredAddress.line1}, ${site.registeredAddress.line2}`,
+      postalCode: site.registeredAddress.postalCode,
       addressLocality: site.locality,
       addressRegion: site.region,
       addressCountry: "IN",
@@ -45,8 +47,11 @@ export function organizationJsonLd() {
 }
 
 /** Local-SEO half of CONTENT-PLAN.md §14.1 — "GST consultant Salem" etc.
- * Deliberately no `streetAddress` or `geo` coordinates: both are on the
- * §1.1 hold list. `areaServed` covers the national DSC/driver lane without
+ * `streetAddress`/`postalCode` are the founder-confirmed registered office
+ * (nav.js `site.registeredAddress`, 20-08-2026) — the same address the footer
+ * now prints, so the schema can never assert something the page doesn't say.
+ * Still no `geo` coordinates: those were never supplied, and §1.1's discipline
+ * extends to schema. `areaServed` covers the national DSC/driver lane without
  * asserting a physical presence outside Salem. */
 export function localBusinessJsonLd() {
   return {

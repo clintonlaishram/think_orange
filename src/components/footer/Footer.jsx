@@ -170,9 +170,25 @@ export function Footer() {
                     {site.email}
                   </a>
                 </li>
+                {/* Registered office — the real street address, founder-
+                    confirmed 20-08-2026 (it was on CONTENT-PLAN.md §1.1's hold
+                    list until then, which is why the footer printed only
+                    "Salem, Tamil Nadu, India"). Rendered as a real <address>
+                    so it is machine-readable as well as visible; `not-italic`
+                    because the UA default italicises that element. */}
                 <li className="flex items-start gap-2.5">
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-ember-400" strokeWidth={1.5} aria-hidden="true" />
-                  {site.location}
+                  <address className="not-italic leading-relaxed">
+                    <span className="mb-0.5 block font-mono text-[11px] uppercase tracking-[0.08em] text-ink-300">
+                      Registered office
+                    </span>
+                    {site.registeredAddress.line1},<br />
+                    {site.registeredAddress.line2},<br />
+                    {site.registeredAddress.locality} &ndash;{" "}
+                    <span className="tabular-nums">{site.registeredAddress.postalCodeDisplay}</span>
+                    <br />
+                    {site.registeredAddress.region}, India
+                  </address>
                 </li>
               </ul>
 
@@ -192,8 +208,15 @@ export function Footer() {
             in and match padding to it, reserve the clearance on every
             breakpoint: `pb-24` is cheap dead space, a hidden link is not. */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-ink-800 pb-24 pt-6 text-body-sm">
+          {/* CIN belongs beside the copyright, not in the contact column: it
+              is a statutory identifier, in the same register as the legal
+              links it now sits opposite. Mono + tabular-nums so the digits
+              align and it never reads as prose. */}
           <p>
             © {year} {site.legalName}. All rights reserved.
+            <span className="mt-1 block font-mono text-[11px] uppercase tracking-[0.08em] text-ink-300">
+              CIN <span className="tabular-nums normal-case">{site.cin}</span>
+            </span>
           </p>
           <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
             {legalPages.slice(0, 2).map((page) => (

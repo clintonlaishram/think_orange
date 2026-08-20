@@ -19,8 +19,10 @@ import { insights } from "./insights/index.js";
 
 // --- Confirmed facts only (CONTENT-PLAN.md §1) -----------------------------
 // Anything not listed here is on the §1.1 hold list and MUST NOT be rendered:
-// CIN, GSTIN, street address, year established, office hours, client count,
-// years of experience, team names, any fee. Do not add them speculatively.
+// GSTIN, year established, office hours, client count, years of experience,
+// team names, any fee. Do not add them speculatively.
+// (CIN and the registered street address CAME OFF that list on 20-08-2026 —
+// founder-confirmed, see `cin` / `registeredAddress` below.)
 export const site = {
   legalName: "ThinkOrange Consulting Private Limited",
   shortName: "ThinkOrange",
@@ -36,6 +38,34 @@ export const site = {
   email: "office@thinkorange.in",
   emailHref: "mailto:office@thinkorange.in",
   domain: "thinkorange.in",
+  // Confirmed by Clinton 20-08-2026. The street address was previously on
+  // CONTENT-PLAN.md §1.1's hold list and therefore rendered nowhere; it is now
+  // founder-confirmed, so the footer states it and `localBusinessJsonLd()`
+  // carries the real `streetAddress`/`postalCode` rather than locality-only.
+  // The pieces are kept separate as well as pre-joined: `full` is what the
+  // footer prints, the parts are what schema.org needs.
+  cin: "U69200TZ2025PTC035876",
+  registeredAddress: {
+    line1: "85/11, 3rd Floor, Balaji Towers",
+    line2: "Ramakrishna Road",
+    locality: "Salem",
+    region: "Tamil Nadu",
+    // Displayed as "636 007"; schema.org wants it unspaced.
+    postalCode: "636007",
+    postalCodeDisplay: "636 007",
+    full: "85/11, 3rd Floor, Balaji Towers, Ramakrishna Road, Salem - 636 007",
+    // Clinton's own Google Maps pin (20-08-2026). `mapsUrl` is the share link
+    // he supplied verbatim — it is what "Get directions" opens, so it keeps
+    // whatever Google resolves it to rather than a URL reassembled by hand.
+    // `mapsQuery` is the coordinate pair that link resolves to, used for the
+    // embedded pin: geocoding the address STRING is approximate (Google puts
+    // "Ramakrishna Road" anywhere along its length), whereas lat/lng drops the
+    // pin on the building. `placeName` labels it, since the plain (keyless)
+    // embed endpoint cannot label a coordinate pin on its own.
+    placeName: "Balaji Towers",
+    mapsUrl: "https://maps.app.goo.gl/aPEpV7X2gnMgWRd66",
+    mapsQuery: "11.6685447,78.1513129",
+  },
 };
 
 // --- Service categories (T3 hubs) and their leaves (T2) --------------------
@@ -209,12 +239,15 @@ export const dscProducts = [
     label: "Buy DSC Tokens", 
     template: "T4" 
   },
-  { 
-    slug: "aadhaar-esign",
-    path: "/dsc/aadhaar-esign", 
-    label: "Aadhaar eSign", 
-    template: "T4" 
-  },
+  // ⛔ eSign PAUSED — 21-08-2026, Clinton: "for now comment out all content and
+  // pages about esign". Commented out rather than deleted; uncomment this entry
+  // (and every other ⛔ eSign PAUSED block across the repo) to restore.
+  // { 
+  //   slug: "aadhaar-esign",
+  //   path: "/dsc/aadhaar-esign", 
+  //   label: "Aadhaar eSign", 
+  //   template: "T4" 
+  // },
 ];
 
 export const dscDocumentsPage = {
@@ -234,12 +267,14 @@ export const dscValidityFaqsPage = {
   template: "T5",
 };
 
-export const dscEsignVsDscPage = {
-  slug: "esign-or-dsc",
-  path: "/dsc/esign-or-dsc",
-  label: "eSign or DSC — Which Do You Need?",
-  template: "T5",
-};
+// ⛔ eSign PAUSED — 21-08-2026. Its consumers (DscHub.jsx, UtilityPage.jsx) are
+// commented out alongside it, so nothing imports this while it is off.
+// export const dscEsignVsDscPage = {
+//   slug: "esign-or-dsc",
+//   path: "/dsc/esign-or-dsc",
+//   label: "eSign or DSC — Which Do You Need?",
+//   template: "T5",
+// };
 
 // The drivers hub absorbs what was a third nav level — the four driver pages
 // are listed ON the hub, never in a nested flyout (CONTENT-PLAN.md §3.5).
@@ -292,10 +327,14 @@ export const dscPanelColumns = [
       dscValidityFaqsPage,
     ],
   },
-  {
-    label: "eSign Solutions",
-    items: [dscProduct("aadhaar-esign"), dscEsignVsDscPage],
-  },
+  // ⛔ eSign PAUSED — 21-08-2026. Removing this column removes the eSign group
+  // from the mega panel, the mobile accordion AND the /dsc hub's sections in one
+  // move, because `dscGroups` (content/dsc/groups.js) derives membership from
+  // this export rather than restating it.
+  // {
+  //   label: "eSign Solutions",
+  //   items: [dscProduct("aadhaar-esign"), dscEsignVsDscPage],
+  // },
 ];
 
 // The DSC mega panel's fourth "column" — a promo CARD, not a link list, so
@@ -339,19 +378,37 @@ export const insightsIndexPage = {
   template: "T10",
 };
 
+// `lightTop` is read by Header.jsx, and it exists because of CLAUDE.md's layout
+// contract: the header is FIXED and transparent over each page's opening
+// section, and it renders canvas-coloured text, so every other template opens
+// on a dark surface. The article template opens LIGHT (Clinton, 20-08-2026), so
+// the nav text would be invisible over it. That contract's own instruction for
+// this case is "the header needs a per-route solid variant — not a local hack",
+// and this is the signal for it: the header simply renders the solid/glass
+// state it already has for the scrolled and panel-open cases.
+//
+// Declared here rather than in the template so it stays derivable during Phase
+// 9's SSR pass and on client navigation from the SAME source, with no state and
+// no effect — server and client can never disagree about it.
 export const insightArticlePages = insights.map((article) => ({
   slug: article.slug,
   path: `/insights/${article.slug}`,
   label: article.title,
   template: "T10",
   parent: insightsIndexPage.path,
+  lightTop: true,
 }));
 
 // --- Standalone and legal pages -------------------------------------------
 export const standalonePages = [
   { slug: "partner-with-us", path: "/partner-with-us", label: "Partner With Us", template: "T6" },
   { slug: "about", path: "/about", label: "About Us", template: "T6" },
-  { slug: "contact", path: "/contact", label: "Contact Us", template: "T7" },
+  // `lightTop` (21-08-2026): /contact opens on a LIGHT surface, so the fixed
+  // transparent header's canvas-coloured text would be invisible over it. Same
+  // sanctioned mechanism the T10 article template uses (see the block above
+  // `insightArticlePages`) — the header renders the solid/glass state it
+  // already owns, rather than the template hacking the header locally.
+  { slug: "contact", path: "/contact", label: "Contact Us", template: "T7", lightTop: true },
 ];
 
 export const legalPages = [
@@ -397,7 +454,9 @@ export const allRoutes = [
   ...dscProducts.map((p) => ({ ...p, parent: "/dsc" })),
   { ...dscDocumentsPage, parent: "/dsc" },
   { ...dscValidityFaqsPage, parent: "/dsc" },
-  { ...dscEsignVsDscPage, parent: "/dsc" },
+  // ⛔ eSign PAUSED — 21-08-2026. Off the route table, so no file is prerendered
+  // for it and `sitemapPaths()` cannot list it.
+  // { ...dscEsignVsDscPage, parent: "/dsc" },
   { ...dscDriversHub, children: undefined, parent: "/dsc" },
   ...dscDriversHub.children.map((d) => ({ ...d, parent: dscDriversHub.path })),
   insightsIndexPage,
@@ -428,7 +487,8 @@ export const footerColumns = [
       ...dscProducts.map(({ path, label }) => ({ path, label })),
       { path: dscDocumentsPage.path, label: dscDocumentsPage.label },
       { path: dscValidityFaqsPage.path, label: dscValidityFaqsPage.label },
-      { path: dscEsignVsDscPage.path, label: dscEsignVsDscPage.label },
+      // ⛔ eSign PAUSED — 21-08-2026.
+      // { path: dscEsignVsDscPage.path, label: dscEsignVsDscPage.label },
       { path: dscDriversHub.path, label: dscDriversHub.label },
     ],
   },
@@ -444,6 +504,37 @@ const routesByPath = new Map(allRoutes.map((route) => [route.path, route]));
 
 export function findRoute(path) {
   return routesByPath.get(path);
+}
+
+/**
+ * Does this route's OPENING section use a light surface?
+ *
+ * Only true where a template deliberately breaks the "open dark" half of the
+ * layout contract; the header consumes it to render its solid state from scroll
+ * position 0 so its canvas-coloured text stays legible. Defaults to false, so
+ * every route that has not opted in behaves exactly as before.
+ */
+export function hasLightTop(path) {
+  return Boolean(routesByPath.get(normalisePath(path))?.lightTop);
+}
+
+/**
+ * Trailing slashes are stripped before the lookup, and that is a bug fix rather
+ * than defensiveness. Route paths in this file are canonical and slash-free
+ * (`/insights/foo`), but Phase 9 prerenders to `dist/insights/foo/index.html`,
+ * so a static host serves the directory form and `location.pathname` arrives as
+ * `/insights/foo/`. Measured: without this the header stayed transparent (84px,
+ * fully transparent background) over the light article hero — i.e. exactly the
+ * invisible-nav-text failure the flag exists to prevent — while a slash-free
+ * visit worked. Both forms reach real users.
+ *
+ * Only `hasLightTop` needs it today: every other consumer receives a canonical
+ * `entry.path` from the route config rather than a live pathname. Anything new
+ * that keys off `location.pathname` should use this too.
+ */
+function normalisePath(path) {
+  if (typeof path !== "string" || path === "/") return path;
+  return path.endsWith("/") ? path.slice(0, -1) : path;
 }
 
 /**
@@ -510,7 +601,8 @@ const slugIndex = new Map([
   ...dscProducts.map((p) => [p.slug, p]),
   [dscDocumentsPage.slug, dscDocumentsPage],
   [dscValidityFaqsPage.slug, dscValidityFaqsPage],
-  [dscEsignVsDscPage.slug, dscEsignVsDscPage],
+  // ⛔ eSign PAUSED — 21-08-2026.
+  // [dscEsignVsDscPage.slug, dscEsignVsDscPage],
   [dscDriversHub.slug, dscDriversHub],
   ...dscDriversHub.children.map((d) => [d.slug, d]),
   [insightsIndexPage.slug, insightsIndexPage],

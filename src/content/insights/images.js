@@ -23,7 +23,9 @@
 // four. From src/assets only the emitted avif/webp variants are written. Worth
 // migrating the hero the same way next time that file is open.
 import entityChoice from "../../assets/insights/private-limited-vs-llp-vs-opc.jpg?w=224;384;768;1152;1600&format=avif;webp&as=picture";
-import dscEsign from "../../assets/insights/class-3-dsc-or-aadhaar-esign.jpg?w=224;384;768;1152;1600&format=avif;webp&as=picture";
+// ⛔ eSign PAUSED — 21-08-2026. Commenting the import keeps the source file out
+// of the build's emitted assets entirely while eSign is off.
+// import dscEsign from "../../assets/insights/class-3-dsc-or-aadhaar-esign.jpg?w=224;384;768;1152;1600&format=avif;webp&as=picture";
 import gstRegistration from "../../assets/insights/when-gst-registration-stops-being-optional.jpg?w=224;384;768;1152;1600&format=avif;webp&as=picture";
 import gemTenders from "../../assets/insights/gem-registration-tender-readiness.jpg?w=224;384;768;1152;1600&format=avif;webp&as=picture";
 
@@ -35,10 +37,11 @@ const IMAGES = {
     picture: entityChoice,
     alt: "Printed documents spread across a desk beside a pen",
   },
-  "class-3-dsc-or-aadhaar-esign": {
-    picture: dscEsign,
-    alt: "An open laptop on a wooden desk",
-  },
+  // ⛔ eSign PAUSED — 21-08-2026. Uncomment with the import above.
+  // "class-3-dsc-or-aadhaar-esign": {
+  //   picture: dscEsign,
+  //   alt: "An open laptop on a wooden desk",
+  // },
   "when-gst-registration-stops-being-optional": {
     picture: gstRegistration,
     alt: "A calculator and pen resting on printed figures",

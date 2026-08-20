@@ -24,7 +24,16 @@ import { site } from "./nav.js";
 // simply becomes two tiles. `npm run content:check` prints a loud warning
 // while any unconfirmed stat remains.
 export const heroStats = [
-  { id: "clients", value: "500+", label: "Clients served", confirmed: false },
+  // 21-08-2026: Clinton asked for "1000+ clients served" on the About hero.
+  // The value lives HERE, not on that page, and /about reads this same entry —
+  // the homepage already renders it, so two pages stating the figure from two
+  // places is a contradiction waiting to be shipped. One number, one source.
+  // `confirmed` stays FALSE: the number was given in passing while judging a
+  // layout, which is the same circumstance that produced the 250+/500+ values
+  // before it, and `content:check`'s warning is the only thing standing between
+  // this file and a published client count. Set it to `true` only when the
+  // figure is deliberately being signed off for launch.
+  { id: "clients", value: "1000+", label: "Clients served", confirmed: false },
   { id: "years", value: "10+", label: "Years of practice", confirmed: false },
   // Both below are confirmed: pan-India service scope is already asserted in
   // index.html's meta description, and the location comes from nav.js.

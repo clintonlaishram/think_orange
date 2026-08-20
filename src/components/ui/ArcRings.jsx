@@ -1,34 +1,14 @@
 import { cn } from "@/lib/cn";
+import { arcPath } from "@/lib/arc";
 
 // Concentric arc rings as a reusable section background — the treatment
 // CtaBand pioneered, generalised so dark sections stop reading as blank
 // fields without each one hand-authoring its own curve.
 //
-// ⚠️ The math below is lifted verbatim from CtaBand.jsx:40-48, which still
-// carries its own local copy. CtaBand was explicitly out of scope for this
-// refinement pass so it was left untouched, but that leaves TWO definitions of
-// one shape. Migrate CtaBand onto this module next time it is opened —
-// DESIGN.md §3.1's "repetition of one specific shape" only holds while the
-// definition is genuinely single.
-//
-// Decomposition of the established path `M340 200a140 140 0 1 1-66.5-119.2`:
-// centre (200,200), r = 140, starting at 3 o'clock and sweeping clockwise the
-// long way round to -58.4° — 301.6° of travel with a 58.4° gap in the upper
-// right. The `a` command's RELATIVE delta from the (200+r, 200) start is:
-//   dx = (cos(-58.4°) - 1) · r = -0.4753 · r
-//   dy =  sin(-58.4°)      · r = -0.8513 · r
-// Sanity check at r=140: -66.54, -119.18 — matches the original exactly.
-const ARC_CENTRE = 200;
-const ARC_END_DX = -0.4753;
-const ARC_END_DY = -0.8513;
-
-// Not exported: a future CtaBand migration should consume <ArcRings> itself
-// rather than re-implementing the composition around a shared path helper.
-function arcPath(r) {
-  const dx = (ARC_END_DX * r).toFixed(1);
-  const dy = (ARC_END_DY * r).toFixed(1);
-  return `M${ARC_CENTRE + r},${ARC_CENTRE}a${r} ${r} 0 1 1 ${dx} ${dy}`;
-}
+// ⚠️ The arc math now lives in `src/lib/arc.js` — ONE definition, so
+// DESIGN.md §3.1's "repetition of one specific shape" is literally true.
+// CtaBand.jsx still carries its own local copy (documented there and in
+// CLAUDE.md); migrate it onto <ArcRings> next time it is opened.
 
 /**
  * @param rings     [{ r, width, opacity }] — absolute weight lives here, and

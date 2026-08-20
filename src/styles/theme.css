@@ -783,6 +783,68 @@ p {
   animation: hero-chevron-bounce 2.4s var(--ease-inout) infinite;
 }
 
+/* ------------------------------------------------------------
+   Hero showcase motion — 20-08-2026.
+
+   ⛔ WHAT WAS HERE BEFORE, AND WHY IT IS NOT: `.hero-float-tile` plus
+   `hero-float-rise` / `hero-float-sink`, a pair of small tiles drifting in
+   counter-phase on the showcase image's left edge (the second decorative
+   family from Zoho MCP's hero). Removed on Clinton's call — each tile carried
+   ArcGlyph's `rule` wave, which IS the Eyebrow's mark, so the pair read as two
+   stray eyebrows sitting on the photograph rather than as floating objects.
+
+   The motion moved onto the two things that were actually static: the image
+   and the capabilities card. That is a better answer than the tiles were — it
+   gives the composition depth instead of adding objects to it, and it finally
+   wires up a behaviour DESIGN.md §11.2 / §9.4 has specified all along.
+
+   ⚠️ `.hero-card-float` below is NOT new. It has existed since Phase 4 and was
+   applied to NOTHING — the class was defined, Hero.jsx's own header comment
+   described "a 6px idle float on a 7s loop", and the card never carried it.
+   Found while wiring this up.
+
+   The two periods (7s card, 11s image) are deliberately unequal, so the pair
+   drifts relative to each other instead of moving as one block: that relative
+   motion IS the effect, since the card overlaps the image's bottom-right
+   corner. Same reasoning as the removed tiles' 7s/9s pairing.
+
+   Only transform animates, so §9.6's global reduced-motion floor collapses
+   both to their 100% keyframe — translate 0 / scale 1, i.e. the resting
+   composition. Nothing to special-case in JS.
+
+   No `will-change`: Phase 4 measured that an actively animating transform is
+   composited regardless, so the hint would only add bookkeeping to a hero that
+   already exceeds §9.5's layer budget for reasons documented there.
+   ------------------------------------------------------------ */
+@keyframes hero-image-drift {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, 7px, 0) scale(1.012);
+  }
+}
+
+/* Applied to the Figure itself, never to the frame — the capabilities card is
+   positioned against that frame, so animating the frame would drag the card
+   along and the relative drift the effect depends on would vanish.
+
+   The scale is 1.2%, which on the 450px slot at lg is ~2.7px of growth per
+   side. It is inside the arc clip-path, so the arc bite breathes with it
+   rather than the image sliding under a static mask.
+
+   Safe for LCP: this image is the homepage's LCP element, so it deliberately
+   gets NO entrance animation — no fade, no mask reveal, nothing that delays
+   its first paint. A transform on an already-painted element does not move the
+   LCP timestamp. */
+.hero-image-drift {
+  animation: hero-image-drift 11s var(--ease-inout) infinite;
+}
+
+
 /* ============================================================
    Scroll nav (components/layout/ScrollNav.jsx).
 
@@ -853,6 +915,75 @@ p {
    wipes it faster so the delete still reads as a backspace rather than a
    dissolve. The global reduced-motion floor collapses both to 0.01ms.
    ============================================================ */
+/* ⛔ THE HEADING'S BOX IS RESERVED, NOT INFERRED — 20-08-2026.
+   Reported: on mobile and tablet, where the hero's 7/5 grid stacks, everything
+   below the H1 jumped as the headline rotated.
+
+   Nothing here reserved a height. The heading's box was the SUM of whatever
+   its line boxes happened to measure, and line 3's emphasis word is Instrument
+   Serif, whose glyph metrics overflow the line box that `--text-display-xl
+   --line-height: 0.95` sets — measured, line 3 came out 51.4px against 50.4px
+   for the two sans lines at 375px, and 73.1px against 70.1px at 768px. That
+   the three current headlines all totalled the same height was a property of
+   the copy (all three are 2 sans lines + one sans+serif line), not of the
+   layout: any headline whose line count or per-line font mix differed shifted
+   the lede, the CTAs, the stat row and every section below. A late-arriving
+   webfont does the same thing on a slow connection, which is why it reads as
+   mobile-only.
+
+   Both declarations below are the fix, and each does a different job:
+
+   `.typewriter-line`'s explicit height makes ONE line's box independent of
+   which font renders the glyphs inside it. `1lh` is the line box the
+   display-xl token already produces, so it tracks that token rather than
+   restating it; the + 0.1em is the descender allowance the hero previously
+   carried as a per-line `pb-[0.1em]`, moved here so the box has a single
+   definition. Verified byte-identical to the old sans line box (50.4px @375,
+   70.08px @768) — the serif line simply stops being 1–3px taller than its
+   siblings, and its descender overflows visually instead of pushing layout.
+
+   `.typewriter`'s min-height reserves the TALLEST sequence in the rotation,
+   from `--typewriter-lines`. With every sequence at three lines that is
+   currently redundant; it is what makes a future headline with a different
+   line count safe, since a shorter sentence can no longer shrink the box
+   mid-cycle.
+
+   ⚠️ Do NOT switch `.typewriter-char` off `inline-block` to "simplify" this.
+   The caret rides the character stream as an inline sibling and its placement
+   was verified against inline-block metrics (0 misplaced in 293 samples). */
+.typewriter {
+  display: block;
+  min-height: calc(var(--typewriter-lines, 1) * (1lh + 0.1em));
+}
+
+.typewriter-line {
+  display: block;
+  height: calc(1lh + 0.1em);
+  /* ⛔ The line COUNT has to be fixed too, or the reserved height above is
+     reserved for the wrong number of lines. Two things can make a pre-broken
+     line wrap and become two:
+
+     1. The caret. It is emitted inline at the write position and is 0.11em
+        wide (0.05em + 0.06em margin) — enough to tip a line that already
+        fills its measure onto a second visual line, and since it MOVES, the
+        wrap appears and disappears as the sentence types. That is a whole
+        line box of jump, repeating, and it is the shape of the reported bug.
+     2. The fallback face. Every @font-face here is `font-display: swap` with
+        no `size-adjust`, so a wider system sans renders the headline until
+        Satoshi arrives. `.typewriter-char` is inline-block, which makes every
+        character its own break opportunity, so an overlong line does not
+        overflow — it breaks MID-WORD and adds a line.
+
+     `nowrap` removes both. The lines are pre-broken to fit at the fluid
+     display-xl scale (see heroHeadlines' comment — the 3-line shape is
+     load-bearing), so a line that needs to wrap is a content error, and the
+     honest failure for one is a few pixels bleeding into the gutter for the
+     moment before the webfont swaps — `<main>`'s `overflow-x: clip` contains
+     it and no scrollbar appears — rather than the whole page below jumping by
+     50–92px. Verified `scrollWidth === innerWidth` at 360/375/414/768/1440. */
+  white-space: nowrap;
+}
+
 .typewriter-char {
   display: inline-block;
 }
@@ -1005,6 +1136,147 @@ p {
   /* §6.4's light-catch — the single detail that makes a dark panel read as a
      real object rather than a hole cut in the page. */
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink-100) 10%, transparent);
+}
+
+/* ============================================================
+   Form fields on a DARK surface (`tone="dark"` on Input / Select / Textarea).
+
+   ONE definition of the dark field surface, consumed by all three primitives
+   — the same reason `.card-dark` exists rather than three copies of the same
+   values. The light branch of those components is untouched: every other form
+   on the site (Partner With Us, EnquiryCard) still renders `bg-white`.
+
+   Construction mirrors `.panel-dark`: a directional wash over ink tokens plus
+   §6.4's inset light-catch, so a field reads as a recess in a real surface
+   rather than a hole punched in the page. Deliberately NO `backdrop-filter` —
+   §7.5 keeps blur exclusive to the sticky nav, and a form is the last place to
+   hand a phone compositor a stack of blur surfaces.
+
+   Focus is a border + ring, never colour alone (§12.4). The rest — text
+   colour, placeholder colour, radius, height — stays in the components'
+   utilities so the two tones share one geometry.
+   ============================================================ */
+
+.field-dark {
+  background-image: linear-gradient(160deg,
+      color-mix(in srgb, var(--color-ink-700) 34%, var(--color-ink-950)) 0%,
+      color-mix(in srgb, var(--color-ink-950) 88%, var(--color-ink-900)) 100%);
+  border-color: color-mix(in srgb, var(--color-ink-100) 12%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-ink-100) 8%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--color-ink-950) 55%, transparent);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.field-dark:hover {
+  border-color: color-mix(in srgb, var(--color-ink-100) 20%, transparent);
+}
+
+.field-dark:focus-visible,
+.field-dark:focus {
+  border-color: color-mix(in srgb, var(--color-ember-300) 60%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-ink-100) 8%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--color-ember-300) 45%, transparent);
+}
+
+/* The native select's own option list is drawn by the OS, not by us — on a
+   dark field the UA would otherwise render white-on-white in some engines. */
+.field-dark option,
+.field-dark optgroup {
+  color: var(--color-ink-600);
+  background: var(--color-canvas);
+}
+
+/* ------------------------------------------------------------------
+   .field-bare — the third field tone (21-08-2026, Contact page).
+
+   `.field-dark` is a recessed box on ink; this is the opposite move: the
+   field has NO box at all. Transparent background, no side or top border,
+   one hairline along the bottom. Clinton's brief for /contact was "do not
+   keep the form inside a card, blend it to the page", and a bordered white
+   input on a canvas section is a card — five small ones. This dissolves the
+   input into the page and leaves the baseline as the only affordance, which
+   is what design-taste-frontend §4.4 means by "group with border-t / divide-y
+   / negative space instead of a container".
+
+   ⚠️ The focus state is a BOX-SHADOW, and that is load-bearing rather than
+   decorative. Tailwind implements `focus-visible:ring-2` as a box-shadow, and
+   this rule is UNLAYERED CSS (same as `.field-dark`), so it wins over
+   `@layer utilities` and would silently erase the ring. The replacement has
+   to carry the whole focus affordance itself, so it does two things at once:
+   `0 1px 0` doubles the 1px hairline to a 2px ember rule, and the soft drop
+   supplies the halo the ring used to. Never leave this at a colour change
+   alone — Phase 10's audit holds the site to zero focusables without a
+   visible indicator.
+
+   Horizontal padding is zero so the field's text sits on the same left
+   margin as its label and the copy around it; without that the form reads as
+   a card whose walls have merely been made invisible.
+   ------------------------------------------------------------------ */
+.field-bare {
+  background-color: transparent;
+  border-color: transparent;
+  border-bottom-color: var(--color-ink-100);
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .field-bare:hover {
+    border-bottom-color: var(--color-ink-300);
+  }
+}
+
+/* The native select still needs room for its chevron, which sits flush to the
+   right edge on this tone — everything else keeps zero horizontal padding. */
+select.field-bare {
+  padding-right: 1.75rem;
+}
+
+/* `.field-bare` is unlayered and sets `border-color: transparent`, so it beats
+   the `border-danger` utility the primitives add in an error state — the error
+   would simply be invisible. Restated here against `aria-invalid`, which the
+   primitives already set, so the two can never disagree. */
+.field-bare[aria-invalid="true"] {
+  border-bottom-color: var(--color-danger);
+}
+
+.field-bare:focus,
+.field-bare:focus-visible {
+  outline: none;
+  border-bottom-color: var(--color-ember-400);
+  box-shadow:
+    0 1px 0 0 var(--color-ember-400),
+    0 6px 14px -10px color-mix(in srgb, var(--color-ember-400) 70%, transparent);
+}
+
+/* ------------------------------------------------------------------
+   .surface-ambient-light — the light-surface counterpart to
+   `.surface-ambient`.
+
+   §7.2 says dark sections "are not flat #0B1329" and gives them a radial;
+   light sections were left flat because nothing needed otherwise. /contact
+   does: it is now ONE continuous canvas from the fixed header to the footer,
+   with no surface change to mark the fold, so a flat fill reads as a blank
+   sheet. This puts a whisper of ember at the top of the page — behind the
+   glass header, fading out by the time the form starts — so the fold has a
+   light source without a seam.
+
+   Kept far below §7.2's own 8% luminance cap: the brightest stop is 5% ember
+   mixed into canvas, i.e. a fraction of a percent of actual lightness shift.
+   ------------------------------------------------------------------ */
+.surface-ambient-light {
+  background-image: radial-gradient(120% 76% at 50% -12%,
+      color-mix(in srgb, var(--color-ember-400) 5%, var(--color-canvas)) 0%,
+      color-mix(in srgb, var(--color-ember-400) 2%, var(--color-canvas)) 34%,
+      var(--color-canvas) 68%);
 }
 
 /* ============================================================
@@ -1239,6 +1511,353 @@ p {
      carry `relative isolate` so this never escapes to an outer stacking
      context. */
   z-index: 0;
+}
+
+/* ============================================================
+   Section background textures — SurfaceTexture.jsx. 20-08-2026, for the DSC
+   module: each DSC menu group carries its own motif, and that motif follows
+   the reader onto every page inside the group.
+
+   `.surface-texture` is the clipping FRAME only; the motifs themselves are
+   inert SVG in the component. Same construction as `.arc-rings` and for the
+   same reason: a section's own `overflow` must stay `visible` (StepFlow and
+   HowWeWork both position labels outside their parent's box), so the texture
+   clips itself rather than asking the section to clip it.
+   ============================================================ */
+.surface-texture {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* z-index: -1, NOT 0 — and this is load-bearing, not a preference.
+     `.arc-rings` uses 0 and every call site has to remember to add `relative`
+     to its own content wrapper, because a positioned z-index:0 element paints
+     at step 6 of the painting order and in-flow TEXT paints at step 5 — i.e. a
+     z-index:0 overlay sits ON TOP of the copy. At -1 the layer paints at step
+     2 instead: above the section's own background, below everything else, with
+     nothing for a call site to remember. It cannot escape upward because
+     `Section`/`PageHero` add `isolate` (a stacking context) whenever a texture
+     is passed. */
+  z-index: -1;
+}
+
+/* The ledger hairline grid, reused rather than re-invented: this is the same
+   pattern as `.footer-grid` and the hero's (commented-out) L2 layer. Tiled by
+   repeating-linear-gradient so it costs nothing at any section height, and
+   masked with a radial so the lines fade out towards the edges instead of
+   stopping at a hard rectangle.
+
+   The stops mix `currentColor`, not a named token, so ONE definition serves
+   both surface tones: SurfaceTexture sets `color` on its wrapper (ink-400 on
+   canvas, ember-400 on ink) and the grid follows the SVG motif it sits under
+   automatically. */
+.tex-grid {
+  background-image:
+    repeating-linear-gradient(to right,
+      color-mix(in srgb, currentColor 8%, transparent) 0 1px,
+      transparent 1px 64px),
+    repeating-linear-gradient(to bottom,
+      color-mix(in srgb, currentColor 8%, transparent) 0 1px,
+      transparent 1px 64px);
+  mask-image: radial-gradient(115% 92% at 88% 4%,
+      rgb(0 0 0 / 1) 0%,
+      rgb(0 0 0 / 0.35) 48%,
+      transparent 76%);
+}
+
+/* Hero variant: the grid comes in from the LOW LEFT instead, so it balances
+   the seal composition in the opposite corner rather than doubling it. */
+.tex-grid--hero {
+  background-image:
+    repeating-linear-gradient(to right,
+      color-mix(in srgb, currentColor 7%, transparent) 0 1px,
+      transparent 1px 72px),
+    repeating-linear-gradient(to bottom,
+      color-mix(in srgb, currentColor 7%, transparent) 0 1px,
+      transparent 1px 72px);
+  mask-image: radial-gradient(90% 80% at 4% 104%,
+      rgb(0 0 0 / 1) 0%,
+      rgb(0 0 0 / 0.3) 52%,
+      transparent 78%);
+}
+
+/* ============================================================
+   Premium light card — DSC group grids, driver grid, validity grid.
+
+   REVISION 20-08-2026. The first pass gave this class a 2px ember rule along
+   the card's top edge that grew to full width on hover. Clinton: "do not use
+   thick top border at all… make the card look premium." Removed outright, and
+   the diagnosis behind the replacement is worth keeping, because the bar was a
+   symptom rather than the disease:
+
+     A card carried THREE separate small ember elements — the top rule, the
+     mono index, and the "Read more" link — on a plain white box. Lots of tiny
+     accents on an undifferentiated surface is exactly what reads as cheap. The
+     homepage never does this: `WhoWeWorkWith` and `WhyThinkOrange` each put
+     ONE ember element in a light block and get their structure from hairlines,
+     type scale and whitespace.
+
+   So this class is now surface quality only, no decoration and no pseudo-
+   elements at all:
+
+     A DIRECTIONAL WASH — the same idea as `.card-dark`'s, in canvas tints
+     instead of ink, so light falls from the top-left and the card has a face
+     rather than being one flat fill. Every stop is a pure canvas token: §7.1
+     bars the brand gradient from card backgrounds, so there is no ember in the
+     surface at all.
+
+   Everything else a DSC card does on hover is already the site's own light-card
+   language, unchanged, in `Card`: shadow-sm → shadow-md, border → ember-200,
+   the corner crescent fading in, and a -4px lift. Adding a fifth signal was
+   the bar's real problem. Note those `hover:` utilities are ALREADY gated —
+   Tailwind v4 wraps every `hover:` variant in `@media (hover: hover)`, so the
+   sticky-hover-on-touch defect this file previously attributed to light Cards
+   does not exist (verified in the built CSS).
+   ============================================================ */
+.card-premium {
+  position: relative;
+  background-image: linear-gradient(158deg,
+      color-mix(in srgb, var(--color-canvas) 62%, transparent) 0%,
+      transparent 52%,
+      color-mix(in srgb, var(--color-canvas-deep) 24%, transparent) 100%);
+}
+
+/* PRESS FEEDBACK, and it fills a real gap rather than adding polish: every
+   other affordance on a light DSC card — the lift, the shadow, the border
+   swap, the corner crescent — lives behind `hover:`, which Tailwind v4 wraps in
+   `@media (hover: hover)`. So a touch user got NOTHING back from tapping one.
+   `:active` is a genuine press on touch, so this is deliberately NOT
+   hover-gated, exactly as `.card-dark:is(a, button):active` already is.
+
+   Selected through the parent `a`, because the card is a div INSIDE the link:
+   the link is the real press target, and `.card-premium:active` would never
+   fire from a tap on the link's padding. Transform only, so it composites. */
+a:active > .card-premium {
+  transform: translateY(-1px) scale(0.99);
+  transition: transform var(--dur-instant) var(--ease-out);
+}
+
+/* ============================================================
+   Hero spec row — the hairline strip of derived facts under the DSC hub's
+   hero copy. Deliberately NOT the homepage's `HeroStats` tiles: those animate
+   (Counter / Scramble) and carry display-size values, which is the T1 hero's
+   signature. This is a quiet 4-up label/value row on hairlines, the same
+   register as a spec table.
+   ============================================================ */
+.hero-spec {
+  border-top: 1px solid color-mix(in srgb, var(--color-ink-100) 14%, transparent);
+}
+
+.hero-spec>* {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-ink-100) 14%, transparent);
+}
+
+@media (min-width: 768px) {
+  .hero-spec>* {
+    border-bottom: 0;
+    border-left: 1px solid color-mix(in srgb, var(--color-ink-100) 14%, transparent);
+  }
+
+  .hero-spec>*:first-child {
+    border-left: 0;
+  }
+}
+
+/* ============================================================
+   Mobile nav trigger — the morphing hamburger (see
+   components/navbar/HamburgerIcon.jsx for why the dash numbers are what they
+   are). All of it is stroke-dash + transform, i.e. paint/composite on a 28px
+   glyph, with no JS driving a single frame. `data-open` is written from
+   MobileNav's own state, so the icon can never disagree with the panel.
+   The global §9.6 floor collapses these transitions to 0.01ms under reduced
+   motion, which lands the icon on its correct END state (an X while open, a
+   hamburger while closed) rather than freezing it mid-morph.
+   ============================================================ */
+.hamburger-icon {
+  transition: transform var(--dur-slow) var(--ease-inout);
+}
+
+.hamburger-icon__line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+  transition:
+    stroke-dasharray var(--dur-slow) var(--ease-inout),
+    stroke-dashoffset var(--dur-slow) var(--ease-inout);
+}
+
+.hamburger-icon__line--morph {
+  stroke-dasharray: 12 63;
+}
+
+.hamburger-icon[data-open="true"] {
+  transform: rotate(-45deg);
+}
+
+.hamburger-icon[data-open="true"] .hamburger-icon__line--morph {
+  stroke-dasharray: 20 300;
+  stroke-dashoffset: -32.42;
+}
+
+/* ============================================================
+   Mobile nav sheet — DESIGN.md §10.4's off-canvas panel, given the same
+   surface quality every other dark surface on the site has (§7.2: a dark
+   panel is never a flat slab). It was a flat `bg-ink-950` rectangle, which
+   is the one thing on a phone a visitor looks at with nothing else on screen.
+
+   NO `backdrop-filter` anywhere here — §7.5 keeps blur exclusive to the
+   sticky nav, and a full-height blur surface is the most expensive thing you
+   can hand a phone compositor mid-transition. Depth comes from a directional
+   wash, a hairline left edge, §6.4's inset light-catch and a cast shadow.
+
+   ⚠️ ENTER AND EXIT ARE ASYMMETRIC ON PURPOSE. Opening is the moment worth
+   spending time on (--dur-slow, decelerating); closing should get out of the
+   way (--dur-base, accelerating). A transition is governed by the state being
+   transitioned TO, so the `[data-open="false"]` rules below ARE the exit.
+   ============================================================ */
+.mobile-sheet {
+  background-image: linear-gradient(196deg,
+      color-mix(in srgb, var(--color-ink-700) 42%, var(--color-ink-950)) 0%,
+      var(--color-ink-950) 44%,
+      color-mix(in srgb, var(--color-ink-900) 55%, var(--color-ink-950)) 100%);
+  border-left: 1px solid color-mix(in srgb, var(--color-ink-100) 12%, transparent);
+  /* ⛔ THE CAST SHADOW BELONGS TO THE OPEN STATE ONLY — 20-08-2026.
+     Reported (Clinton, on a phone): a dark fade down the right edge of every
+     page while the menu is CLOSED.
+     The sheet stays mounted so it can slide, and closed it sits exactly
+     off-screen (`translate: 100%`, left = viewport width). An off-screen
+     element paints nothing — but its OUTER box-shadow is offset -32px with a
+     64px blur, so it was cast leftward, back INTO the viewport, on every route.
+     Measured at 390px on a white section: rgb 128 one pixel from the edge
+     (50% grey), 178 at 22px, and not clean white until ~90px in. The scrim was
+     already at opacity 0 and `inert` was already set — neither hides a shadow.
+     Only the inset light-catch stays unconditional; it is inside the box and
+     cannot escape. */
+  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--color-ink-100) 8%, transparent);
+  /* ⚠️ `translate` AND `transform`: Tailwind v4's `translate-x-*` utilities
+     compile to the INDIVIDUAL `translate` property, so a transition listing
+     only `transform` animates nothing and the sheet teleports. Same trap this
+     file records for `rotate-[135deg]` reading as `transform: none`. */
+  transition:
+    translate var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+
+.mobile-sheet[data-open="true"] {
+  box-shadow:
+    inset 1px 0 0 color-mix(in srgb, var(--color-ink-100) 8%, transparent),
+    -32px 0 64px -24px color-mix(in srgb, var(--color-ink-950) 85%, transparent);
+}
+
+.mobile-sheet[data-open="false"] {
+  /* The full shorthand, not just an override of duration/timing-function: the
+     box-shadow leg needs its own delay, and `transition-duration` alone would
+     apply --dur-base to it too.
+
+     `box-shadow` is held for the WHOLE exit and then dropped in one 1ms step,
+     so the sheet keeps its depth while it travels and nothing is left painting
+     into the viewport afterwards. Deliberately not animated — box-shadow is a
+     paint property, and there is nothing to see: by the time it switches, the
+     sheet is entirely off-screen. */
+  transition:
+    translate var(--dur-base) var(--ease-in),
+    transform var(--dur-base) var(--ease-in),
+    box-shadow 1ms linear var(--dur-base);
+}
+
+/* The scrim is a gradient, not a flat 60% ink: it deepens toward the sheet so
+   the panel reads as lifted off the page rather than pasted onto it. */
+.mobile-sheet-scrim {
+  background-image: linear-gradient(to left,
+      color-mix(in srgb, var(--color-ink-950) 82%, transparent) 0%,
+      color-mix(in srgb, var(--color-ink-950) 62%, transparent) 45%,
+      color-mix(in srgb, var(--color-ink-950) 48%, transparent) 100%);
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+.mobile-sheet-scrim[data-open="false"] {
+  transition-duration: var(--dur-fast);
+}
+
+/* Content settles in behind the sheet's own travel — each row carries its
+   index as `--i`, so the cascade is one CSS rule rather than a motion
+   component per row (§9: this fires on a tap, dozens of times a day, and
+   nothing here needs a JS driver). The delay lives ONLY in the open rule, so
+   closing collapses the whole list at once instead of unwinding row by row,
+   which would hold the sheet on screen long after the tap. */
+.mobile-sheet-item {
+  opacity: 0;
+  transform: translateX(14px);
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.mobile-sheet[data-open="true"] .mobile-sheet-item {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(90ms + var(--i, 0) * 45ms);
+}
+
+/* §9.6's floor collapses DURATIONS but says nothing about delays, so without
+   this the cascade survives reduced motion as a staircase of late-appearing
+   rows — worse than the animation it is meant to remove. */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-sheet[data-open="true"] .mobile-sheet-item {
+    transition-delay: 0s;
+  }
+}
+
+/* ============================================================
+   Mega panel (desktop) — DESIGN.md §10.2's ONE flat panel, given the surface
+   quality §7.2 requires of every other dark surface. It was a flat
+   `bg-ink-900` slab: the largest dark surface on the site with no wash, no
+   light-catch and no texture, which is exactly why it read as plain next to
+   the pages it drops over.
+
+   Same construction as `.panel-dark` / `.mobile-sheet` rather than a fourth
+   recipe: directional wash over pure ink tokens (§7.1 bars the brand gradient
+   from panel backgrounds — the column indicator bar is the one whitelisted
+   ember gradient in here), a hairline border, §6.4's inset light-catch, and a
+   deeper cast shadow so the panel sits above the page instead of on it.
+   No `backdrop-filter` — §7.5 keeps blur exclusive to the header bar itself.
+   ============================================================ */
+.mega-panel {
+  background-image: linear-gradient(168deg,
+      color-mix(in srgb, var(--color-ink-700) 48%, var(--color-ink-900)) 0%,
+      var(--color-ink-900) 46%,
+      color-mix(in srgb, var(--color-ink-950) 55%, var(--color-ink-900)) 100%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-ink-100) 9%, transparent),
+    0 32px 64px -24px color-mix(in srgb, var(--color-ink-950) 80%, transparent);
+}
+
+/* Column cascade. Deliberately TINY — 22ms per column, ~110ms across the
+   widest panel, inside the container's own 180ms enter. This is a nav opened
+   tens of times a day, where a visible stagger reads as lag rather than
+   polish; it exists only so six columns don't snap in as one block. */
+.mega-panel-col {
+  animation: mega-panel-col-in var(--dur-fast) var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 22ms);
+}
+
+@keyframes mega-panel-col-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Same delay trap as the mobile sheet: §9.6's floor collapses the DURATION
+   but not the delay, and with `backwards` fill a column would sit invisible
+   for its delay before snapping in. */
+@media (prefers-reduced-motion: reduce) {
+  .mega-panel-col {
+    animation-delay: 0s;
+  }
 }
 
 /* DESIGN.md §9.6 — global reduced-motion floor. Component-level JS handling

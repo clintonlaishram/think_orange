@@ -372,68 +372,73 @@ export const dscProducts = [
       },
     ],
   },
-  {
-    slug: "aadhaar-esign",
-    label: "Aadhaar eSign",
-    h1: "Aadhaar eSign — Sign Documents Online with Aadhaar",
-    meta: {
-      title: "Aadhaar eSign in Salem | ThinkOrange Consulting",
-      description:
-        "Sign contracts and agreements online using Aadhaar OTP or biometric authentication — no USB token, no software. Not a substitute for statutory portal DSC filings.",
-      keywords: [
-        "aadhaar esign salem",
-        "aadhaar based electronic signature",
-        "esign document online india",
-        "esign vs digital signature certificate",
-      ],
-    },
-    lede:
-      "Sign contracts and agreements online in minutes using your Aadhaar and a mobile OTP — no USB token, no software to install, and no certificate to keep track of afterward.",
-    usedFor: [
-      "Employment offer letters, appointment letters and HR onboarding paperwork",
-      "Vendor, NDA and client agreements where the other party accepts an Aadhaar-based signature",
-      "Loan and lending agreements where the lender's own platform accepts Aadhaar eSign",
-      "Any document both parties agree can be signed this way, rather than with a certificate on a token",
-    ],
-    validityOptions: null,
-    documents: [
-      "Aadhaar number, linked to an active mobile number for OTP authentication at the moment of signing",
-      "The specific document you need signed, finalised — eSign authenticates a signature on that exact document, not a certificate you hold in advance for future use",
-      "Email address, for the signed document and its audit trail to be delivered to",
-    ],
-    verificationNote:
-      "Aadhaar eSign does not replace a Class 3 DSC for statutory portal filings. The income tax e-filing portal, the GST portal, MCA21/ROC filings and e-tendering/GeM all specifically require a Class 3 certificate on a token, and will not accept an Aadhaar eSign in its place. This is for contracts and agreements where the other party accepts it, not for government filings.",
-    process: [
-      { step: 1, title: "Confirm eSign fits your document", desc: "Not every use case accepts it — we check that before setting anything up, since statutory portal filings need a Class 3 DSC instead." },
-      { step: 2, title: "Aadhaar-linked mobile confirmed", desc: "The number your OTP will be sent to, through our eMudhra/SignX partner's eSign service." },
-      { step: 3, title: "Document routed for signing", desc: "The signer receives a secure link, authenticates with Aadhaar OTP (or biometric where offered), and signs." },
-      { step: 4, title: "Signed document and audit trail", desc: "Delivered with a tamper-evident signature embedded — evidence of who signed and when, tied to that document." },
-    ],
-    fees: null,
-    driverSlugs: [],
-    faqs: [
-      {
-        q: "Is an Aadhaar eSign legally valid?",
-        a: "Yes. Section 3A of the Information Technology Act 2000 recognises an electronic signature made using an authentication technique notified in the Act's Second Schedule, and Aadhaar eSign is one of those — it carries the same legal standing as a Class 3 digital signature for the documents it's used on.",
-      },
-      {
-        q: "Can I use this instead of a Class 3 DSC for GST or income tax filing?",
-        a: "No. Statutory portals — income tax e-filing, the GST portal, MCA21/ROC and e-tendering/GeM — specifically require a Class 3 certificate on a token and don't accept Aadhaar eSign as an alternative. Use eSign for contracts and agreements instead.",
-      },
-      {
-        q: "Do I need a USB token for this?",
-        a: "No — that's the main difference from every other certificate we issue. Verification happens by Aadhaar OTP or biometric at the moment you sign, rather than through hardware you keep and maintain.",
-      },
-      {
-        q: "How long is the signature valid for?",
-        a: "It doesn't expire the way a DSC does. The signature and its audit trail are permanently tied to that one signed document, rather than sitting on a certificate you hold for future use — there's no renewal to think about afterward.",
-      },
-      {
-        q: "What if my Aadhaar-linked mobile number has changed?",
-        a: "The OTP goes to whichever number is currently linked to your Aadhaar in UIDAI's own records. If that's changed or you no longer have access to it, update it with UIDAI first — eSign can't authenticate to a number Aadhaar itself doesn't recognise.",
-      },
-    ],
-  },
+  // ⛔ eSign PAUSED — 21-08-2026, Clinton: "for now comment out all content
+  // and pages about esign". The product object is commented out rather than
+  // deleted; uncomment it and the matching ⛔ eSign PAUSED blocks in nav.js,
+  // groups.js, icons.js, hub-content.js, DscHub.jsx, UtilityPage.jsx and
+  // content/insights/ to restore the whole family.
+  // {
+  //   slug: "aadhaar-esign",
+  //   label: "Aadhaar eSign",
+  //   h1: "Aadhaar eSign — Sign Documents Online with Aadhaar",
+  //   meta: {
+  //     title: "Aadhaar eSign in Salem | ThinkOrange Consulting",
+  //     description:
+  //       "Sign contracts and agreements online using Aadhaar OTP or biometric authentication — no USB token, no software. Not a substitute for statutory portal DSC filings.",
+  //     keywords: [
+  //       "aadhaar esign salem",
+  //       "aadhaar based electronic signature",
+  //       "esign document online india",
+  //       "esign vs digital signature certificate",
+  //     ],
+  //   },
+  //   lede:
+  //     "Sign contracts and agreements online in minutes using your Aadhaar and a mobile OTP — no USB token, no software to install, and no certificate to keep track of afterward.",
+  //   usedFor: [
+  //     "Employment offer letters, appointment letters and HR onboarding paperwork",
+  //     "Vendor, NDA and client agreements where the other party accepts an Aadhaar-based signature",
+  //     "Loan and lending agreements where the lender's own platform accepts Aadhaar eSign",
+  //     "Any document both parties agree can be signed this way, rather than with a certificate on a token",
+  //   ],
+  //   validityOptions: null,
+  //   documents: [
+  //     "Aadhaar number, linked to an active mobile number for OTP authentication at the moment of signing",
+  //     "The specific document you need signed, finalised — eSign authenticates a signature on that exact document, not a certificate you hold in advance for future use",
+  //     "Email address, for the signed document and its audit trail to be delivered to",
+  //   ],
+  //   verificationNote:
+  //     "Aadhaar eSign does not replace a Class 3 DSC for statutory portal filings. The income tax e-filing portal, the GST portal, MCA21/ROC filings and e-tendering/GeM all specifically require a Class 3 certificate on a token, and will not accept an Aadhaar eSign in its place. This is for contracts and agreements where the other party accepts it, not for government filings.",
+  //   process: [
+  //     { step: 1, title: "Confirm eSign fits your document", desc: "Not every use case accepts it — we check that before setting anything up, since statutory portal filings need a Class 3 DSC instead." },
+  //     { step: 2, title: "Aadhaar-linked mobile confirmed", desc: "The number your OTP will be sent to, through our eMudhra/SignX partner's eSign service." },
+  //     { step: 3, title: "Document routed for signing", desc: "The signer receives a secure link, authenticates with Aadhaar OTP (or biometric where offered), and signs." },
+  //     { step: 4, title: "Signed document and audit trail", desc: "Delivered with a tamper-evident signature embedded — evidence of who signed and when, tied to that document." },
+  //   ],
+  //   fees: null,
+  //   driverSlugs: [],
+  //   faqs: [
+  //     {
+  //       q: "Is an Aadhaar eSign legally valid?",
+  //       a: "Yes. Section 3A of the Information Technology Act 2000 recognises an electronic signature made using an authentication technique notified in the Act's Second Schedule, and Aadhaar eSign is one of those — it carries the same legal standing as a Class 3 digital signature for the documents it's used on.",
+  //     },
+  //     {
+  //       q: "Can I use this instead of a Class 3 DSC for GST or income tax filing?",
+  //       a: "No. Statutory portals — income tax e-filing, the GST portal, MCA21/ROC and e-tendering/GeM — specifically require a Class 3 certificate on a token and don't accept Aadhaar eSign as an alternative. Use eSign for contracts and agreements instead.",
+  //     },
+  //     {
+  //       q: "Do I need a USB token for this?",
+  //       a: "No — that's the main difference from every other certificate we issue. Verification happens by Aadhaar OTP or biometric at the moment you sign, rather than through hardware you keep and maintain.",
+  //     },
+  //     {
+  //       q: "How long is the signature valid for?",
+  //       a: "It doesn't expire the way a DSC does. The signature and its audit trail are permanently tied to that one signed document, rather than sitting on a certificate you hold for future use — there's no renewal to think about afterward.",
+  //     },
+  //     {
+  //       q: "What if my Aadhaar-linked mobile number has changed?",
+  //       a: "The OTP goes to whichever number is currently linked to your Aadhaar in UIDAI's own records. If that's changed or you no longer have access to it, update it with UIDAI first — eSign can't authenticate to a number Aadhaar itself doesn't recognise.",
+  //     },
+  //   ],
+  // },
 ];
 
 export function getDscProduct(slug) {

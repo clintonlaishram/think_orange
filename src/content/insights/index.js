@@ -48,22 +48,36 @@ export const insights = [
     },
     confirmed: true,
   },
-  {
-    slug: "class-3-dsc-or-aadhaar-esign",
-    title: "Class 3 DSC or Aadhaar eSign: which signature your filing actually accepts",
-    excerpt:
-      "Both are legally valid signatures. Only one of them is accepted on the income tax, GST, MCA and e-tendering portals — and picking wrong costs you a deadline.",
-    category: "Digital Signatures",
-    readMinutes: 5,
-    published: PUBLISHED,
-    related: ["class-3-individual", "class-3-organisation", "aadhaar-esign"],
-    meta: {
-      title: "Class 3 DSC or Aadhaar eSign — Which Do You Need? | ThinkOrange Consulting",
-      description:
-        "When a Class 3 Digital Signature Certificate is mandatory, when Aadhaar eSign is enough, and why government portals accept only one of the two.",
-    },
-    confirmed: true,
-  },
+  // ⛔ eSign PAUSED — 21-08-2026, Clinton: "for now comment out all content and
+  // pages about esign". This article is a page about eSign, so it goes with the
+  // rest of the family — its route disappears from `insightArticlePages`
+  // automatically, since that export is derived from this array.
+  //
+  // ⚠️ TWO CONSEQUENCES, BOTH INTENTIONAL AND BOTH REVERSED BY UNCOMMENTING:
+  //   1. `insights` drops to 3, below `MIN_ARTICLES_TO_SHOW` (4), so the
+  //      HOMEPAGE INSIGHTS SECTION NOW RENDERS NOTHING. The threshold is left
+  //      at 4 deliberately — the section is a feature-plus-three layout, and
+  //      lowering it to 3 would render a feature plus TWO, which is the thin
+  //      editorial row that threshold exists to prevent.
+  //   2. An article page's "More insights" row now offers 2 cards, not 3.
+  // Restore either by uncommenting this entry, or by writing a fourth
+  // non-eSign article.
+  // {
+  //   slug: "class-3-dsc-or-aadhaar-esign",
+  //   title: "Class 3 DSC or Aadhaar eSign: which signature your filing actually accepts",
+  //   excerpt:
+  //     "Both are legally valid signatures. Only one of them is accepted on the income tax, GST, MCA and e-tendering portals — and picking wrong costs you a deadline.",
+  //   category: "Digital Signatures",
+  //   readMinutes: 5,
+  //   published: PUBLISHED,
+  //   related: ["class-3-individual", "class-3-organisation", "aadhaar-esign"],
+  //   meta: {
+  //     title: "Class 3 DSC or Aadhaar eSign — Which Do You Need? | ThinkOrange Consulting",
+  //     description:
+  //       "When a Class 3 Digital Signature Certificate is mandatory, when Aadhaar eSign is enough, and why government portals accept only one of the two.",
+  //   },
+  //   confirmed: true,
+  // },
   {
     slug: "when-gst-registration-stops-being-optional",
     title: "When GST registration stops being optional",

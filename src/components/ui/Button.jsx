@@ -21,11 +21,13 @@ const VARIANTS = {
   // ink-950 because ember-300 has almost no contrast against ember-400.
   onEmber:
     "bg-ink-950 text-canvas hover:bg-ink-900 hover:-translate-y-0.5 focus-visible:ring-ink-950",
-  secondary: {
-    light:
+    secondary: {
+      light:
       "bg-transparent text-ink-600 border border-ink-100 hover:bg-ink-50 hover:border-ink-600",
-    dark: "bg-transparent text-canvas border border-ink-700 hover:bg-ink-800 hover:border-ink-600",
-  },
+      dark: "bg-transparent text-canvas border border-ink-700 hover:bg-ink-800 hover:border-ink-600",
+    },
+    tertiary:
+      "bg-whatsapp text-canvas text-ink-800 hover:text-ink-100 hover:bg-success hover:-translate-y-0.5 focus-visible:ring-ink-950",
   ghost: {
     light: "bg-transparent text-ember-600 hover:underline underline-offset-4",
     dark: "bg-transparent text-ember-200 hover:underline underline-offset-4",

@@ -48,6 +48,23 @@ import { cn } from "@/lib/cn";
 // carry different durations via `data-on`, since a transition is governed by
 // the state being transitioned TO.
 //
+// ── Why the box is RESERVED rather than measured ─────────────────────────
+// Keeping every glyph in flow makes ONE sentence's box constant. It does not
+// make the box constant ACROSS a rotation, and that was a real reported bug on
+// mobile and tablet (20-08-2026): the heading's height was simply the sum of
+// whatever its line boxes measured, and a line containing the serif emphasis
+// word measures 1–3px taller than an all-sans line. The three current
+// headlines happening to total the same height was a property of the copy, not
+// of the layout.
+//
+// So the height is now declared, in two places, both in theme.css:
+//   • `.typewriter-line` gives each line an explicit `calc(1lh + 0.1em)` box,
+//     so which font renders a line can no longer change its height.
+//   • `.typewriter` reserves `--typewriter-lines` of them, taken from the
+//     LONGEST sequence in the rotation — so a future headline with a different
+//     line count cannot shrink the heading mid-cycle either.
+// Nothing below the H1 can move as a consequence of this component again.
+//
 // Both `animate()` calls below are the two-argument value form
 // (`animate(from, to, options)`), which is the safe one. Do NOT rewrite this
 // as a single multi-keyframe call with `times` — `animate()` prepends `from`
@@ -91,6 +108,13 @@ export function Typewriter({
     built.push({ parts, start, end: offset });
   }
   const totalChars = offset;
+
+  // Reserve for the LONGEST sequence, not the active one — reserving the
+  // active sentence's own line count would be no reservation at all.
+  const reservedLines = Math.max(
+    1,
+    ...allSequences.map((sequence) => sequence.length),
+  );
 
   // Reduced motion: the finished sentence, immediately, and no rotation — a
   // heading that erases and rewrites itself every few seconds is exactly the
@@ -169,9 +193,15 @@ export function Typewriter({
   const caret = <span aria-hidden="true" className="typewriter-cursor" />;
 
   return (
-    <>
+    <span
+      className={cn("typewriter", className)}
+      // Consumed by `.typewriter`'s min-height. An inline custom property
+      // rather than a class, because the value is data-driven — a Tailwind
+      // arbitrary value can't read `sequences`.
+      style={{ "--typewriter-lines": reservedLines }}
+    >
       {built.map((line, lineIndex) => (
-        <span key={lineIndex} className={cn("block", className)}>
+        <span key={lineIndex} className="typewriter-line">
           {line.parts.map((part, partIndex) => (
             <span key={partIndex} className={part.className}>
               {part.chars.map((char, charIndex) => {
@@ -214,6 +244,6 @@ export function Typewriter({
           ))}
         </span>
       ))}
-    </>
+    </span>
   );
 }

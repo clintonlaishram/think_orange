@@ -88,41 +88,43 @@ export const articleBodies = {
       "If you tell us what the business does, who owns it and whether outside money is on the horizon, we will tell you which of the three we would form — and say so plainly if the answer is the cheaper one.",
   },
 
-  "class-3-dsc-or-aadhaar-esign": {
-    lede: "Both a Class 3 Digital Signature Certificate and an Aadhaar-based eSign produce a legally valid electronic signature under the Information Technology Act. That shared legal standing is exactly what causes the confusion, because it does not mean the two are interchangeable in practice.",
-    sections: [
-      {
-        heading: "The rule that settles most cases",
-        paragraphs: [
-          "Statutory portals mandate a Class 3 certificate specifically. The income tax portal, the GST portal, MCA21 for company filings, and e-tendering and e-procurement platforms including GeM will not accept an Aadhaar eSign in place of one. If your filing lands on any of those, the question is already answered and the only decision left is individual or organisation.",
-          "This is worth stating flatly because it is the mistake with a deadline attached: discovering it on the evening of a filing date, with a token that has to be issued and delivered before you can sign, is a different problem from discovering it a week earlier.",
-        ],
-      },
-      {
-        heading: "Where eSign is genuinely the better tool",
-        paragraphs: [
-          "For contracts and agreements between private parties, an Aadhaar eSign is faster and lighter in every respect. There is no USB token to buy, no driver to install, no certificate to track, and no physical object that can be lost the week you need it. Signing takes an Aadhaar-linked mobile OTP and a couple of minutes.",
-          "Offer and appointment letters, HR onboarding paperwork, NDAs, vendor agreements and client engagement letters are all reasonable candidates — provided the other side accepts an Aadhaar-based signature, which in practice most do.",
-        ],
-      },
-      {
-        heading: "Individual or organisation, if it is a DSC",
-        paragraphs: [
-          "An individual Class 3 certificate carries your own name and is what you use when you sign in your personal capacity. An organisation certificate carries both your name and the entity's, and is what a portal expects when you sign on behalf of a company or LLP — ROC filings, corporate tender bids, entity-level GST or EPFO submissions.",
-          "One more variant catches bidders out: some e-tendering portals require an encryption certificate alongside the signing one before a bid can be submitted at all. That pairing is what a combo certificate is, issued together on a single token rather than bought twice.",
-        ],
-      },
-      {
-        heading: "Verification is not optional either way",
-        paragraphs: [
-          "Every Class 3 issuance includes a short recorded video verification confirming your identity against your documents. It is required by the Controller of Certifying Authorities and cannot be skipped or delegated, for any certificate type. Aadhaar eSign substitutes its own Aadhaar authentication for that step, which is precisely why it is faster and also why it is not accepted where a certificate is mandated.",
-          "Plan for the verification step rather than around it. It is short, but it is a scheduled human interaction in a process people otherwise assume is instant.",
-        ],
-      },
-    ],
-    closing:
-      "If you tell us which portal you are signing on, we can tell you in one message which of the two you need — and if it is a certificate, which class and whose name it should carry.",
-  },
+  // ⛔ eSign PAUSED — 21-08-2026. Body preserved verbatim; its index entry in
+  // content/insights/index.js is commented out too, so nothing resolves it.
+  // "class-3-dsc-or-aadhaar-esign": {
+  //   lede: "Both a Class 3 Digital Signature Certificate and an Aadhaar-based eSign produce a legally valid electronic signature under the Information Technology Act. That shared legal standing is exactly what causes the confusion, because it does not mean the two are interchangeable in practice.",
+  //   sections: [
+  //     {
+  //       heading: "The rule that settles most cases",
+  //       paragraphs: [
+  //         "Statutory portals mandate a Class 3 certificate specifically. The income tax portal, the GST portal, MCA21 for company filings, and e-tendering and e-procurement platforms including GeM will not accept an Aadhaar eSign in place of one. If your filing lands on any of those, the question is already answered and the only decision left is individual or organisation.",
+  //         "This is worth stating flatly because it is the mistake with a deadline attached: discovering it on the evening of a filing date, with a token that has to be issued and delivered before you can sign, is a different problem from discovering it a week earlier.",
+  //       ],
+  //     },
+  //     {
+  //       heading: "Where eSign is genuinely the better tool",
+  //       paragraphs: [
+  //         "For contracts and agreements between private parties, an Aadhaar eSign is faster and lighter in every respect. There is no USB token to buy, no driver to install, no certificate to track, and no physical object that can be lost the week you need it. Signing takes an Aadhaar-linked mobile OTP and a couple of minutes.",
+  //         "Offer and appointment letters, HR onboarding paperwork, NDAs, vendor agreements and client engagement letters are all reasonable candidates — provided the other side accepts an Aadhaar-based signature, which in practice most do.",
+  //       ],
+  //     },
+  //     {
+  //       heading: "Individual or organisation, if it is a DSC",
+  //       paragraphs: [
+  //         "An individual Class 3 certificate carries your own name and is what you use when you sign in your personal capacity. An organisation certificate carries both your name and the entity's, and is what a portal expects when you sign on behalf of a company or LLP — ROC filings, corporate tender bids, entity-level GST or EPFO submissions.",
+  //         "One more variant catches bidders out: some e-tendering portals require an encryption certificate alongside the signing one before a bid can be submitted at all. That pairing is what a combo certificate is, issued together on a single token rather than bought twice.",
+  //       ],
+  //     },
+  //     {
+  //       heading: "Verification is not optional either way",
+  //       paragraphs: [
+  //         "Every Class 3 issuance includes a short recorded video verification confirming your identity against your documents. It is required by the Controller of Certifying Authorities and cannot be skipped or delegated, for any certificate type. Aadhaar eSign substitutes its own Aadhaar authentication for that step, which is precisely why it is faster and also why it is not accepted where a certificate is mandated.",
+  //         "Plan for the verification step rather than around it. It is short, but it is a scheduled human interaction in a process people otherwise assume is instant.",
+  //       ],
+  //     },
+  //   ],
+  //   closing:
+  //     "If you tell us which portal you are signing on, we can tell you in one message which of the two you need — and if it is a certificate, which class and whose name it should carry.",
+  // },
 
   "when-gst-registration-stops-being-optional": {
     lede: "Almost everyone knows there is a turnover threshold for GST registration. Far fewer know that several categories of business have to register from their first invoice regardless of turnover — and that being in one of those categories is the most common reason a registration turns out to be overdue rather than upcoming.",

@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
 import { PageHero } from "@/components/layout/PageHero";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Card } from "@/components/ui/Card";
 import { Img } from "@/components/ui/Img";
@@ -53,30 +54,88 @@ export default function InsightArticle({ path }) {
         })}
       />
 
-      <PageHero
-        path={path}
-        eyebrow={article.category}
-        h1={article.title}
-        lede={article.excerpt}
-      >
-        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-300">
-          {formatArticleDate(article.published)} · {article.readMinutes} min read
-        </p>
-      </PageHero>
+      {/* ⛔ THIS SECTION OPENS LIGHT, WHICH BREAKS HALF OF CLAUDE.md's LAYOUT
+          CONTRACT ON PURPOSE (Clinton, 20-08-2026: "in the article page do not
+          make the hero section dark colour make it light colour").
 
-      <Section surface="light">
+          That contract requires every page's opening section to be dark, because
+          the header is fixed and transparent over it and renders
+          canvas-coloured text. Its own stated remedy for a template that must
+          open light is "the header needs a per-route solid variant — not a local
+          hack", so that is what was built: nav.js marks these routes `lightTop`
+          and Header.jsx renders the solid/glass state it already owns from
+          scroll position 0. Nothing is hacked locally here, and the other ~40
+          heroes are untouched.
+
+          It is also deliberately NOT `PageHero`. That primitive is the shared
+          compact DARK hero for T2/T3/T4/T5 — `data-surface="deep"`,
+          `text-canvas` h1, ink-300 lede — and adding a light mode to it would
+          put a second surface family into a component 40+ routes depend on. An
+          editorial header is a different archetype: headline, then the excerpt
+          and the meta on one baseline, a rule, and the photograph.
+
+          ONE section carries the header, the rule, the photo AND the body.
+          Splitting the header out would put two `light` sections back to back,
+          which reads as one surface anyway and registers as a consecutive
+          repeat in the surface-cadence audit (it counts `section[data-surface]`).
+          `page-top` supplies the fixed header's clearance; the bottom padding
+          matches `.section-pad`'s own clamp so the page ends like every other. */}
+      <section
+        data-surface="light"
+        className="page-top relative bg-canvas pb-[clamp(72px,9vw,144px)] text-ink-500"
+      >
         <Container>
-          {/* Header photograph — INSIDE this section, not a section of its own:
-              a second `light` section back-to-back would read as one surface
-              anyway and would show up as a consecutive repeat in the surface
-              cadence audit (which counts `section[data-surface]`).
-              `priority` because on this page the header image IS the LCP
-              element, and lazy-loading the LCP image is a measurable delay
-              rather than a saving. Real descriptive `alt` here, unlike the
-              decorative copies of the same photo on the homepage list and the
-              index cards where the adjacent headline is the content.
-              IMAGE-PLAN.md §2 Tier 2 — contextual, no people, never presented
-              as our own premises. See src/assets/insights/ATTRIBUTION.txt. */}
+          <Reveal margin="0px" delay={0}>
+            {/* tone="light" is load-bearing — the default dark palette puts
+                ink-200/ink-300 on canvas, far under the 4.5:1 floor. */}
+            <Breadcrumbs path={path} tone="light" className="mb-8" />
+          </Reveal>
+
+          <Reveal margin="0px" delay={0.06}>
+            <Eyebrow>{article.category}</Eyebrow>
+          </Reveal>
+
+          {/* `fade={false}` — rises but never starts transparent. On this page
+              the H1 is the largest text above the fold and a real LCP
+              candidate, so gating its paint behind hydration would be a
+              measurable regression. Same call as PageHero's own h1. */}
+          <Reveal margin="0px" delay={0.12} fade={false}>
+            <h1 className="mt-3 max-w-[26ch] text-h1">{article.title}</h1>
+          </Reveal>
+
+          {/* The excerpt and the meta share one baseline, with the rule beneath
+              — the requested shape. They stack on phones, where a mono date
+              pushed to the right of a three-line excerpt would leave the
+              excerpt at ~20ch. `--surface-border` rather than a literal
+              ink-100 so the rule tracks the surface system like every other
+              hairline on the site. */}
+          <div className="mt-8 flex flex-col gap-5 border-b border-[var(--surface-border)] pb-8 md:flex-row md:items-end md:justify-between md:gap-14">
+            <Reveal margin="0px" delay={0.2} className="max-w-[64ch]">
+              <p className="text-body-lg text-ink-500">{article.excerpt}</p>
+            </Reveal>
+
+            <Reveal margin="0px" delay={0.26} className="shrink-0">
+              {/* ink-400, not ink-300: on a light surface ink-300 measured
+                  3.4–3.5:1 for small text when this was checked for the DSC
+                  documents list, and ink-400 is 7.2:1. The separator is
+                  aria-hidden so a screen reader reads "12 August 2026, 6 min
+                  read" rather than a stray middot. */}
+              <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-400 md:text-right">
+                {formatArticleDate(article.published)}
+                <span aria-hidden="true" className="mx-2 text-ink-200">·</span>
+                {article.readMinutes} min read
+              </p>
+            </Reveal>
+          </div>
+
+          {/* Header photograph. NOT wrapped in a Reveal: on this page it is the
+              LCP element, so `priority` plus an immediate paint is the whole
+              point — an opacity-0 start would push the largest paint behind
+              hydration. Real descriptive `alt` here, unlike the decorative
+              copies of the same photo on the homepage list and the index cards,
+              where the adjacent headline is the content. IMAGE-PLAN.md §2 Tier
+              2 — contextual, no people, never presented as our own premises.
+              See src/assets/insights/ATTRIBUTION.txt. */}
           {image && (
             <Img
               picture={image.picture}
@@ -84,11 +143,11 @@ export default function InsightArticle({ path }) {
               ratio="16 / 7"
               priority
               sizes="(min-width: 1800px) 1740px, 96vw"
-              className="mb-12 w-full rounded-[var(--radius-lg)]"
+              className="mt-10 w-full rounded-[var(--radius-lg)]"
             />
           )}
 
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+          <div className="mt-14 grid grid-cols-1 gap-12 lg:grid-cols-12">
             {/* Measure is capped at ~68ch: the whole point of an 1800px
                 container is generous gutters and a sidebar, not a 140-character
                 line of body copy. */}
@@ -175,30 +234,73 @@ export default function InsightArticle({ path }) {
             </aside>
           </div>
         </Container>
-      </Section>
+      </section>
 
       {others.length > 0 && (
         <Section surface="light-alt">
           <Container>
             <Eyebrow>More insights</Eyebrow>
             <h2 className="mt-3 text-h2 max-w-[32ch]">Also worth reading</h2>
+            {/* Deliberately the SAME card construction as /insights' own index
+                (modules/insights/index.jsx), not a second design for the same
+                content type on an adjacent page. Three things were wrong with
+                the previous version and all three are why the row looked
+                unfinished:
+
+                  1. No thumbnail, while the index cards and the homepage list
+                     both carry one — so the same article looked like a
+                     different kind of thing depending on where you met it.
+                  2. `h-full` alone stretches the CARD but not its contents, so
+                     with three different excerpt lengths nothing lined up: the
+                     row had no common floor. `flex h-full flex-col` plus
+                     `mt-auto` on the action row pins "Read the article" to the
+                     bottom of every card regardless of excerpt length. Rows
+                     landing at different heights across a grid is exactly the
+                     detail recorded in CLAUDE.md as making a set "look
+                     untended".
+                  3. No read time and no action affordance, so a card that IS a
+                     link gave no sign of being one beyond the hover state.
+
+                `alt=""` because the headline immediately below is the same
+                information; a description of the photo would only dilute it
+                (WCAG 1.1.1). Same call as the index cards. */}
             <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {others.map((entry, index) => (
-                <Reveal key={entry.slug} delay={Math.min(index, 3) * 0.06}>
-                  <Link
-                    to={`/insights/${entry.slug}`}
-                    className="block h-full rounded-[var(--radius-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2"
-                  >
-                    <Card surface="light" className="h-full">
-                      <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-400">
-                        {entry.category}
-                      </p>
-                      <h3 className="mt-2 text-h4 text-ink-600">{entry.title}</h3>
-                      <p className="mt-2 text-body-sm text-ink-500">{entry.excerpt}</p>
-                    </Card>
-                  </Link>
-                </Reveal>
-              ))}
+              {others.map((entry, index) => {
+                const thumb = getInsightImage(entry.slug);
+                return (
+                  <Reveal key={entry.slug} delay={Math.min(index, 3) * 0.06} className="h-full">
+                    <Link
+                      to={`/insights/${entry.slug}`}
+                      className="block h-full rounded-[var(--radius-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2"
+                    >
+                      <Card surface="light" className="flex h-full flex-col !p-0 overflow-hidden">
+                        {thumb && (
+                          <Img
+                            picture={thumb.picture}
+                            alt=""
+                            ratio="16 / 9"
+                            sizes="(min-width: 1024px) 28vw, (min-width: 640px) 44vw, 92vw"
+                            className="w-full"
+                          />
+                        )}
+                        <div className="flex flex-col gap-1.5 p-6 sm:p-8">
+                          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-400">
+                            {entry.category}
+                            <span aria-hidden="true" className="mx-2 text-ink-200">·</span>
+                            {entry.readMinutes} min read
+                          </p>
+                          <h3 className="mt-3 text-h4 text-ink-600">{entry.title}</h3>
+                          <p className="mt-2 text-body-sm text-ink-500">{entry.excerpt}</p>
+                          <span className="mt-auto flex items-center gap-1.5 pt-6 text-body-sm font-medium text-ember-600">
+                            Read the article
+                            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                          </span>
+                        </div>
+                      </Card>
+                    </Link>
+                  </Reveal>
+                );
+              })}
             </div>
           </Container>
         </Section>

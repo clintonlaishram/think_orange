@@ -1,8 +1,10 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
+import { motion, useReducedMotion } from "motion/react";
 import { Check, ChevronDown } from "lucide-react";
 
 import ArcField from "@/components/hero/ArcField";
+import { HeroFloaters } from "@/components/hero/HeroFloaters";
 // import { useBloom } from "@/hooks/useBloom"; // cursor bloom removed — see below
 import { Container } from "@/components/layout/Container";
 import { Eyebrow } from "@/components/layout/Eyebrow";
@@ -77,6 +79,7 @@ export function Hero() {
       className="page-top relative isolate flex min-h-[100svh] flex-col bg-ink-950 pb-10 text-ink-300"
     >
       <ArcField />
+      <HeroFloaters />
 
       {/* Container carries `mx-auto`, and flexbox suppresses cross-axis
           stretch on any flex item with an auto margin on that axis — so
@@ -126,7 +129,6 @@ export function Hero() {
                     load-bearing. */}
                 <h1 className="text-display-xl text-canvas">
                   <Typewriter
-                    className="pb-[0.1em]"
                     startDelay={0.12}
                     cycleSeconds={10}
                     sequences={heroHeadlines.map((headline) => [
@@ -187,7 +189,7 @@ export function Hero() {
                     just under the floor. ink-100 measures 7:1 there. */}
                 <Reveal
                   delay={0.24}
-                  className="mt-8 border-t border-ink-800 pt-4 font-mono text-body-sm text-ink-100"
+                  className="mt-8 border-t border-ink-800/20 pt-4 font-mono text-body-sm text-ink-100"
                 >
                   {site.legalName} · {site.location}
                 </Reveal>
@@ -215,13 +217,34 @@ export function Hero() {
  * padding reserves space for the overhang so the card is never clipped by
  * the column edge or the stat row below.
  */
+// 60ms per row, matching Stagger's established STEP. The rows are NOT wrapped
+// in <Stagger>, deliberately: that component wraps each child in its own
+// motion.div, which would put a <div> between the <ul> and its <li>s and break
+// the list's semantics. Driving motion.li directly off the card's existing
+// observer keeps <ul> > <li> intact and adds no second IntersectionObserver.
+const ROW_STEP = 0.06;
+// The card's own spring starts at 0.44s; the rows follow once it has settled
+// rather than cascading while the whole card is still travelling.
+const ROW_BASE_DELAY = 0.62;
+
 function HeroShowcase() {
+  const reduceMotion = useReducedMotion();
+
   return (
     // Outer padding is layout-only: it reserves room for the card overhang
     // so the next section never collides with it. The inner relative box is
     // the image frame the card actually positions against.
     <div className="mx-auto max-w-md pb-14 pr-8 sm:pb-16 sm:pr-10 lg:mx-0 lg:max-w-none lg:pb-20 lg:pr-14">
       <div className="relative">
+        {/* `hero-image-drift` sits on the Figure, never on the frame above it:
+            the card is positioned against that frame, so animating the frame
+            would carry the card along and the relative drift between the two —
+            which is the whole effect — would disappear.
+
+            No entrance animation on this image, on purpose. It is the
+            homepage's LCP element (Phase 10 measured it), so a fade or a mask
+            reveal here would push first paint back; a transform on an
+            already-painted element does not. */}
         <Figure
           picture={heroPicture}
           sizes={heroImage.sizes}
@@ -229,35 +252,54 @@ function HeroShowcase() {
           ratio="1/1"
           arcMask
           priority
-          className="w-full"
+          className="hero-image-drift w-full"
         />
 
+        {/* Render-prop form so the six rows hang off the ONE observer this
+            Reveal already needs, rather than installing six more. */}
         <Reveal
           delay={0.44}
           transition={{ ...SPRING, delay: 0.44 }}
           className="absolute -bottom-6 -right-12 sm:-right-4 z-10 sm:-bottom-8 sm:-right-6 lg:-bottom-10 lg:-right-10 w-[20rem] sm:w-[24rem] backdrop-blur-sm backdrop-saturate-150"
         >
-          <div className="hero-card rounded-lg border border-ink-700 p-5 sm:p-6 md:p-7">
-            <h2 className="text-sm sm:text-h4 text-canvas">What we handle for you</h2>
+          {(inView) => (
+            // `hero-card-float` is DESIGN.md §11.2's 6px / 7s idle float. It
+            // has existed in theme.css since Phase 4 and was applied to
+            // nothing — this file's own header comment described the behaviour
+            // while the class sat unused. It goes on the INNER div, not on
+            // Reveal's wrapper, so the CSS animation and Reveal's own
+            // transform never fight over the same element.
+            <div className="hero-card hero-card-float rounded-lg border border-ink-700 p-5 sm:p-6 md:p-7">
+              <h2 className="text-sm sm:text-h4 text-canvas">What we handle for you</h2>
 
-            <ul className="mt-2 sm:mt-4 divide-y divide-ink-700/30">
-              {heroCapabilities.map((capability) => (
-                <li
-                  key={capability}
-                  className="flex items-start gap-2 sm:gap-3 py-2 sm:py-3 first:pt-0 last:pb-0"
-                >
-                  <Check
-                    className="mt-0.5 h-4 w-4 shrink-0 text-ember-400"
-                    strokeWidth={2.5}
-                    aria-hidden="true"
-                  />
-                  <span className="text-xs sm:text-body-sm text-ink-100">
-                    {capability}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+              <ul className="mt-2 sm:mt-4 divide-y divide-ink-700/30">
+                {heroCapabilities.map((capability, index) => (
+                  <motion.li
+                    key={capability}
+                    className="flex items-start gap-2 sm:gap-3 py-2 sm:py-3 first:pt-0 last:pb-0"
+                    initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                    animate={
+                      reduceMotion ? undefined : inView ? { opacity: 1, y: 0 } : {}
+                    }
+                    transition={{
+                      duration: 0.42,
+                      ease: [0.22, 1, 0.36, 1],
+                      delay: ROW_BASE_DELAY + index * ROW_STEP,
+                    }}
+                  >
+                    <Check
+                      className="mt-0.5 h-4 w-4 shrink-0 text-ember-400"
+                      strokeWidth={2.5}
+                      aria-hidden="true"
+                    />
+                    <span className="text-xs sm:text-body-sm text-ink-100">
+                      {capability}
+                    </span>
+                  </motion.li>
+                ))}
+              </ul>
+            </div>
+          )}
         </Reveal>
       </div>
     </div>

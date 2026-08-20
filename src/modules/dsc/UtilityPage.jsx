@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Download, MessageCircle, ArrowRight, Phone } from "lucide-react";
+import { ArrowRight, Check, Download, MessageCircle, Phone, RefreshCw } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
 import { Eyebrow } from "@/components/layout/Eyebrow";
@@ -16,15 +16,18 @@ import {
   dscDocumentsPage,
   dscDriversHub,
   dscValidityFaqsPage,
-  dscEsignVsDscPage,
+  // ⛔ eSign PAUSED — 21-08-2026. dscEsignVsDscPage,
   site,
 } from "@/content/nav";
 import { getDriver } from "@/content/dsc/drivers";
+import { dscGroupForSlug } from "@/content/dsc/groups";
 import { dscProducts } from "@/content/dsc/products";
 import { dscValidityRenewalContent } from "@/content/dsc/validity-renewal-faqs";
-import { esignOrDscContent } from "@/content/dsc/esign-or-dsc";
+// ⛔ eSign PAUSED — 21-08-2026.
+// import { esignOrDscContent } from "@/content/dsc/esign-or-dsc";
 import { t } from "@/content/turnaround";
 import { howToJsonLd, faqPageJsonLd } from "@/lib/jsonld";
+import { dscEnquiryHref } from "@/lib/whatsapp";
 
 // T5 — CONTENT-PLAN.md §9, §11.9; DESIGN.md §2.4. Covers 6 routes across
 // three genuinely different content shapes sharing one speed-first grammar:
@@ -39,6 +42,26 @@ import { howToJsonLd, faqPageJsonLd } from "@/lib/jsonld";
 // way — every animation this file would otherwise use is scroll-triggered
 // motion whose whole cost buys nothing on a page whose entire job is "get
 // out of the way".
+//
+// --- 20-08-2026, DSC premium pass -----------------------------------------
+// Every view here now carries its group's background motif, resolved through
+// `dscGroupForSlug` (content/dsc/groups.js). All six T5 routes belong to
+// "Tokens & Resources" except eSign-or-DSC, which belongs to "eSign
+// Solutions" — and neither fact is stated in this file: membership comes from
+// `dscPanelColumns` in nav.js, with driver detail pages inheriting the drivers
+// hub's group (they are its children, not panel items in their own right).
+//
+// A texture is not marketing chrome and does not touch the LCP story this
+// file's brief protects: it is one inert, un-animated SVG plus one CSS
+// gradient behind the content, with no image request, no JS and no layout
+// work. The "no Reveal/Stagger" rule above still holds — nothing here
+// animates.
+//
+// The motif is in the HERO ONLY. The first pass also painted it on each
+// page's first light section; Clinton's note was that the design "is repeated
+// to hero section and next page", and it was right — the same picture twice in
+// one scroll. Content sections here get their depth from type and hairlines,
+// same as the homepage's own light sections.
 export default function UtilityPage({ path }) {
   const route = findRoute(path);
   const slug = route?.slug;
@@ -55,20 +78,25 @@ export default function UtilityPage({ path }) {
   // gets its own dispatch check and render function, same pattern as the
   // three shapes above.
   if (slug === dscValidityFaqsPage.slug) return <ValidityRenewalFaqs path={path} />;
-  if (slug === dscEsignVsDscPage.slug) return <EsignOrDsc path={path} />;
+  // ⛔ eSign PAUSED — 21-08-2026. The route is off nav.js's table too, so this
+  // slug can no longer reach the template at all.
+  // if (slug === dscEsignVsDscPage.slug) return <EsignOrDsc path={path} />;
 
   // Fallback for any future T5 slug added to nav.js with no content shape
   // written yet. Same discipline as ServiceLeaf's PendingLeaf.
-  return <PendingUtility path={path} label={route?.label} />;
+  return <PendingUtility path={path} label={route?.label} slug={slug} />;
 }
 
 function DriverHub({ path }) {
+  const group = dscGroupForSlug(dscDriversHub.slug);
   return (
     <>
       <PageHero
         path={path}
-        eyebrow="Digital Signature Certificates"
+        eyebrow={group?.eyebrow ?? "Digital Signature Certificates"}
         h1={dscDriversHub.label}
+        texture={group?.texture}
+        textureId={group ? `dsc-drivers-hub-hero-${group.key}` : undefined}
         lede="Install the right driver for your USB token before signing on any government portal. Pick your token model below."
       />
 
@@ -83,7 +111,7 @@ function DriverHub({ path }) {
                   to={child.path}
                   className="block h-full rounded-[var(--radius-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2"
                 >
-                  <Card surface="light" className="h-full">
+                  <Card surface="light" className="card-premium h-full">
                     <h2 className="text-h4 text-ink-600">{child.label}</h2>
                     {driver?.lede && <p className="mt-2 text-body-sm text-ink-500">{driver.lede}</p>}
                     {driver?.supportedOs && (
@@ -109,6 +137,7 @@ function DriverHub({ path }) {
 }
 
 function DriverDetail({ path, driver }) {
+  const group = dscGroupForSlug(driver.slug);
   return (
     <>
       <JsonLd
@@ -120,7 +149,14 @@ function DriverDetail({ path, driver }) {
         })}
       />
 
-      <PageHero path={path} eyebrow="Token Driver Downloads" h1={driver.h1} lede={driver.lede}>
+      <PageHero
+        path={path}
+        eyebrow="Token Driver Downloads"
+        h1={driver.h1}
+        lede={driver.lede}
+        texture={group?.texture}
+        textureId={group ? `dsc-driver-hero-${driver.slug}` : undefined}
+      >
         <div className="flex flex-wrap gap-3">
           {driver.downloads.map((download) =>
             download.url ? (
@@ -241,12 +277,15 @@ function DriverDetail({ path, driver }) {
 }
 
 function DocumentsRequired({ path }) {
+  const group = dscGroupForSlug(dscDocumentsPage.slug);
   return (
     <>
       <PageHero
         path={path}
-        eyebrow="Digital Signature Certificates"
+        eyebrow={group?.eyebrow ?? "Digital Signature Certificates"}
         h1={dscDocumentsPage.label}
+        texture={group?.texture}
+        textureId={group ? `dsc-documents-hero-${group.key}` : undefined}
         lede="What to have ready before you apply, grouped by certificate type — the same lists shown on each certificate's own page."
       />
 
@@ -299,16 +338,27 @@ function DocumentsRequired({ path }) {
 }
 
 function ValidityRenewalFaqs({ path }) {
+  const group = dscGroupForSlug(dscValidityFaqsPage.slug);
   const renewalReissueRoute = findBySlug("dsc-renewal-reissue");
   const withValidity = dscProducts.filter((product) => product.validityOptions);
+  // Columns are the UNION of every product's options, ordered by their leading
+  // number — derived, not hardcoded, so a product offering a period nobody else
+  // does adds a column rather than being silently dropped from the table.
+  // `parseFloat("2 years")` is 2; anything unparseable sorts to the front and
+  // keeps insertion order (Array.sort is stable).
+  const validityColumns = [
+    ...new Set(withValidity.flatMap((product) => product.validityOptions)),
+  ].sort((a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0));
 
   return (
     <>
       <PageHero
         path={path}
-        eyebrow="Digital Signature Certificates"
+        eyebrow={group?.eyebrow ?? "Digital Signature Certificates"}
         h1={dscValidityFaqsPage.label}
         lede={dscValidityRenewalContent.heroLede}
+        texture={group?.texture}
+        textureId={group ? `dsc-validity-hero-${group.key}` : undefined}
       />
 
       <SubNav
@@ -323,39 +373,107 @@ function ValidityRenewalFaqs({ path }) {
         <Container>
           <Eyebrow>Validity by certificate</Eyebrow>
           <h2 className="mt-3 text-h2 max-w-[32ch]">How long each certificate lasts</h2>
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {withValidity.map((product) => {
-              const navEntry = findBySlug(product.slug);
-              return (
-                <div
-                  key={product.slug}
-                  className="rounded-[var(--radius-md)] border border-ink-100 bg-white p-5"
-                >
-                  <h3 className="text-h4 text-ink-600">
-                    {navEntry ? (
-                      <Link
-                        to={navEntry.path}
-                        className="rounded-sm transition-colors hover:text-ember-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2"
+          <p className="mt-4 max-w-[68ch] text-body text-ink-500">
+            A longer certificate costs more up front and less per year. Pick the row you need to
+            see the process and documents for it.
+          </p>
+
+          {/* 20-08-2026: was five cards in a 2-column grid — three rows with a
+              hole in the last one, each card holding a title and two or three
+              pills, so most of it was white space. This data is a MATRIX
+              (certificate × validity period), and the one question a reader
+              actually has here is "which periods can I get for this
+              certificate?" — which a table answers at a glance and a grid of
+              cards does not. It also shows the thing the cards hid: Combo has
+              no 1-year option.
+
+              Matches the two tables already in this file (the driver
+              compatibility table and the eSign comparison), including the
+              `overflow-x-auto` + `min-w` pair that keeps a wide table
+              scrollable inside its own box instead of widening the page.
+              Nothing here animates — tables never do (CLAUDE.md), which is also
+              T5's own no-motion brief. */}
+          <div className="mt-8 overflow-x-auto rounded-[var(--radius-md)] border border-ink-100">
+            <table className="w-full min-w-[640px] border-collapse text-left">
+              <thead className="bg-ink-50">
+                <tr>
+                  <th scope="col" className="px-5 py-3.5 text-body-sm font-medium text-ink-600">
+                    Certificate
+                  </th>
+                  {validityColumns.map((option) => (
+                    <th
+                      key={option}
+                      scope="col"
+                      className="px-5 py-3.5 font-mono text-body-sm font-medium text-ink-600"
+                    >
+                      {option}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink-100">
+                {withValidity.map((product) => {
+                  const navEntry = findBySlug(product.slug);
+                  return (
+                    <tr key={product.slug}>
+                      <th
+                        scope="row"
+                        className="px-5 py-4 text-body font-medium text-ink-600"
                       >
-                        {product.label}
-                      </Link>
-                    ) : (
-                      product.label
-                    )}
-                  </h3>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {product.validityOptions.map((option) => (
-                      <span
-                        key={option}
-                        className="rounded-full border border-ink-100 bg-ink-50 px-3.5 py-1.5 font-mono text-body-sm text-ink-600"
-                      >
-                        {option}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+                        {navEntry ? (
+                          <Link
+                            to={navEntry.path}
+                            className="rounded-sm transition-colors hover:text-ember-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2"
+                          >
+                            {product.label}
+                          </Link>
+                        ) : (
+                          product.label
+                        )}
+                      </th>
+                      {validityColumns.map((option) => {
+                        const available = product.validityOptions.includes(option);
+                        return (
+                          <td key={option} className="px-5 py-4">
+                            {/* The glyph is decorative — the accessible answer
+                                is the visually-hidden word beside it, so a
+                                screen reader hears "Available"/"Not available"
+                                rather than an unlabelled tick in a grid of
+                                identical cells. */}
+                            {available ? (
+                              <>
+                                <Check
+                                  className="h-4 w-4 text-ember-600"
+                                  strokeWidth={2}
+                                  aria-hidden="true"
+                                />
+                                <span className="sr-only">Available</span>
+                              </>
+                            ) : (
+                              <>
+                                {/* ink-400, not ink-300 — 6.48:1 vs 3.35:1 on
+                                    canvas. It IS `aria-hidden`, so the pixel
+                                    audit skips it (correctly: the accessible
+                                    answer is the sr-only word beside it). But
+                                    for a sighted reader this dash is the ONLY
+                                    signal that a period is unavailable, so it
+                                    is not incidental text and it carries the
+                                    4.5:1 floor. Caught by computing the pair
+                                    directly, not by the audit. */}
+                                <span aria-hidden="true" className="text-ink-400">
+                                  &mdash;
+                                </span>
+                                <span className="sr-only">Not available</span>
+                              </>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </Container>
       </Section>
@@ -364,23 +482,45 @@ function ValidityRenewalFaqs({ path }) {
         <Container>
           <Eyebrow>Renewal, re-issue &amp; revocation</Eyebrow>
           <h2 className="mt-3 text-h2 max-w-[32ch]">What actually happens, and when</h2>
-          <div className="mt-6 max-w-[68ch] space-y-4">
-            {dscValidityRenewalContent.renewalGuidance.map((paragraph, index) => (
-              <p key={index} className="text-body text-ink-500">
-                {paragraph}
-              </p>
-            ))}
+          {/* 20-08-2026: the prose was a lone `max-w-[68ch]` column, so the
+              right two thirds of the section were empty. Now 7/5, with the
+              next step promoted out of a trailing sentence into a panel beside
+              the copy — it was the most useful line here and it was the easiest
+              one to miss at the end of three paragraphs. */}
+          <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
+            <div className="space-y-4 lg:col-span-7">
+              {dscValidityRenewalContent.renewalGuidance.map((paragraph, index) => (
+                <p key={index} className="text-body text-ink-500">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+
             {renewalReissueRoute && (
-              <p className="text-body text-ink-500">
-                Ready to renew or re-issue a certificate?{" "}
-                <Link
-                  to={renewalReissueRoute.path}
-                  className="font-medium text-ember-600 hover:underline underline-offset-4"
-                >
-                  See Renewal &amp; Re-issue
-                </Link>{" "}
-                for the process and documents needed.
-              </p>
+              <div
+                data-surface="dark"
+                className="panel-dark grain relative self-start overflow-hidden rounded-[var(--radius-lg)] p-6 md:p-8 lg:col-span-5"
+              >
+                <span className="relative flex h-11 w-11 items-center justify-center rounded-full border border-ember-400/60">
+                  <RefreshCw
+                    className="h-5 w-5 text-ember-400"
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
+                </span>
+                <h3 className="relative mt-5 text-h4 text-canvas">
+                  Ready to renew or re-issue?
+                </h3>
+                <p className="relative mt-3 text-body text-ink-100">
+                  The Renewal &amp; Re-issue page has the process and the documents needed,
+                  whether your certificate is expiring or the token is lost or damaged.
+                </p>
+                <div className="relative mt-6">
+                  <Button as={Link} to={renewalReissueRoute.path} variant="primary">
+                    See Renewal &amp; Re-issue
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         </Container>
@@ -405,101 +545,109 @@ function ValidityRenewalFaqs({ path }) {
   );
 }
 
-function EsignOrDsc({ path }) {
-  const esignRoute = findBySlug("aadhaar-esign");
-  const dscRoute = findBySlug("class-3-individual");
-
-  return (
-    <>
-      <PageHero
-        path={path}
-        eyebrow="eSign Solutions"
-        h1={dscEsignVsDscPage.label}
-        lede={esignOrDscContent.heroLede}
-      />
-
-      <SubNav
-        sections={[
-          { id: "comparison", label: "Side by side" },
-          { id: "which-one", label: "Which one do you need" },
-          { id: "faqs", label: "FAQs" },
-        ]}
-      />
-
-      <Section id="comparison" surface="light">
-        <Container>
-          <Eyebrow>Side by side</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[32ch]">Where each one actually differs</h2>
-          <div className="mt-8 overflow-x-auto rounded-[var(--radius-md)] border border-ink-100">
-            <table className="w-full min-w-[640px] border-collapse text-left">
-              <thead className="bg-ink-50">
-                <tr>
-                  <th className="px-5 py-3.5 text-body-sm font-medium text-ink-600">Criterion</th>
-                  <th className="px-5 py-3.5 text-body-sm font-medium text-ink-600">Aadhaar eSign</th>
-                  <th className="px-5 py-3.5 text-body-sm font-medium text-ink-600">Class 3 DSC</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink-100">
-                {esignOrDscContent.comparisonRows.map((row) => (
-                  <tr key={row.criterion}>
-                    <td className="px-5 py-4 text-body-sm font-medium text-ink-600">{row.criterion}</td>
-                    <td className="px-5 py-4 text-body-sm text-ink-500">{row.esign}</td>
-                    <td className="px-5 py-4 text-body-sm text-ink-500">{row.dsc}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Container>
-      </Section>
-
-      <Section id="which-one" surface="light-alt">
-        <Container>
-          <Eyebrow>Which one do you need</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[32ch]">A quick way to decide</h2>
-          <ul className="mt-6 max-w-[68ch] space-y-3">
-            {esignOrDscContent.decisionGuide.map((point, index) => (
-              <li key={index} className="flex gap-3 text-body text-ink-500">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ember-500" aria-hidden="true" />
-                {point}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-8 flex flex-wrap gap-4">
-            {esignRoute && (
-              <Button as={Link} to={esignRoute.path} variant="secondary">
-                Aadhaar eSign
-                <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-              </Button>
-            )}
-            {dscRoute && (
-              <Button as={Link} to={dscRoute.path} variant="secondary">
-                Class 3 DSC
-                <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-              </Button>
-            )}
-          </div>
-        </Container>
-      </Section>
-
-      <Section id="faqs" surface="light">
-        <FaqSection
-          eyebrow="FAQs"
-          heading="Common questions"
-          intro="Which one a portal will actually accept, and when eSign is not a substitute for a Class 3 certificate."
-          items={esignOrDscContent.faqs.map((faq, index) => ({
-            id: index,
-            question: faq.q,
-            answer: faq.a,
-          }))}
-        />
-        <JsonLd data={faqPageJsonLd(esignOrDscContent.faqs)} />
-      </Section>
-
-      <DscEnquiryStrip />
-    </>
-  );
-}
+// ⛔ eSign PAUSED — 21-08-2026, Clinton: "for now comment out all content and
+// pages about esign". The whole renderer is preserved verbatim below; uncomment
+// it together with the import, the dispatch branch above, and the ⛔ eSign
+// PAUSED blocks in nav.js / groups.js / icons.js / products.js /
+// hub-content.js / DscHub.jsx / content/insights/.
+// function EsignOrDsc({ path }) {
+//   const group = dscGroupForSlug(dscEsignVsDscPage.slug);
+//   const esignRoute = findBySlug("aadhaar-esign");
+//   const dscRoute = findBySlug("class-3-individual");
+//
+//   return (
+//     <>
+//       <PageHero
+//         path={path}
+//         eyebrow={group?.eyebrow ?? "eSign Solutions"}
+//         h1={dscEsignVsDscPage.label}
+//         lede={esignOrDscContent.heroLede}
+//         texture={group?.texture}
+//         textureId={group ? `dsc-esign-hero-${group.key}` : undefined}
+//       />
+//
+//       <SubNav
+//         sections={[
+//           { id: "comparison", label: "Side by side" },
+//           { id: "which-one", label: "Which one do you need" },
+//           { id: "faqs", label: "FAQs" },
+//         ]}
+//       />
+//
+//       <Section id="comparison" surface="light">
+//         <Container>
+//           <Eyebrow>Side by side</Eyebrow>
+//           <h2 className="mt-3 text-h2 max-w-[32ch]">Where each one actually differs</h2>
+//           <div className="mt-8 overflow-x-auto rounded-[var(--radius-md)] border border-ink-100">
+//             <table className="w-full min-w-[640px] border-collapse text-left">
+//               <thead className="bg-ink-50">
+//                 <tr>
+//                   <th className="px-5 py-3.5 text-body-sm font-medium text-ink-600">Criterion</th>
+//                   <th className="px-5 py-3.5 text-body-sm font-medium text-ink-600">Aadhaar eSign</th>
+//                   <th className="px-5 py-3.5 text-body-sm font-medium text-ink-600">Class 3 DSC</th>
+//                 </tr>
+//               </thead>
+//               <tbody className="divide-y divide-ink-100">
+//                 {esignOrDscContent.comparisonRows.map((row) => (
+//                   <tr key={row.criterion}>
+//                     <td className="px-5 py-4 text-body-sm font-medium text-ink-600">{row.criterion}</td>
+//                     <td className="px-5 py-4 text-body-sm text-ink-500">{row.esign}</td>
+//                     <td className="px-5 py-4 text-body-sm text-ink-500">{row.dsc}</td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </table>
+//           </div>
+//         </Container>
+//       </Section>
+//
+//       <Section id="which-one" surface="light-alt">
+//         <Container>
+//           <Eyebrow>Which one do you need</Eyebrow>
+//           <h2 className="mt-3 text-h2 max-w-[32ch]">A quick way to decide</h2>
+//           <ul className="mt-6 max-w-[68ch] space-y-3">
+//             {esignOrDscContent.decisionGuide.map((point, index) => (
+//               <li key={index} className="flex gap-3 text-body text-ink-500">
+//                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ember-500" aria-hidden="true" />
+//                 {point}
+//               </li>
+//             ))}
+//           </ul>
+//           <div className="mt-8 flex flex-wrap gap-4">
+//             {esignRoute && (
+//               <Button as={Link} to={esignRoute.path} variant="secondary">
+//                 Aadhaar eSign
+//                 <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+//               </Button>
+//             )}
+//             {dscRoute && (
+//               <Button as={Link} to={dscRoute.path} variant="secondary">
+//                 Class 3 DSC
+//                 <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+//               </Button>
+//             )}
+//           </div>
+//         </Container>
+//       </Section>
+//
+//       <Section id="faqs" surface="light">
+//         <FaqSection
+//           eyebrow="FAQs"
+//           heading="Common questions"
+//           intro="Which one a portal will actually accept, and when eSign is not a substitute for a Class 3 certificate."
+//           items={esignOrDscContent.faqs.map((faq, index) => ({
+//             id: index,
+//             question: faq.q,
+//             answer: faq.a,
+//           }))}
+//         />
+//         <JsonLd data={faqPageJsonLd(esignOrDscContent.faqs)} />
+//       </Section>
+//
+//       <DscEnquiryStrip />
+//     </>
+//   );
+// }
 
 /**
  * Graceful fallback for a T5 slug that matches none of the three known
@@ -511,18 +659,20 @@ function EsignOrDsc({ path }) {
  * like a T2 pending page since there's no speed-sensitive content to protect
  * yet.
  */
-function PendingUtility({ path, label }) {
-  const whatsappHref = `${site.whatsappHref}?text=${encodeURIComponent(
-    `Hi ThinkOrange, I'd like to ask about ${label ?? "a DSC or eSign service"}.`
-  )}`;
+function PendingUtility({ path, label, slug }) {
+  const group = dscGroupForSlug(slug);
+  // ⛔ eSign PAUSED — 21-08-2026: was "a DSC or eSign service".
+  const whatsappHref = dscEnquiryHref(label ?? "a DSC service");
 
   return (
     <>
       <PageHero
         path={path}
-        eyebrow="Digital Signature Certificates"
+        eyebrow={group?.eyebrow ?? "Digital Signature Certificates"}
         h1={label ?? "Digital Signatures"}
         lede="This page is still being written. Message us directly and we'll help you the same way."
+        texture={group?.texture}
+        textureId={group ? `dsc-pending-utility-hero-${group.key}` : undefined}
       />
 
       <Section surface="light">
@@ -568,9 +718,7 @@ function PendingUtility({ path, label }) {
  * off a real number rather than shipping the spec's example figure as fact.
  */
 function DscEnquiryStrip() {
-  const whatsappHref = `${site.whatsappHref}?text=${encodeURIComponent(
-    "Hi ThinkOrange, I'd like to enquire about a new DSC."
-  )}`;
+  const whatsappHref = dscEnquiryHref("a new DSC");
 
   return (
     <Section surface="light">

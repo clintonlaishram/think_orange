@@ -30,6 +30,35 @@ export const aboutContent = {
       body: "Registrations, loans, tenders and audits exist to unlock the next stage of a business, not just to satisfy a regulator. We treat each engagement as part of that bigger move, not an isolated task to close out.",
     },
   ],
+  // Moved out of the About template's JSX (21-08-2026), where these four were
+  // an unmarked <ul> inside a card. Same four claims, same wording, split into
+  // title + body so the page can set them the way the site actually sets a
+  // four-point differentiator block — the oversized mono numerals of
+  // DESIGN.md §11.4 / the homepage's WhyThinkOrange. Nothing new is asserted.
+  //
+  // ⚠️ These deliberately stay SEPARATE from `WhyThinkOrange.jsx`'s own
+  // `differentiators`, which say the same four things at greater length for
+  // the homepage. Both trace to CONTENT-PLAN.md §1's confirmed facts. If they
+  // are ever unified, unify them in a shared content module and have both
+  // pages read from it — do not let one page quote the other's private array.
+  differentiators: [
+    {
+      title: "All solutions under one roof",
+      body: "GST, tax, entity formation, audit, tenders, finance and DSC.",
+    },
+    {
+      title: "Technology-driven and accurate",
+      body: "The same professional tooling on every client file, not loose spreadsheets.",
+    },
+    {
+      title: "Pan-India, digital-first service",
+      body: "Most engagements never need an in-person visit.",
+    },
+    {
+      title: "Client-centric, tailored solutions",
+      body: "Scoped to what your business actually needs, not a one-size template.",
+    },
+  ],
   howWeWork: [
     {
       title: "A written scope, before work starts",

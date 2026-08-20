@@ -101,6 +101,8 @@ Your logo's orange crescent — the swoosh cutting through the `O` — is a genu
 
 The rule is that the arc always curves in the same direction as the logo's, and always uses the brand gradient (§7.1). Repetition of one specific shape is what makes a visual system feel authored.
 
+**As of 20-08-2026 the shape has ONE definition, `arcPath(r)` in `src/lib/arc.js`**, consumed by `ArcRings` and by the `certificate` / `seal` textures (§7.4b). "Repetition of one specific shape" only holds while the definition is genuinely single, and it had drifted into three copies. `CtaBand.jsx` still carries the last local copy — migrate it next time that file is open.
+
 ### 3.2 The Compliance Calendar
 
 This is the differentiator, and it's the section I'd fight for. Every Indian CA website has a hero, services, about and contact. Almost none show **what is due next**.
@@ -254,6 +256,10 @@ Fluid, `clamp()`-based. Values are `size / line-height / letter-spacing`.
 | `stat` | `clamp(2.5rem, 1.5rem + 3vw, 3.75rem)` | 1.0 | −0.03em | Satoshi 900 | Metrics, `tabular-nums` |
 | `quote` | `clamp(1.5rem, 1.1rem + 1.5vw, 2.125rem)` | 1.4 | −0.01em | Instrument Serif 400i | Testimonials |
 
+⛔ **Semantic font-size names and `tailwind-merge` do not mix by default, and the failure is silent.** `tailwind-merge` classifies a `text-*` utility by guessing from its value; a name it does not recognise as a size falls through to the *text-colour* group. Every token in this scale is a semantic name, so `text-h1` was being treated as a colour, conflicting with `text-canvas`, and **the size was deleted**. `twMerge("text-h1 text-canvas")` returned `"text-canvas"`.
+
+Measured consequence before the fix: the `<h1>` of every T2 / T3 / T4 / T5 page — 60-odd routes — rendered at the inherited **16px / weight 400** instead of ~52px / 700, because `PageHero` passes its heading classes through `cn()`. `src/lib/cn.js` now declares this scale to `extendTailwindMerge`. **A font-size token added to `theme.css` without being added to that list reintroduces the bug, and nothing errors.**
+
 ### 5.3 Typographic rules
 
 - **Measure.** Body text never exceeds `68ch`. Display headlines break at `14–18ch` per line — set explicit `max-width` on headlines rather than letting them run to the container edge. Long headline lines are the fastest way to look like a template.
@@ -364,6 +370,74 @@ A `3%` opacity SVG turbulence overlay on all dark surfaces. This is the highest-
 ```
 
 Static — never animate the grain. Animated film grain is distracting and expensive.
+
+### 7.4b Section textures — one motif per group (added 20-08-2026)
+
+Grain (§7.4) gives a dark surface *material*. It does not give a section an *identity*, and the DSC tree needed one: three menu groups whose pages are visually indistinguishable read as one undifferentiated list, which is what "it looks plain" actually means.
+
+`components/ui/SurfaceTexture.jsx` supplies four named background motifs. They are line work behind the content — inert SVG plus one tiled CSS gradient, `aria-hidden`, no animation, no blur (§16 bars floating blurred blobs; these are not that).
+
+| Variant | Used by | What it is |
+|---|---|---|
+| `certificate` | Digital Signature Certificates group | Guilloché — seven concentric §3.1 crescents plus a radial tick ring. Security print. |
+| `blueprint` | Tokens & Resources group | Ledger grid plus orthogonal hairlines that terminate *on* the crescent — a technical drawing measuring the brand shape. |
+| `signature` | eSign Solutions group | A single flowing stroke with one receding echo. |
+| `seal` | The `/dsc` hub hero | Denser crescent set with a 60-tick rosette, plus a low-left ledger grid. |
+
+Rules that make this consistent rather than four unrelated ideas:
+
+- **Colour is set once, on the wrapper, and inherited via `currentColor`** — including the CSS grid, whose stops are `color-mix(… currentColor …)`. `tone: light` → `ink-400` on canvas; `tone: dark` → `ember-400` on ink, which is what the single static arc these replaced already used. Tone is *derived* from the surface (`Section`) or fixed (`PageHero`), never passed by hand — pairing an ink texture with an ink surface yields an invisible layer, which looks like the prop was ignored.
+- **A motif appears ONCE per page.** On a T4/T5 page that is the hero. On the `/dsc` hub each group *section* carries its own — three different motifs on three different sections is a sequence, not a repeat. The first pass painted a motif in the hero *and* on the same page's first light section; that is the same picture twice in one scroll, and it was the first thing Clinton flagged.
+- **Weight sits at or below the homepage's own ladder** (CtaBand's rings are 0.045–0.12). Fine strokes run 0.16–0.30, the one wide band 0.10. On canvas the tone is `ink-300`, not `ink-400` — these should be felt, not seen.
+- **No figurative elements.** The first pass drew a rounded-rect USB-token silhouette, circuit pads and a dashed signing rule. That is illustration, not texture, and it is what "looks cheap" means in practice. What remains is line geometry from the site's own vocabulary: the crescent, the ledger grid, hairlines.
+- **`z-index: -1`, not `0`.** A positioned `z-index: 0` overlay paints *above* in-flow text (painting-order step 6 vs step 5), which is why `.arc-rings` requires every call site to remember `relative` on its content. At `-1` the layer paints above the section background and below everything else, with nothing to remember; `isolate` on the section keeps it contained.
+
+**Honest note on §3.1 and §16.** `certificate` and `seal` are built from `lib/arc.js`'s crescent at several radii, so they are the one shape repeated. `circuit` is rectilinear but not new — it is the ledger hairline grid `.footer-grid` and the hero's L2 layer already established. `signature` **is** a new motif and the one real deviation; it earns it by being the eSign group's entire subject and by appearing in exactly one place, which is what §16 asks of an effect.
+
+Measured after the fact, not asserted: ember coverage **0.70–1.81%** per fold across the DSC tree (ceiling ~12%), and **0 contrast failures** by pixel sampling behind every heading, lede, spec label and card string on 13 folds.
+
+### 7.4c `.card-premium` — the light-card counterpart
+
+**Surface quality only. No decoration, no pseudo-elements.** One directional wash in canvas tints, so light falls from the top-left and the card has a face instead of being one flat fill. Pure canvas tokens — §7.1 bars the brand gradient from card backgrounds, so there is no ember in the surface at all.
+
+The first version added a 2px ember rule along the top edge that grew to full width on hover. It was removed, and the diagnosis matters more than the bar: **a card was carrying three separate small ember elements** — the rule, the mono index, and the "Read more" link — on a plain white box. Many tiny accents on an undifferentiated surface is what reads as cheap. The homepage never does it: `WhoWeWorkWith` and `WhyThinkOrange` each put *one* ember element in a light block and take their structure from hairlines, type scale and whitespace. So the DSC card now has one ember element (the action), a quiet `ink-300` mono index, and a hairline above the action row.
+
+Everything a light card does on hover is already the site's language, in `Card`, unchanged: `shadow-sm` → `shadow-md`, border → `ember-200`, the corner crescent fading in, and a -4px lift. A fifth signal was the bar's real problem.
+
+**Correction to a note this repo carried since the Phase 5 refinement pass:** light `Card` hover was described as "still ungated", i.e. sticky on touch. It is not. **Tailwind v4 wraps every `hover:` variant in `@media (hover: hover)`** — verified in the built CSS — so `hover:-translate-y-1` has always been gated.
+
+### 7.4d Icons on cards, and the one dark band
+
+**Icons** on DSC cards sit in a circle — **filled on light surfaces, ringed on
+dark ones**, never both. On a white card a hairline ring plus an `ember-50` tint
+is two treatments doing one job, and the ring reads as an outline *around* a
+shape rather than as the shape; the fill alone is the disc. On ink there is no
+tint pale enough to register as a disc without lifting the card's whole warmth,
+so a ring is the only option there — which is what the homepage DSC band already
+does. §16 tell 6 counts icon-in-a-circle instances per page, but its detector
+correctly excludes glyphs inside `a, button, label, [role=button]`: a circle
+that **is** the click target is an affordance, not the decorative motif the tell
+is about. This is the same
+treatment, on the same kind of card, the homepage DSC band already uses. One
+shared map — `src/content/dsc/icons.js` — resolved through `dscIcon(slug)`,
+which always returns a component so an unmapped slug can never render
+`<undefined />` (a hard React crash, and a bug this project has already had once).
+
+**One dark band per long light stretch.** A page of six consecutive light
+sections separated only by the canvas/canvas-alt tonal shift reads as plain no
+matter how good the type is — §11.1's homepage rhythm puts a genuinely dark
+section between light ones, and that is where its depth comes from. `/dsc` now
+runs `deep → light → light-alt → dark → light-alt → light → light-alt → ember`.
+Pick the band by content, not position: the eSign group is the product family
+that genuinely differs, so the surface change reinforces something real. Because
+`dark` differs from *both* light values, such an override can never create two
+consecutive identical surfaces at any index.
+
+**Images: at most one per section, and only where the layout has room for it.**
+An image squeezed beside a five-card grid reads as "an image was added"; a
+section with two cards and a 5-column gap wanted one. On ink, render a
+transparent PNG directly — `ProductShot`'s dark plinth exists for a transparent
+PNG on a *light* section, and on a dark one it is a box around a box.
 
 ### 7.5 Glassmorphism — one place only
 

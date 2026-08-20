@@ -1,15 +1,8 @@
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  Building2,
-  FileSignature,
   Headset,
-  KeyRound,
-  Lock,
-  RefreshCw,
   ShieldCheck,
-  Ship,
-  User,
   Usb,
 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
@@ -22,6 +15,7 @@ import { Reveal } from "@/components/motion/Reveal";
 import { ProductShot } from "@/components/ui/ProductShot";
 import { dscProducts as dscNav, site } from "@/content/nav";
 import { dscProducts as dscContent } from "@/content/dsc/products";
+import { dscIcon } from "@/content/dsc/icons";
 import { Img } from "@/components/ui/Img";
 
 // Homepage section 8 — CONTENT-PLAN.md §6 row 8. Deep surface. Ledes are
@@ -41,21 +35,6 @@ import { Img } from "@/components/ui/Img";
 //   - its three feature icons sitting in filled circles. §16 tell 6 counts
 //     icon-in-a-circle instances per page, and the product cards below
 //     already spend four of them; these render as bare glyphs instead.
-// 17-08-2026: 3 new entries for the DSC menu restructure's new products
-// (combo-dsc, dsc-renewal-reissue, aadhaar-esign) — `dscNav.map` below
-// iterates every product in nav.js, so a missing key here would try to
-// render `ICONS[slug]` as `undefined`, which crashes (not a graceful
-// blank — React throws on an undefined element type).
-const ICONS = {
-  "class-3-individual": User,
-  "class-3-organisation": Building2,
-  "combo-dsc": Lock,
-  "dgft-iec": Ship,
-  "dsc-renewal-reissue": RefreshCw,
-  "buy-tokens": KeyRound,
-  "aadhaar-esign": FileSignature,
-};
-
 // The reference's three trust points were "Secure & Compliant / Quick
 // Processing / Expert Assistance". "Quick Processing" is an unconfirmed
 // turnaround claim wearing an adjective (CLAUDE.md non-negotiables), so it is
@@ -174,7 +153,10 @@ export function DscBand() {
 
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {dscNav.map((product, index) => {
-            const Icon = ICONS[product.slug];
+            // Shared map, and resolved through a helper that always returns a
+            // component — an unmapped slug used to render `<undefined />`, a hard
+            // React crash. See content/dsc/icons.js.
+            const Icon = dscIcon(product.slug);
             const lede = dscContent.find((p) => p.slug === product.slug)?.lede;
 
             return (

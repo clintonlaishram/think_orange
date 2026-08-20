@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, ChevronRight, Menu, Phone, X } from "lucide-react";
+import { ArrowRight, ChevronRight, Phone } from "lucide-react";
 import {
   serviceCategories,
   dscPanelColumns,
@@ -11,6 +11,8 @@ import {
 } from "@/content/nav";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
+import { HamburgerIcon } from "./HamburgerIcon";
+import { ArcRings } from "@/components/ui/ArcRings";
 
 // DESIGN.md §10.4. Accordions use grid-template-rows 0fr -> 1fr (§9.3) rather
 // than max-height, which is what keeps the open/close from juddering.
@@ -150,13 +152,13 @@ export function MobileNav({ className }) {
       <button
         type="button"
         ref={triggerRef}
-        onClick={() => setOpen(true)}
+        onClick={() => (open ? closeMenu({ restoreFocus: true }) : setOpen(true))}
         aria-expanded={open}
         aria-controls="mobile-nav"
         className="grid h-12 w-12 place-items-center rounded-full text-canvas transition-colors hover:text-ember-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950"
       >
-        <Menu className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
-        <span className="sr-only">Open menu</span>
+        <HamburgerIcon open={open} />
+        <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
       </button>
 
       {/* Backdrop + panel are portaled to document.body, NOT rendered inline
@@ -167,9 +169,10 @@ export function MobileNav({ className }) {
           {/* Backdrop */}
           <div
             aria-hidden="true"
+            data-open={open ? "true" : "false"}
             onClick={() => closeMenu()}
             className={cn(
-              "fixed inset-0 z-50 bg-ink-950/60 transition-opacity duration-[var(--dur-base)]",
+              "mobile-sheet-scrim fixed inset-0 z-50",
               open ? "opacity-100" : "pointer-events-none opacity-0"
             )}
           />
@@ -188,12 +191,31 @@ export function MobileNav({ className }) {
             // removes the whole subtree from the tab order, the a11y tree
             // and pointer events in one attribute.
             inert={!open}
+            data-open={open ? "true" : "false"}
+            data-surface="dark"
             className={cn(
-              "fixed inset-y-0 right-0 z-50 flex w-full max-w-sm flex-col bg-ink-950 outline-none",
-              "transition-transform duration-[var(--dur-base)] ease-[var(--ease-out)]",
+              "mobile-sheet grain fixed inset-y-0 right-0 z-50 isolate flex w-full max-w-sm flex-col overflow-hidden outline-none",
               open ? "translate-x-0" : "translate-x-full"
             )}
           >
+            {/* The site's own arc, at panel weight, bled off the top-right so
+                the sheet's empty upper corner carries the brand mark rather
+                than nothing. `[z-index:-1]` rather than `.arc-rings`' own 0:
+                a positioned z-0 layer paints ABOVE in-flow text, which is why
+                every other call site has to remember `relative` on its
+                content wrapper. At -1, inside this sheet's `isolate`, there
+                is nothing to remember. Unique gradientId — `url(#id)`
+                resolves document-wide. */}
+            <ArcRings
+              gradientId="mobile-sheet-arc"
+              rings={[
+                { r: 140, width: 1, opacity: 0.1 },
+                { r: 112, width: 1.5, opacity: 0.055 },
+              ]}
+              className="[z-index:-1]"
+              svgClassName="-right-56 -top-44 h-[400px] w-[400px]"
+            />
+
             <div className="flex h-[84px] shrink-0 items-center justify-between border-b border-ink-800 px-6">
               <span className="font-mono text-eyebrow uppercase text-ink-300">Menu</span>
               <button
@@ -201,18 +223,29 @@ export function MobileNav({ className }) {
                 onClick={() => closeMenu({ restoreFocus: true })}
                 className="grid h-12 w-12 place-items-center rounded-full text-canvas transition-colors hover:text-ember-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950"
               >
-                <X className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
+                {/* Same control, already in its open state: tapping it morphs
+                    back to the hamburger as the panel slides out, which is the
+                    half of the animation the trigger itself can't show (the
+                    full-width panel covers it while open). */}
+                <HamburgerIcon open={open} />
                 <span className="sr-only">Close menu</span>
               </button>
             </div>
 
-            <nav aria-label="Mobile" className="flex-1 overflow-y-auto px-6 py-4">
-              <Row to="/" label="Home" />
+            <nav
+              aria-label="Mobile"
+              className="relative flex-1 overflow-y-auto overscroll-contain px-6 py-4"
+            >
+              <Row to="/" label="Home" index={0} />
 
-              {SECTIONS.map((section) => {
+              {SECTIONS.map((section, i) => {
                 const isExpanded = expanded === section.key;
                 return (
-                  <div key={section.key} className="border-b border-ink-800">
+                  <div
+                    key={section.key}
+                    style={{ "--i": i + 1 }}
+                    className="mobile-sheet-item border-b border-ink-800"
+                  >
                     <button
                       type="button"
                       onClick={() => setExpanded(isExpanded ? null : section.key)}
@@ -293,16 +326,26 @@ export function MobileNav({ className }) {
 
               {standalonePages
                 .filter((page) => page.slug !== "partner-with-us")
-                .map((page) => (
-                  <Row key={page.path} to={page.path} label={page.label} />
+                .map((page, i) => (
+                  <Row
+                    key={page.path}
+                    to={page.path}
+                    label={page.label}
+                    index={SECTIONS.length + 1 + i}
+                  />
                 ))}
             </nav>
 
-            {/* Sticky footer — phone + primary CTA (DESIGN.md §10.4) */}
-            <div className="shrink-0 space-y-3 border-t border-ink-800 px-6 py-5">
+            {/* Sticky footer — phone + primary CTA (DESIGN.md §10.4). Last in
+                the cascade, so the eye lands on the CTA once the list has
+                settled rather than competing with it. */}
+            <div
+              style={{ "--i": SECTIONS.length + 4 }}
+              className="mobile-sheet-item relative shrink-0 space-y-3 border-t border-ink-800 px-6 py-5"
+            >
               <a
                 href={site.phoneHref}
-                className="flex min-h-12 items-center gap-2.5 text-body font-medium text-canvas hover:text-ember-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
+                className="flex pl-2 min-h-12 items-center gap-2.5 text-body font-medium text-canvas hover:text-ember-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
               >
                 <Phone className="h-4 w-4 text-ember-400" strokeWidth={1.5} aria-hidden="true" />
                 <span className="tabular-nums">{site.phoneDisplay}</span>
@@ -333,11 +376,15 @@ export function MobileNav({ className }) {
 // `document.body` puts the overlay outside `<header>` entirely, so it can
 // never be affected by the header's own filter state again.
 
-function Row({ to, label }) {
+function Row({ to, label, index = 0 }) {
   return (
     <Link
       to={to}
-      className="flex min-h-12 items-center border-b border-ink-800 py-3 text-body font-medium text-canvas transition-colors hover:text-ember-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
+      style={{ "--i": index }}
+      // No `transition-colors` here: `.mobile-sheet-item` owns this element's
+      // `transition` shorthand (a later utility would replace it wholesale and
+      // kill the cascade), so it carries the colour leg itself.
+      className="mobile-sheet-item flex min-h-12 items-center border-b border-ink-800 py-3 text-body font-medium text-canvas hover:text-ember-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
     >
       {label}
     </Link>
@@ -360,7 +407,7 @@ function PromoCard({ promo, isExpanded }) {
   return (
     <div
       data-surface="dark"
-      className="panel-dark grain relative mt-4 overflow-hidden rounded-[var(--radius-sm)] p-4"
+      className="panel-dark grain relative mt-4 overflow-hidden rounded-[var(--radius-lg)] p-4"
     >
       {/* `text-canvas` — see MegaPanel.jsx's `PanelPromo` for why this isn't
           ember (matches the source mockup, and `.text-ember-300` would lose
