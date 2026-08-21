@@ -3,10 +3,10 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { insights, MIN_ARTICLES_TO_SHOW } from "@/content/insights/index.js";
 import { getInsightImage } from "@/content/insights/images.js";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Img } from "@/components/ui/Img";
 import { Reveal } from "@/components/motion/Reveal";
 import { cn } from "@/lib/cn";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // Homepage section 12 — DESIGN.md §11.1 row 10 (Light surface, editorial).
 // Still gated on CONTENT-PLAN.md §6 row 12's own bar ("Reserve the route and
@@ -40,12 +40,11 @@ export function Insights() {
     <section data-surface="light" className="section-pad relative bg-canvas">
       <Container>
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <Eyebrow>Insights</Eyebrow>
-            <h2 className="mt-3 text-h2 max-w-[28ch]">
-              Compliance, explained without the jargon
-            </h2>
-          </div>
+          <SectionHeading
+            eyebrow="Insights"
+            heading="Compliance, explained without the jargon"
+            headingClassName="max-w-[28ch]"
+          />
           <Link
             to="/insights"
             className="inline-flex min-h-11 items-center gap-1.5 rounded-sm text-body-sm font-medium text-ember-600 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2"

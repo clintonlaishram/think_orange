@@ -1,9 +1,9 @@
 import { Phone, MessageCircle } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Button } from "@/components/ui/Button";
 import { site } from "@/content/nav";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // Shared "rest of this page isn't live yet" body, dropped in AFTER a
 // template's own PageHero/hero (never instead of it — the hero's
@@ -25,9 +25,7 @@ export function ComingSoon({
     <Section surface="light">
       <Container>
         <div className="max-w-[68ch]">
-          <Eyebrow>{eyebrow}</Eyebrow>
-          <h2 className="mt-3 text-h2">{heading}</h2>
-          <p className="mt-4 text-body-lg text-ink-500">{message}</p>
+          <SectionHeading eyebrow={eyebrow} heading={heading} lede={message} />
           <div className="mt-6 flex flex-wrap gap-4">
             <Button as="a" href={site.phoneHref} variant="secondary">
               <Phone className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />

@@ -7,8 +7,8 @@ import {
   useTransform,
 } from "motion/react";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { cn } from "@/lib/cn";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // THE STEP / PROCESS TREATMENT — one component, every "how it works" section.
 //
@@ -116,20 +116,15 @@ export function StepFlow({
             on a 6-step leaf is most of a screen. */}
         <div className="lg:col-span-4">
           <div className="lg:sticky lg:top-[calc(var(--header-h)+32px)]">
-            {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-            {heading && (
-              <h2 className="mt-3 text-h2 max-w-[18ch]">{heading}</h2>
-            )}
-            {intro && (
-              <p
-                className={cn(
-                  "mt-4 max-w-[42ch] text-body",
-                  dark ? "text-ink-300" : "text-ink-500",
-                )}
-              >
-                {intro}
-              </p>
-            )}
+            <SectionHeading
+              eyebrow={eyebrow}
+              heading={heading}
+              lede={intro}
+              dark={dark}
+              headingClassName="max-w-[18ch]"
+              ledeClassName="max-w-[42ch] text-body sm:text-body"
+              reveal={false}
+            />
           </div>
         </div>
 

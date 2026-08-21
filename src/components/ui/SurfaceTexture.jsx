@@ -203,11 +203,314 @@ function SealTexture({ id }) {
   );
 }
 
+/* ══ SERVICE PRACTICE-AREA MOTIFS ════════════════════════════════════════════
+ * Clinton, 22-08-2026: "different background texture for each service group",
+ * then: "improve the texture design, now it looks simple and not looking good,
+ * make more complex and premium type."
+ *
+ * ⚠️ THIS IS NOT A REVERSAL OF THE 20-08-2026 "PROMINENT / CHEAP" NOTE, and
+ * the distinction is the whole design of this block. What read as cheap then
+ * was FIGURATIVE illustration at high opacity: a USB-token silhouette, circuit
+ * pads, a dashed signing rule — clip-art of the subject. Richness is a
+ * different axis entirely. These are built the way security-print engraving is
+ * built: many fine strokes in graduated weights, layered, at LOW opacity. The
+ * complexity is in the layer count, never in the brightness, and no motif
+ * depicts its subject.
+ *
+ * Every one is four layers on the same scaffold, so they read as one family:
+ *
+ *   A  anchor      one wide, very low-opacity arc — mass, not line
+ *   B  guilloché   graduated fine concentric arcs
+ *   C  signature   the DISTINGUISHING primitive (this is what tells them apart)
+ *   D  echo        a small secondary cluster, bracketing the composition the
+ *                  way CtaBand's corner echo brackets that band
+ *
+ *   cadence  GST                       two-scale radial dial   (circular marks)
+ *   strata   Income Tax                double horizontal rules (horizontal)
+ *   frame    Business Setup            nested squares + marks  (rectilinear)
+ *   emboss   Registrations & Licences  rim + inner guilloché   (concentric)
+ *   column   Accounting, Payroll…      ruled ledger columns    (vertical)
+ *   ascent   Tenders & Finance         graduated diagonals     (diagonal)
+ *
+ * ⛔ The four DSC variants above are NOT reused. Those motifs MEAN something —
+ * a guilloché says "certificate", a flourish says "eSign" — so putting either
+ * behind a GST page would assert something untrue about it.
+ *
+ * ⚠️ §3.1: the echo groups are translate+scale only. NEVER a negative scale —
+ * a mirrored crescent is a different shape, and the whole point of `lib/arc.js`
+ * is that the site repeats one.
+ */
+
+/**
+ * Where the motif sits in the hero, and it is not decoration to get right:
+ * `PageHero`'s optional `aside` is an opaque `.panel-dark` occupying the whole
+ * right half, so a top-right composition on a hero that HAS one is almost
+ * entirely behind the panel — measured on the first pass, only the outer arc
+ * and a few tick ends survived. `left` puts it in the real negative space
+ * beside and below the copy instead.
+ *
+ * Contrast is not the question here: Phase 10 measured headings over the arc
+ * rings at 15.6-17.5:1, so a motif crossing a headline is aesthetic only. It
+ * was re-measured for these anyway, since they are denser.
+ */
+const PLACEMENT = {
+  default:
+    "absolute -right-24 -top-28 h-[440px] w-[440px] md:-right-20 md:-top-36 md:h-[660px] md:w-[660px]",
+  left:
+    "absolute -left-28 -top-20 h-[440px] w-[440px] md:-left-36 md:-top-24 md:h-[680px] md:w-[680px]",
+};
+
+/**
+ * Where the circle of radius `r` centred on (200,200) crosses a given y (or x).
+ * Rules TERMINATE on the crescent rather than near it — the same discipline
+ * `blueprint` follows, and the reason its lines read as a technical drawing
+ * measuring the brand shape instead of hairlines scattered over it.
+ * Returns null when the line misses the circle entirely.
+ */
+function chord(r, offset) {
+  const d = r * r - offset * offset;
+  return d <= 0 ? null : Math.sqrt(d);
+}
+
+/** Layer B. Graduated fine arcs — the engraving base every motif shares. */
+function Guilloche({ radii, base = 0.13, step = 0.028, width = 0.75 }) {
+  return radii.map((r, i) => (
+    <path key={r} d={arcPath(r)} strokeWidth={width} opacity={+(base + i * step).toFixed(3)} />
+  ));
+}
+
+/** Layer D. A small bracketing cluster. translate + POSITIVE scale only. */
+function Echo({ x, y, scale, radii = [150, 118], opacity = 0.16 }) {
+  return (
+    <g transform={`translate(${x - 200 * scale} ${y - 200 * scale}) scale(${scale})`}>
+      {radii.map((r, i) => (
+        <path
+          key={r}
+          d={arcPath(r)}
+          strokeWidth={1.2 / scale}
+          opacity={+(opacity - i * 0.05).toFixed(3)}
+        />
+      ))}
+    </g>
+  );
+}
+
+function Motif({ id, svgClass, fade, children }) {
+  return (
+    <svg viewBox="0 0 400 400" fill="none" className={svgClass ?? PLACEMENT.default}>
+      <defs>
+        <FadeDef id={`${id}-fade`} {...fade} />
+      </defs>
+      <g stroke={`url(#${id}-fade)`} strokeLinecap="round">{children}</g>
+    </svg>
+  );
+}
+
+// GST — a precision dial. Returns arrive on a cycle, so the signature layer is
+// radial marks at TWO scales (13 long majors, 52 short minors) around a bezel,
+// plus a fine inner tick ring. Reads as a chronometer bezel rather than as a
+// picture of anything.
+function CadenceTexture({ id, svgClass }) {
+  const majors = radialTicks({ count: 13, inner: 146, outer: 184, startDeg: 0, sweepDeg: 302 });
+  const minors = radialTicks({ count: 53, inner: 168, outer: 180, startDeg: 0, sweepDeg: 302 });
+  const inners = radialTicks({ count: 31, inner: 86, outer: 98, startDeg: 0, sweepDeg: 302 });
+  return (
+    <Motif id={id} svgClass={svgClass}>
+      <path d={arcPath(196)} strokeWidth="16" opacity="0.055" />
+      <Guilloche radii={[186, 164, 140, 118, 96]} />
+      <g strokeWidth="1.15" opacity="0.24">
+        {majors.map((t, i) => <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} />)}
+      </g>
+      <g strokeWidth="0.6" opacity="0.15">
+        {minors.map((t, i) => <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} />)}
+      </g>
+      <g strokeWidth="0.6" opacity="0.12">
+        {inners.map((t, i) => <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} />)}
+      </g>
+      <Echo x={318} y={330} scale={0.26} />
+    </Motif>
+  );
+}
+
+// Income Tax — layered bands. Each rule is DOUBLED by a hairline just beneath
+// it, which is an engraving convention and the thing that stops this reading
+// as a plain set of lines. Weight increases downward. No amount, no rate, no
+// slab table: the geometry says "layers" and asserts nothing.
+const STRATA_Y = [78, 110, 142, 174, 206, 238, 270, 302];
+
+function StrataTexture({ id, svgClass }) {
+  return (
+    <Motif id={id} svgClass={svgClass}>
+      <path d={arcPath(198)} strokeWidth="15" opacity="0.05" />
+      <Guilloche radii={[188, 172, 158]} base={0.1} />
+      {STRATA_Y.map((y, i) => {
+        const half = chord(158, y - 200);
+        if (half === null) return null;
+        const x = +(200 - half).toFixed(1);
+        return (
+          <g key={y}>
+            <line
+              x1={x} y1={y} x2="400" y2={y}
+              strokeWidth={+(0.55 + i * 0.16).toFixed(2)}
+              opacity={+(0.1 + i * 0.016).toFixed(3)}
+            />
+            {/* The paired hairline. 5px under its rule, always finer. */}
+            <line x1={x + 12} y1={y + 5} x2="400" y2={y + 5} strokeWidth="0.5" opacity="0.075" />
+          </g>
+        );
+      })}
+      <Echo x={92} y={330} scale={0.24} />
+    </Motif>
+  );
+}
+
+// Business Setup — nested structure. The only rectilinear closed shape in the
+// set, which is what makes it unmistakable beside five circular/linear motifs.
+// Each square carries REGISTRATION CROSSES at its corners: already site
+// vocabulary (HeroFloaters draws the same mark), and what turns four rectangles
+// into a drawn plate rather than four rectangles.
+const FRAME_HALF = [58, 96, 134, 172, 196];
+
+function FrameTexture({ id, svgClass }) {
+  return (
+    <Motif id={id} svgClass={svgClass}>
+      <path d={arcPath(190)} strokeWidth="15" opacity="0.05" />
+      <Guilloche radii={[152, 120]} base={0.12} />
+      {FRAME_HALF.map((half, i) => (
+        <rect
+          key={half}
+          x={200 - half} y={200 - half} width={half * 2} height={half * 2}
+          rx={8 + i * 3}
+          strokeWidth={i === 2 ? 1.1 : 0.7}
+          opacity={i === 2 ? 0.2 : +(0.085 + i * 0.012).toFixed(3)}
+        />
+      ))}
+      {/* Registration crosses on the dominant square's corners. */}
+      {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sy]) => {
+        const cx = 200 + sx * 134;
+        const cy = 200 + sy * 134;
+        return (
+          <g key={`${sx}${sy}`} strokeWidth="0.8" opacity="0.22">
+            <line x1={cx - 7} y1={cy} x2={cx + 7} y2={cy} />
+            <line x1={cx} y1={cy - 7} x2={cx} y2={cy + 7} />
+          </g>
+        );
+      })}
+      <Echo x={318} y={332} scale={0.24} />
+    </Motif>
+  );
+}
+
+// Registrations & Licences — a raised seal. Two heavy rim arcs with 44 marks
+// between them, then a separate inner guilloché and one DASHED ring. Dense
+// concentric weight is the signature, where `cadence` is marks alone and DSC's
+// `certificate` is five fine rings with no rim at all.
+function EmbossTexture({ id, svgClass }) {
+  const rim = radialTicks({ count: 45, inner: 176, outer: 192, startDeg: 0, sweepDeg: 302 });
+  const inner = radialTicks({ count: 25, inner: 104, outer: 114, startDeg: 0, sweepDeg: 302 });
+  return (
+    <Motif id={id} svgClass={svgClass} fade={{ from: 0.05, peak: 1, to: 0.18 }}>
+      <path d={arcPath(194)} strokeWidth="2.2" opacity="0.2" />
+      <path d={arcPath(174)} strokeWidth="2.2" opacity="0.2" />
+      <g strokeWidth="0.8" opacity="0.15">
+        {rim.map((t, i) => <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} />)}
+      </g>
+      <Guilloche radii={[152, 140, 128, 116]} base={0.1} step={0.022} />
+      {/* One dashed ring — a stamp's perforated edge, in line not illustration. */}
+      <path d={arcPath(164)} strokeWidth="1" opacity="0.18" strokeDasharray="3 9" />
+      <g strokeWidth="0.6" opacity="0.13">
+        {inner.map((t, i) => <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} />)}
+      </g>
+      <Echo x={96} y={334} scale={0.24} />
+    </Motif>
+  );
+}
+
+// Accounting, Payroll & Audit — a ruled ledger. Hairline VERTICALS dropping
+// from the crescent, under one heavy header rule with short separator ticks
+// sitting on it. Vertical dominance is the distinction from `strata`, and from
+// DSC's `blueprint`, which draws both axes plus a CSS grid field.
+const COLUMN_X = [74, 104, 134, 164, 194, 224, 254, 284, 314];
+const HEADER_Y = 118;
+
+function ColumnTexture({ id, svgClass }) {
+  const headerHalf = chord(186, HEADER_Y - 200);
+  return (
+    <Motif id={id} svgClass={svgClass}>
+      <path d={arcPath(196)} strokeWidth="15" opacity="0.05" />
+      <Guilloche radii={[186, 168]} base={0.12} />
+      {headerHalf !== null && (
+        <>
+          <line
+            x1={+(200 - headerHalf).toFixed(1)} y1={HEADER_Y} x2="400" y2={HEADER_Y}
+            strokeWidth="1.3" opacity="0.22"
+          />
+          <line
+            x1={+(200 - headerHalf).toFixed(1) + 10} y1={HEADER_Y + 6} x2="400" y2={HEADER_Y + 6}
+            strokeWidth="0.55" opacity="0.1"
+          />
+        </>
+      )}
+      {COLUMN_X.map((x, i) => {
+        const half = chord(186, x - 200);
+        if (half === null) return null;
+        const top = +(200 - half).toFixed(1);
+        return (
+          <g key={x}>
+            <line
+              x1={x} y1={top} x2={x} y2="400"
+              strokeWidth={i % 3 === 0 ? 0.95 : 0.6}
+              opacity={i % 3 === 0 ? 0.18 : 0.115}
+            />
+            {/* Separator tick sitting on the header rule. */}
+            <line x1={x} y1={HEADER_Y - 5} x2={x} y2={HEADER_Y + 5} strokeWidth="0.9" opacity="0.2" />
+          </g>
+        );
+      })}
+      <Echo x={322} y={330} scale={0.24} />
+    </Motif>
+  );
+}
+
+// Tenders & Finance — rising parallels, the only diagonal in the set. Each
+// heavy line is PAIRED with a hairline echo above it, so the set reads as a
+// graduated sheaf rather than as stripes. Deliberately no axis and no plotted
+// points: nothing here should read as a performance claim the page never makes.
+const ASCENT_OFFSET = [-168, -112, -56, 0, 56, 112, 168];
+
+function AscentTexture({ id, svgClass }) {
+  return (
+    <Motif id={id} svgClass={svgClass}>
+      <path d={arcPath(196)} strokeWidth="15" opacity="0.05" />
+      <Guilloche radii={[186, 158, 130]} base={0.11} />
+      {ASCENT_OFFSET.map((offset, i) => (
+        <g key={offset}>
+          <line
+            x1="-20" y1={430 + offset} x2="420" y2={178 + offset}
+            strokeWidth={+(0.55 + (i % 3) * 0.28).toFixed(2)}
+            opacity={+(0.1 + (i % 3) * 0.035).toFixed(3)}
+          />
+          <line x1="-20" y1={418 + offset} x2="420" y2={166 + offset} strokeWidth="0.45" opacity="0.07" />
+        </g>
+      ))}
+      <Echo x={318} y={92} scale={0.24} />
+    </Motif>
+  );
+}
+
 const VARIANTS = {
   certificate: CertificateTexture,
   blueprint: BlueprintTexture,
   signature: SignatureTexture,
   seal: SealTexture,
+
+  // Service practice areas — see the block above.
+  cadence: CadenceTexture,
+  strata: StrataTexture,
+  frame: FrameTexture,
+  emboss: EmbossTexture,
+  column: ColumnTexture,
+  ascent: AscentTexture,
 };
 
 // Colour is set ONCE, on the wrapper, and every variant inherits it through
@@ -241,16 +544,20 @@ const TONE_CLASS = {
 const PARALLAX_PX = 28;
 
 /**
- * @param variant  `certificate` | `blueprint` | `signature` | `seal`. An
+ * @param variant  one of the keys in VARIANTS (four DSC motifs plus six
+ *                 service practice-area motifs). An
  *                 unknown or missing variant renders NOTHING rather than
  *                 throwing, so a nav.js column added without a matching
  *                 variant degrades to an untextured section.
  * @param id       Unique per mounted instance — see the warning above.
+ * @param placement `default` (top-right) or `left`. `PageHero` passes
+ *                 `left` whenever it renders an `aside`, because the panel
+ *                 would otherwise cover the composition.
  * @param tone     `light` (default) for canvas surfaces, `dark` for ink ones.
  *                 `Section` derives it from its own surface and `PageHero`
  *                 always passes `dark`, so no call site sets it by hand.
  */
-export function SurfaceTexture({ variant, id, tone = "light", className }) {
+export function SurfaceTexture({ variant, id, tone = "light", placement = "default", className }) {
   const ref = useRef(null);
   const reduceMotion = useReducedMotion();
   // Same construction StepFlow already uses on these prerendered pages:
@@ -292,7 +599,9 @@ export function SurfaceTexture({ variant, id, tone = "light", className }) {
       aria-hidden="true"
     >
       <motion.div className="absolute inset-0" style={{ y }}>
-        <Variant id={id} />
+        {/* Only the six service motifs read `svgClass`; the four DSC
+            variants ignore it and keep their hand-tuned positions. */}
+        <Variant id={id} svgClass={PLACEMENT[placement] ?? PLACEMENT.default} />
       </motion.div>
     </div>
   );

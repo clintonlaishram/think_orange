@@ -7,6 +7,7 @@ import { MapEmbed } from "@/components/ui/MapEmbed";
 import { Reveal } from "@/components/motion/Reveal";
 import { site } from "@/content/nav";
 import { ContactForm } from "@/modules/contact/ContactForm";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // T7 — CONTENT-PLAN.md §11.
 //
@@ -222,11 +223,14 @@ export default function Contact({ path }) {
         <div className="mt-16 grid grid-cols-1 gap-14 md:mt-20 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-7">
             <Reveal>
-              <h2 className="max-w-[20ch] text-h2">Tell us what you need</h2>
-              <p className="mt-4 max-w-[54ch] text-body text-ink-500">
-                Five fields, nothing more. Pick the service closest to what you need — we will
-                point you the right way if it turns out to be another one.
-              </p>
+              <SectionHeading
+                eyebrow="Send a message"
+                heading="Tell us what you need"
+                lede="Five fields, nothing more. Pick the service closest to what you need — we will point you the right way if it turns out to be another one."
+                headingClassName="max-w-[20ch]"
+                ledeClassName="max-w-[54ch] text-body sm:text-body"
+                reveal={false}
+              />
             </Reveal>
 
             <Reveal delay={0.08} className="mt-10">

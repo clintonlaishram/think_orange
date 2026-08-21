@@ -2,17 +2,16 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
 import { Card } from "@/components/ui/Card";
 import { FaqSection } from "@/components/ui/FaqSection";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SubNav } from "@/components/layout/SubNav";
 import { ProductShot } from "@/components/ui/ProductShot";
 import { ArcGlyph } from "@/components/ui/ArcGlyph";
 import { Img } from "@/components/ui/Img";
 import { ArcRings } from "@/components/ui/ArcRings";
 import { Reveal } from "@/components/motion/Reveal";
-import { motion, useReducedMotion } from "motion/react";
 import { Stagger } from "@/components/motion/Stagger";
 import { CtaBand } from "@/modules/home/sections/CtaBand";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -348,9 +347,11 @@ export default function DscHub({ path }) {
 
       <Section surface={whySurface}>
         <Container>
-          <Reveal>
-            <Eyebrow>Why ThinkOrange</Eyebrow>
-          </Reveal>
+          {/* Label promoted to heading, as on the homepage's WhyThinkOrange and
+              /about: this section carried a label and no heading, and promoting the
+              existing string beats writing a new sentence. SectionHeading reveals
+              itself, so the wrapper Reveal that used to be here is gone. */}
+          <SectionHeading eyebrow="Why us" heading="Why ThinkOrange" />
           {/* 20-08-2026: was three plain paragraphs in a divided row, which is
               the flattest thing a light section can be. This is the homepage's
               own archetype for exactly this content — `WhyThinkOrange` pairs a
@@ -608,71 +609,26 @@ function HeroHighlights({ highlights }) {
 }
 
 /**
- * A group section's header: mono index, a hairline rule running to the edge,
- * then the eyebrow / h2 / lede. The index and rule are what make three
- * near-identical section headers read as a sequence rather than a repeat —
- * the same editorial device the homepage FAQ row's mono row numbers use.
+ * A group section's header. The mono index, the drawn hairline rule and the
+ * eyebrow / h2 / lede all live in `components/ui/SectionHeading.jsx` now
+ * (22-08-2026): the services templates needed the identical device, and two
+ * copies of it would drift. This stays as a named wrapper only because it
+ * adapts DscHub's `group` object to the shared component's flat props.
  *
- * ⚠️ `dark` is not optional decoration. The eyebrow and the h2 are handled for
- * free — `Eyebrow` reads `var(--surface-accent)` and theme.css sets
- * `[data-surface="dark"] h2` — but the mono index, the hairline rule and the
- * LEDE are plain utility classes, so they carried their light-surface values
- * onto the dark eSign band: an ink-500 lede on ink-900 (measured 1.5:1, all
- * but unreadable) and an ink-100 rule that read as a bright white line. Caught
- * by the pixel-contrast pass, not by looking at it.
+ * ⚠️ `dark` is still not optional decoration - see SectionHeading's own note.
+ * The eyebrow and h2 are handled by the surface system for free, but the
+ * index, the rule and the LEDE are plain utilities and carried their
+ * light-surface values onto the dark eSign band (an ink-500 lede on ink-900,
+ * measured ~1.5:1). Caught by pixel contrast, not by looking at it.
  */
 function GroupHeading({ group, index, dark }) {
-  const reduceMotion = useReducedMotion();
-
   return (
-    // Render-prop form: the rule below animates off THIS Reveal's single
-    // IntersectionObserver rather than installing a second one of its own —
-    // the same reason HeroStats takes the render-prop form.
-    <Reveal>
-      {(inView) => (
-        <>
-          <div className="flex items-center gap-4">
-            <span
-              aria-hidden="true"
-              className={cn(
-                "font-mono text-body-sm tabular-nums tracking-[0.14em]",
-                dark ? "text-ink-300" : "text-ink-400"
-              )}
-            >
-              {String(index + 1).padStart(2, "0")}
-            </span>
-            {/* The rule DRAWS from the index outward as the section arrives —
-                the same "a line draws on scroll" device HowWeWork's connector
-                and StepFlow's progress line already use, which is why it reads
-                as part of the system rather than as a new effect. `scaleX` on a
-                1px element, so it composites; animating `width` would relayout
-                the row on every frame.
-
-                Reduced motion renders it drawn (`initial={false}`) rather than
-                skipping it — the rule is structure, not decoration, and a
-                missing divider looks like a bug. */}
-            <motion.span
-              aria-hidden="true"
-              className={cn("h-px flex-1 origin-left", dark ? "bg-ink-700" : "bg-ink-100")}
-              initial={reduceMotion ? false : { scaleX: 0 }}
-              animate={reduceMotion ? undefined : inView ? { scaleX: 1 } : {}}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-            />
-          </div>
-          <Eyebrow className="mt-6">{group.eyebrow}</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[32ch]">{group.heading}</h2>
-          {group.lede && (
-            <p
-              className={cn(
-                "mt-3 max-w-[68ch] text-body-base sm:text-body-lg",
-                dark ? "text-ink-200" : "text-ink-500"
-              )}
-            >
-              {group.lede}
-            </p>
-          )}
-        </>
-      )}
-    </Reveal>
+    <SectionHeading
+      index={index}
+      eyebrow={group.eyebrow}
+      heading={group.heading}
+      lede={group.lede}
+      dark={dark}
+    />
   );
 }

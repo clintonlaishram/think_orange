@@ -173,7 +173,33 @@ export function RootLayout() {
             header needs canvas-coloured text to stay legible), so this keeps
             that contract true even during the brief gap before the real
             lazy-loaded template paints. `min-h-screen` avoids a footer jump. */}
-        <Suspense fallback={<div className="min-h-screen bg-ink-950" />}>
+        {/* ⛔ `key={pathname}` — REMOUNTS the page subtree on every navigation,
+            and it is a bug fix, not a preference (22-08-2026).
+
+            React reconciles by element TYPE and POSITION. Two service leaves
+            are two different routes but both render <ServiceLeaf> at the same
+            depth, so React kept the SAME component instance and only changed
+            its props — which meant every `useInView(..., { once: true })`
+            latch inside `Reveal`, `Stagger` and `SectionHeading` survived the
+            navigation already flipped to true. The new page's content
+            therefore appeared fully opaque with no reveal at all, and any
+            wrapper that happened to be latched stayed latched forever.
+
+            Measured on /services/gst/registration -> /services/gst/return-filing:
+            a hard load starts with 23 of 30 reveal wrappers hidden; after the
+            in-app navigation only 6 were, and scrolling the new page never
+            revealed anything because there was nothing left to trigger.
+
+            Keying by pathname makes an in-app navigation behave like a fresh
+            load: new instances, fresh observers, reveals replay. It also fixes
+            the same class of problem for every other template that serves more
+            than one route (T3 hubs, T4 products, T5 utility pages, T8 legal,
+            T10 articles), not just service leaves.
+
+            On the Suspense boundary rather than a wrapper div, so it adds no
+            DOM node. Keys are not serialized, so this cannot introduce a
+            hydration mismatch. */}
+        <Suspense key={pathname} fallback={<div className="min-h-screen bg-ink-950" />}>
           <Outlet />
         </Suspense>
       </main>

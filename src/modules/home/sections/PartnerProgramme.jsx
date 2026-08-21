@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { ArcRings } from "@/components/ui/ArcRings";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/motion/Reveal";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // Homepage section 10 — CONTENT-PLAN.md §6 row 10, DESIGN.md §11.1's brief
 // for this row ("Split 6/6, navy inset panel on the light surface, 'Enquire
@@ -38,16 +38,14 @@ export function PartnerProgramme() {
       <Container>
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
           <Reveal>
-            <Eyebrow>Partner with us</Eyebrow>
-            <h2 className="mt-3 text-h2 max-w-[20ch]">
-              Resell DSCs to your own clients, under our issuance
-            </h2>
-            <p className="mt-4 max-w-[52ch] text-body text-ink-500">
-              For CAs, tax practitioners, advocates, consultants and IT
-              service providers who already field DSC questions from
-              clients. Apply once, then order per client — we handle the
-              rest.
-            </p>
+            <SectionHeading
+              eyebrow="Partner with us"
+              heading="Resell DSCs to your own clients, under our issuance"
+              lede="For CAs, tax practitioners, advocates, consultants and IT service providers who already field DSC questions from clients. Apply once, then order per client — we handle the rest."
+              headingClassName="max-w-[20ch]"
+              ledeClassName="max-w-[52ch] text-body sm:text-body"
+              reveal={false}
+            />
             <Button as={Link} to="/partner-with-us" variant="secondary" tone="light" className="mt-6">
               Enquire about partnership
               <ArrowRight className="h-4 w-4" aria-hidden="true" />

@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -31,6 +30,7 @@ import { dscGroupForSlug } from "@/content/dsc/groups";
 import { productJsonLd, faqPageJsonLd } from "@/lib/jsonld";
 import { dscEnquiryHref } from "@/lib/whatsapp";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // T4 — CONTENT-PLAN.md §9. 4 routes, one component, zero per-slug branching —
 // same discipline as T2's ServiceLeaf. "Closer to a product page than a
@@ -192,8 +192,11 @@ export default function DscProduct({ path }) {
               stays static per CLAUDE.md — a heading is not body copy, and the
               homepage animates its section headings the same way. */}
           <Reveal>
-            <Eyebrow>What it&rsquo;s used for</Eyebrow>
-            <h2 className="mt-3 text-h2 max-w-[32ch]">Where you&rsquo;ll actually use it</h2>
+            <SectionHeading
+              eyebrow="What it&rsquo;s used for"
+              heading="Where you&rsquo;ll actually use it"
+              headingClassName="max-w-[32ch]"
+            />
           </Reveal>
           <Stagger className="mt-8 grid grid-cols-1 gap-x-10 gap-y-4 md:grid-cols-2">
             {product.usedFor.map((point, index) => (
@@ -214,8 +217,11 @@ export default function DscProduct({ path }) {
         <Section id="validity-token" surface="light-alt">
           <Container>
             <Reveal>
-              <Eyebrow>Validity &amp; token</Eyebrow>
-              <h2 className="mt-3 text-h2 max-w-[32ch]">What you&rsquo;re issued</h2>
+              <SectionHeading
+                eyebrow="Validity &amp; token"
+                heading="What you&rsquo;re issued"
+                headingClassName="max-w-[32ch]"
+              />
             </Reveal>
             {/* 20-08-2026 (second pass). Clinton: "for token and validity it
                 look so empty." It was: three tiny icon cards and a panel
@@ -282,8 +288,11 @@ export default function DscProduct({ path }) {
       <Section id="documents-required" surface={product.validityOptions ? "light" : "light-alt"}>
         <Container>
           <Reveal>
-            <Eyebrow>Documents required</Eyebrow>
-            <h2 className="mt-3 text-h2 max-w-[32ch]">What you&rsquo;ll need to hand over</h2>
+            <SectionHeading
+              eyebrow="Documents required"
+              heading="What you&rsquo;ll need to hand over"
+              headingClassName="max-w-[32ch]"
+            />
           </Reveal>
           {/* 20-08-2026 (second pass). Clinton: this section looked empty too.
               It was a full-width card holding 2-5 short strings in a 2x2 grid,
@@ -352,8 +361,11 @@ export default function DscProduct({ path }) {
       <Section id="pricing" surface="light">
         <Container>
           <Reveal>
-            <Eyebrow>Pricing</Eyebrow>
-            <h2 className="mt-3 text-h2 max-w-[32ch]">On request</h2>
+            <SectionHeading
+              eyebrow="Pricing"
+              heading="On request"
+              headingClassName="max-w-[32ch]"
+            />
           </Reveal>
           <Reveal as="p" delay={0.08} className="mt-4 text-body-base sm:text-body-lg text-ink-500 flex sm:flex-row flex-col justify-between gap-4">
            <p className="max-w-[68ch]">
@@ -431,8 +443,10 @@ function PendingProduct({ path, label, slug }) {
       <Section surface="light">
         <Container>
           <div className="max-w-[68ch]">
-            <Eyebrow>Content coming soon</Eyebrow>
-            <h2 className="mt-3 text-h2">We&rsquo;re still writing this page</h2>
+            <SectionHeading
+              eyebrow="Content coming soon"
+              heading="We&rsquo;re still writing this page"
+            />
             <p className="mt-4 text-body-lg text-ink-500">
               Call, WhatsApp or email us and we&rsquo;ll help you the same way we would through
               the page.
@@ -470,8 +484,11 @@ function DriverSupport({ driverSlugs }) {
     <Section surface="light-alt">
       <Container>
         <Reveal>
-          <Eyebrow>Driver support</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[32ch]">Get your token working</h2>
+          <SectionHeading
+            eyebrow="Driver support"
+            heading="Get your token working"
+            headingClassName="max-w-[32ch]"
+          />
         </Reveal>
         <Reveal as="p" delay={0.08} className="mt-4 max-w-[68ch] text-body text-ink-500">
           Every certificate ships on a USB token, which needs its own driver installed before

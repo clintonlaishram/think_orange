@@ -144,7 +144,16 @@ export function PageHero({
       )}
     >
       {textured ? (
-        <SurfaceTexture variant={texture} id={textureId} tone="dark" />
+        /* `placement` is DERIVED, never passed by a call site: an `aside` is
+           an opaque `.panel-dark` filling the right half, so a top-right motif
+           on a hero that has one ends up almost entirely behind it. Deriving
+           it here means a template cannot pair the two wrongly. */
+        <SurfaceTexture
+          variant={texture}
+          id={textureId}
+          tone="dark"
+          placement={aside ? "left" : "default"}
+        />
       ) : ringed ? (
         /* Bled off the right edge and centred on the hero's own height rather
            than hung off the top corner, so the brightest part of the sweep

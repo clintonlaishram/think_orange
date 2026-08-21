@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Building2, MapPin, ShieldCheck, TrendingUp } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
 import { ArcRings } from "@/components/ui/ArcRings";
 import { MapEmbed } from "@/components/ui/MapEmbed";
@@ -13,6 +12,7 @@ import { CtaBand } from "@/modules/home/sections/CtaBand";
 import { serviceCategories, site } from "@/content/nav";
 import { aboutContent } from "@/content/about";
 import { heroStats } from "@/content/home-hero";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // T6 — CONTENT-PLAN.md §10. Founding year, team, credentials, client numbers
 // and photography are all on §1.1's hold list — the page is written to read
@@ -118,7 +118,12 @@ export default function About({ path }) {
       <Section surface="light">
         <Container>
           <Reveal>
-            <h2 className="max-w-[26ch] text-h2">{site.positioning}</h2>
+            <SectionHeading
+              eyebrow="Who we are"
+              heading={site.positioning}
+              headingClassName="max-w-[26ch]"
+              reveal={false}
+            />
           </Reveal>
           <div className="mt-10 grid grid-cols-1 gap-x-14 gap-y-6 text-body-lg text-ink-500 md:grid-cols-2">
             <Reveal delay={0.06}>
@@ -149,8 +154,13 @@ export default function About({ path }) {
 
         <Container className="relative">
           <Reveal>
-            <Eyebrow>What we believe</Eyebrow>
-            <h2 className="mt-3 max-w-[24ch] text-h2">{site.strapline}</h2>
+            <SectionHeading
+              eyebrow="What we believe"
+              heading={site.strapline}
+              headingClassName="max-w-[24ch]"
+              dark
+              reveal={false}
+            />
           </Reveal>
 
           {/* ⚠️ NOT `Stagger`, and that is a bug fix rather than a preference.
@@ -196,7 +206,12 @@ export default function About({ path }) {
       <Section surface="light-alt">
         <Container>
           <Reveal>
-            <h2 className="max-w-[24ch] text-h2">What sets us apart</h2>
+            <SectionHeading
+              eyebrow="Our approach"
+              heading="What sets us apart"
+              headingClassName="max-w-[24ch]"
+              reveal={false}
+            />
           </Reveal>
 
           <div className="mt-12 grid grid-cols-1 gap-x-12 gap-y-12 md:grid-cols-2">
@@ -229,6 +244,7 @@ export default function About({ path }) {
           keeps the cadence alternating after the dark band above. --- */}
       <Section surface="light">
         <StepFlow
+          eyebrow="How we work"
           heading="What working with us looks like"
           intro="The same three commitments on every engagement, whatever the filing is."
           surface="light"
@@ -247,16 +263,17 @@ export default function About({ path }) {
       <Section surface="light-alt">
         <Container>
           <Reveal>
-            <Eyebrow>What we do</Eyebrow>
-            {/* ⚠️ The count is deliberately NOT in this heading (Clinton,
-                21-08-2026: "do not mention 6 practice directly"). The grid
-                below still derives every row from `serviceCategories`, so the
-                page shows the practice areas without ever asserting how many
-                there are — which also means a category added or merged can
-                never leave this line stale. */}
-            <h2 className="mt-3 max-w-[30ch] text-h2">
-              Every practice area, one point of contact
-            </h2>
+            {/* ⚠️ The count is deliberately NOT in this heading (Clinton, 21-08-2026:
+                "do not mention 6 practice directly"). The grid below still derives
+                every row from `serviceCategories`, so the page shows the practice
+                areas without ever asserting how many there are — which also means a
+                category added or merged can never leave this line stale. */}
+            <SectionHeading
+              eyebrow="What we do"
+              heading="Every practice area, one point of contact"
+              headingClassName="max-w-[30ch]"
+              reveal={false}
+            />
           </Reveal>
 
           <Stagger className="mt-10 grid grid-cols-1 border-t border-ink-100 md:grid-cols-2">
@@ -302,10 +319,14 @@ export default function About({ path }) {
                 <span className="grid h-11 w-11 place-items-center rounded-full bg-ember-50 text-ember-600">
                   <MapPin className="h-[18px] w-[18px]" strokeWidth={1.5} aria-hidden="true" />
                 </span>
-                <h2 className="mt-5 max-w-[22ch] text-h2">{site.location}</h2>
-                <p className="mt-4 max-w-[52ch] text-body-lg text-ink-500">
-                  {aboutContent.whereWeAre}
-                </p>
+                <SectionHeading
+                  eyebrow="Where we are"
+                  heading={site.location}
+                  lede={aboutContent.whereWeAre}
+                  headingClassName="mt-5 max-w-[22ch]"
+                  ledeClassName="max-w-[52ch]"
+                  reveal={false}
+                />
                 <address className="mt-6 text-body not-italic text-ink-500">
                   {site.registeredAddress.line1}
                   <br />

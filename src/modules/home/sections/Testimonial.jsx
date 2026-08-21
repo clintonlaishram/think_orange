@@ -3,9 +3,9 @@ import { motion } from "motion/react";
 
 import { testimonials } from "@/content/testimonials";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Reveal } from "@/components/motion/Reveal";
 import { ArcRings } from "@/components/ui/ArcRings";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 const ARC_RINGS = [
   { r: 180, width: 16, opacity: 0.05 },
@@ -67,13 +67,20 @@ export function Testimonial() {
         <Reveal>
           {(inView) => (
             <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
-              <Eyebrow>What clients say</Eyebrow>
-              {/* "In their words" states nothing about how many clients there
-                  are or where they are — every version of that sentence is a
-                  claim on CONTENT-PLAN.md §1.1's hold list. (This heading read
-                  "Trusted by learners and parents" until Phase 10, left over
-                  from another project's copy.) */}
-              <h2 className="mt-3 text-heading-md text-canvas">In their words</h2>
+              {/* "In their words" states nothing about how many clients there are or
+                  where they are — every version of that sentence is a claim on
+                  CONTENT-PLAN.md §1.1's hold list. (This heading read "Trusted by
+                  learners and parents" until Phase 10, left over from another project.) */}
+              {/* CENTRED, so the wrapper carries the flex column itself: without it the
+                  wrapper div stretches and Eyebrow's own flex row aligns left. */}
+              <SectionHeading
+                eyebrow="What clients say"
+                heading="In their words"
+                headingClassName="text-heading-md"
+                className="flex flex-col items-center"
+                dark
+                reveal={false}
+              />
 
               {/* `h-16` is the reservation, not styling. The active avatar
                   animates 44px → 64px with `transition-all`, and height is a

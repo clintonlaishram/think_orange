@@ -1,9 +1,9 @@
 import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Reveal } from "@/components/motion/Reveal";
 import { Accordion } from "@/components/ui/Accordion";
 import { site } from "@/content/nav";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // THE FAQ SECTION LAYOUT — the homepage row's, applied everywhere
 // (19-08-2026, Clinton: "take the design of the home page FAQs on all pages").
@@ -23,15 +23,35 @@ import { site } from "@/content/nav";
 // surface is decided per page (DscHub derives it from its column count so the
 // cadence can't repeat) and some callers hang an id or JSON-LD off it. This
 // component owns the layout inside the section, nothing else.
-export function FaqSection({ eyebrow = "Common questions", heading, intro, items, askLabel = "Ask us something else" }) {
+// `dark` is available but currently unused by any call site — every FAQ
+// section on the site sits on a light surface. It exists so a future dark
+// one cannot forget it: without it the subheading keeps its ink-500
+// light-surface value, which measures ~1.5:1 on ink-900.
+export function FaqSection({
+  eyebrow = "Common questions",
+  heading,
+  intro,
+  items,
+  askLabel = "Ask us something else",
+  dark = false,
+}) {
   return (
     <Container>
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
         <Reveal className="lg:col-span-4">
           <div className="lg:sticky lg:top-[calc(var(--header-h)+32px)]">
-            <Eyebrow>{eyebrow}</Eyebrow>
-            <h2 className="mt-3 text-h2 max-w-[18ch]">{heading}</h2>
-            {intro && <p className="mt-4 max-w-[42ch] text-body text-ink-500">{intro}</p>}
+            {/* The sitewide LABEL / Heading / Subheading header. The tighter
+                measures are the one legitimate override: this rail is a 4-col
+                column, where the standard 32ch/68ch would run past its edge. */}
+            <SectionHeading
+              eyebrow={eyebrow}
+              heading={heading}
+              lede={intro}
+              dark={dark}
+              headingClassName="max-w-[18ch]"
+              ledeClassName="max-w-[42ch] text-body sm:text-body"
+              reveal={false}
+            />
             <a
               href={site.whatsappHref}
               target="_blank"

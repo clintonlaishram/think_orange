@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Stagger } from "@/components/motion/Stagger";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // Homepage section 4 — CONTENT-PLAN.md §6 row 4. Light surface, DESIGN.md
 // §11.4's archetype ("not cards... hairlines... cost whitespace") borrowed
@@ -37,7 +37,10 @@ export function WhoWeWorkWith() {
   return (
     <section data-surface="light" className="section-pad bg-canvas">
       <Container>
-        <Eyebrow>Who we work with</Eyebrow>
+        {/* This section carried a label and no heading. Rather than write a new
+            sentence, the existing label is PROMOTED to the heading and the label
+            becomes a plain category word. No new claim. */}
+        <SectionHeading eyebrow="Clients" heading="Who we work with" />
 
         <Stagger className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {segments.map((segment, index) => (

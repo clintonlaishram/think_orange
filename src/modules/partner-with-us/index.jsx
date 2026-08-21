@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
 import { ArcGlyph } from "@/components/ui/ArcGlyph";
 import { ArcRings } from "@/components/ui/ArcRings";
@@ -13,6 +12,7 @@ import { Reveal } from "@/components/motion/Reveal";
 import { CtaBand } from "@/modules/home/sections/CtaBand";
 import { partnerContent } from "@/content/partner-with-us";
 import { PartnerEnquiryForm } from "@/modules/partner-with-us/PartnerEnquiryForm";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // T6 — CONTENT-PLAN.md §10. See partner-with-us.js's own header comment for
 // why the commercial tiles state THAT commission/fee/timeline terms exist and
@@ -103,10 +103,12 @@ export default function PartnerWithUs({ path }) {
       <Section surface="light">
         <Container>
           <Reveal>
-            <Eyebrow>Who it&apos;s for</Eyebrow>
-            <h2 className="mt-3 text-h2 max-w-[32ch]">
-              Built for the people already trusted with a client&apos;s filings
-            </h2>
+            <SectionHeading
+              eyebrow="Who it&apos;s for"
+              heading="Built for the people already trusted with a client&apos;s filings"
+              headingClassName="max-w-[32ch]"
+              reveal={false}
+            />
           </Reveal>
 
           {/* Per-item `Reveal as="li"` rather than `<Stagger>`: Stagger wraps
@@ -188,10 +190,12 @@ export default function PartnerWithUs({ path }) {
               intro centres its prose against the ProductShot beside it. */}
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-16">
             <Reveal className="lg:col-span-5">
-              <Eyebrow>What we handle</Eyebrow>
-              <h2 className="mt-3 text-h2 max-w-[24ch]">
-                Everything after you make the referral
-              </h2>
+              <SectionHeading
+                eyebrow="What we handle"
+                heading="Everything after you make the referral"
+                headingClassName="max-w-[24ch]"
+                reveal={false}
+              />
             </Reveal>
             <Reveal delay={0.12} className="lg:col-span-7">
               <WhatWeHandlePanel points={partnerContent.whatWeHandle} />
@@ -211,10 +215,12 @@ export default function PartnerWithUs({ path }) {
       <Section surface="light-alt">
         <Container>
           <Reveal>
-            <Eyebrow>What you get</Eyebrow>
-            <h2 className="mt-3 text-h2 max-w-[32ch]">
-              A programme built to stay out of your way
-            </h2>
+            <SectionHeading
+              eyebrow="What you get"
+              heading="A programme built to stay out of your way"
+              headingClassName="max-w-[32ch]"
+              reveal={false}
+            />
           </Reveal>
 
           <div className="mt-10 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-2">
@@ -246,8 +252,12 @@ export default function PartnerWithUs({ path }) {
         <Container>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
             <Reveal className="lg:col-span-5">
-              <Eyebrow>Apply</Eyebrow>
-              <h2 className="mt-3 text-h2 max-w-[26ch]">Tell us about your practice</h2>
+              <SectionHeading
+                eyebrow="Apply"
+                heading="Tell us about your practice"
+                headingClassName="max-w-[26ch]"
+                reveal={false}
+              />
               <p className="mt-4 max-w-[52ch] text-body-lg text-ink-500">
                 We&apos;ll confirm the commission structure, onboarding steps and next order
                 details once we hear from you.

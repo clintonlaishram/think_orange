@@ -16,6 +16,7 @@ import { getInsightImage } from "@/content/insights/images.js";
 import { findBySlug, site } from "@/content/nav";
 import { articleJsonLd } from "@/lib/jsonld";
 import { formatArticleDate } from "@/lib/formatDate";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // T10 article — /insights/:slug. One component for all four articles, driven
 // entirely by content: no per-slug branching, same discipline as T2/T4.
@@ -239,8 +240,11 @@ export default function InsightArticle({ path }) {
       {others.length > 0 && (
         <Section surface="light-alt">
           <Container>
-            <Eyebrow>More insights</Eyebrow>
-            <h2 className="mt-3 text-h2 max-w-[32ch]">Also worth reading</h2>
+            <SectionHeading
+              eyebrow="More insights"
+              heading="Also worth reading"
+              headingClassName="max-w-[32ch]"
+            />
             {/* Deliberately the SAME card construction as /insights' own index
                 (modules/insights/index.jsx), not a second design for the same
                 content type on an adjacent page. Three things were wrong with

@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { Download } from "lucide-react";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Stagger } from "@/components/motion/Stagger";
 import { dscDriversHub } from "@/content/nav";
 import { drivers } from "@/content/dsc/drivers";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // Homepage section 9 — CONTENT-PLAN.md §6 row 9, DESIGN.md §11.9's tone
 // ("deliberately plain — this is a service block, not a sales block").
@@ -20,10 +20,11 @@ export function DriverDownloads() {
   return (
     <section data-surface="light" className="section-pad bg-canvas">
       <Container>
-        <Eyebrow>Token driver downloads</Eyebrow>
-        <h2 className="mt-3 text-h2 max-w-[26ch]">
-          Driver downloads for every DSC token we issue
-        </h2>
+        <SectionHeading
+          eyebrow="Token driver downloads"
+          heading="Driver downloads for every DSC token we issue"
+          headingClassName="max-w-[26ch]"
+        />
 
         <Stagger className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {dscDriversHub.children.map((driver) => {

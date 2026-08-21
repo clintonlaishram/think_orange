@@ -6,7 +6,6 @@ import {
   Usb,
 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { ArcGlyph } from "@/components/ui/ArcGlyph";
 import { ArcRings } from "@/components/ui/ArcRings";
 import { Button } from "@/components/ui/Button";
@@ -17,6 +16,7 @@ import { dscProducts as dscNav, site } from "@/content/nav";
 import { dscProducts as dscContent } from "@/content/dsc/products";
 import { dscIcon } from "@/content/dsc/icons";
 import { Img } from "@/components/ui/Img";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // Homepage section 8 — CONTENT-PLAN.md §6 row 8. Deep surface. Ledes are
 // pulled from src/content/dsc/products.js verbatim — the real T4 page copy
@@ -88,19 +88,22 @@ export function DscBand() {
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="lg:col-span-7">
             <Reveal>
-              <Eyebrow>Digital Signature Certificates</Eyebrow>
-              {/* Two lines, second in ember — the reference's treatment, done
-                  with a plain coloured span. No gradient text (§16). */}
-              <h2 className="mt-3 max-w-[22ch] text-h2 text-canvas">
-                Digital signatures,{" "}
-                <span className="text-ember-300">simplified for you.</span>
-              </h2>
-              <p className="mt-4 max-w-[54ch] text-body-lg text-ink-200">
-                Issued through our eMudhra and SignX partnership — both licensed
-                certifying authorities, not a reseller of unknown standing. That
-                is the question every buyer actually has about a digital
-                signature.
-              </p>
+              {/* Two lines, second in ember — the reference's treatment, done with a
+                  plain coloured span. No gradient text (§16). */}
+              <SectionHeading
+                eyebrow="Digital Signature Certificates"
+                heading={
+                  <>
+                    Digital signatures,{" "}
+                    <span className="text-ember-300">simplified for you.</span>
+                  </>
+                }
+                lede="Issued through our eMudhra and SignX partnership — both licensed certifying authorities, not a reseller of unknown standing. That is the question every buyer actually has about a digital signature."
+                headingClassName="max-w-[22ch]"
+                ledeClassName="max-w-[54ch]"
+                dark
+                reveal={false}
+              />
             </Reveal>
 
             <Reveal delay={0.12}>
@@ -139,16 +142,22 @@ export function DscBand() {
 
         {/* ── Band 2: the product grid, now under its own label. */}
         <Reveal className="mt-20 lg:mt-24">
-          <Eyebrow>DSC solutions</Eyebrow>
-          <h3 className="mt-3 max-w-[30ch] text-h3 text-canvas">
-            Choose the right DSC for your needs
-          </h3>
-          {/* The reference's short rule under the heading — left-aligned to
-              the text rather than centred beneath it. */}
-          <span
-            className="mt-4 block h-0.5 w-16 rounded-full bg-ember-400"
-            aria-hidden="true"
-          />
+          <SectionHeading
+            eyebrow="DSC solutions"
+            heading="Choose the right DSC for your needs"
+            as="h3"
+            headingClassName="text-h3 max-w-[30ch]"
+            dark
+            reveal={false}
+          >
+            {/* The reference's short rule under the heading, left-aligned to the
+                text rather than centred beneath it. Passed as children so it stays
+                part of this header rather than becoming a floating sibling. */}
+            <span
+              className="mt-4 block h-0.5 w-16 rounded-full bg-ember-400"
+              aria-hidden="true"
+            />
+          </SectionHeading>
         </Reveal>
 
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

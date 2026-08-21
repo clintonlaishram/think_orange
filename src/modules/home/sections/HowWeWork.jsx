@@ -6,8 +6,8 @@ import {
   useTransform,
 } from "motion/react";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { ArcRings } from "@/components/ui/ArcRings";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // Homepage section 6 — CONTENT-PLAN.md §6 row 6, DESIGN.md §11.5 + Pattern D
 // (§9.2). Dark surface. Four steps, emphasising written scope before work
@@ -80,10 +80,12 @@ export function HowWeWork() {
       />
 
       <Container className="relative">
-        <Eyebrow>How we work</Eyebrow>
-        <h2 className="mt-3 text-h2 max-w-[28ch]">
-          Four steps, and a written scope before we touch anything
-        </h2>
+        <SectionHeading
+          eyebrow="How we work"
+          heading="Four steps, and a written scope before we touch anything"
+          headingClassName="max-w-[28ch]"
+          dark
+        />
 
         {/* Desktop/tablet — the real arc-draw-on-scroll (Pattern D).
             aspect-ratio keeps the SVG's coordinate space matching the

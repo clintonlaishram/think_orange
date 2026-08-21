@@ -4691,3 +4691,670 @@ measuring:
   profile dir per run, and `pkill -9 -f "Google Chrome --headless"` between
   sessions. Also: `npx serve` DIES when `vite build` replaces `dist/` under it —
   restart it after every rebuild, and the symptom is curl returning `000`.
+
+## Services module: premium pass — 22-08-2026
+NOT a phase. Clinton: analyse Home and /dsc, then bring the services pages up to
+the same standard — "premium, clean and aesthetic", keep the enquiry form in a
+card, and add proper animation. Scope: `ServiceLeaf.jsx` (T2, 31 routes),
+`CategoryHub.jsx` (T3, 6 routes), `ServicesHub.jsx` (`/services`) and
+`EnquiryCard.jsx`. Run as **Redesign — Preserve**: copy, IA, routes, JSON-LD,
+sub-nav anchor ids and the enquiry form's field names and order are all
+unchanged, and every string still comes from `nav.js` or the content files.
+
+### Why the pages read as plain — four structural causes, none of them colour
+Measured against Home and /dsc rather than judged by eye. "Add more orange"
+would not have fixed any of these, and the ember budget was never the problem
+(non-CTA folds measured 0.6–1.9% against the ~12% ceiling, before and after).
+
+1. **NO DARK BAND, or one arriving far too late.** `/services` ran
+   `deep → light → light → ember` — a genuine **consecutive-surface repeat**,
+   the property every other page is audited against, so this was a real bug and
+   not only a flat look. `/services/gst` ran six light-family surfaces in a row.
+   The T2 leaf reached its first dark band only at section 6. Exactly the
+   diagnosis already recorded for /dsc and /about.
+2. **AN EYEBROW ON EVERY SECTION** — eight over ten sections on the leaf. The
+   most templated rhythm a page can have, and the same thing that made /about
+   read as generated.
+3. **BARE HEROES.** Flat ink-950 plus the default lone crescent, whose brightest
+   part sits behind the fixed header, so it reads as one dull circle that has
+   been cut off. No spec row, no aside.
+4. **THE SAME LAYOUT FAMILY THREE TIMES.** "Who needs this", "What's included"
+   and "Documents required" were all sparse two-column text runs; on T3 the
+   intro's navy panel listed every child and the very next section was a grid of
+   **the same children**.
+
+### What each page got
+- **`components/ui/SectionHeading.jsx` (new)** is DscHub's private
+  `GroupHeading`, extracted. Mono index (optional), a hairline rule that DRAWS
+  on scroll, then eyebrow / h2 / lede. `DscHub` now consumes it and keeps only a
+  thin adapter, so there is ONE definition — same discipline as `.card-dark` and
+  `lib/arc.js`. The drawn rule is what lets most sections drop their eyebrow
+  entirely: the structure carries the ordering the labels were carrying badly.
+  Leaf eyebrow count is now 3 (hero category, StepFlow, FAQ) over 10 sections.
+- **`content/services/icons.js` (new)** — one icon per leaf (31) and per
+  practice area (6), so a service carries the same mark on `/services`, on its
+  category hub and in a related-service card. ⛔ **Always via `serviceIcon()` /
+  `categoryIcon()`, never by indexing the map**: consumers map over nav.js, so
+  an unmapped slug resolves to `undefined` and `<undefined />` is a hard React
+  crash. That exact bug shipped once from `DscBand`'s private map (17-08-2026).
+  ⚠️ It is a component-side module under `src/content/` (it imports lucide) —
+  never import it from `nav.js`, `lib/seo.js`, or anything the Node scripts
+  load. Same caveat as `content/insights/images.js`. Verified `content-check.mjs`
+  never touches it: that script imports `services/index.js` and then reads
+  `<slug>.js` by name, and `icons` is not a slug.
+- **T2 cadence is now `deep → light → dark → light → light-alt → dark → light →
+  light-alt → light → ember`** — darks at positions 3 and 6, which is the
+  homepage's own rhythm. "Who needs this" is the new band.
+- **T2 layout families, now all different:** numbered hairline rows on dark
+  (who needs this) / ONE card holding a two-column checklist (what's included) /
+  a card per entity-type group (documents) / scroll-linked StepFlow (how it
+  works) / a 7/5 table beside a `.panel-dark` panel (timeline).
+  - The documents grid is the biggest single lift: up to five groups previously
+    ran together as one ~30-row text wall with nothing marking where one entity
+    type ended. The group is a real boundary in the data, not a grid invented to
+    fill space.
+  - The timeline panel's copy is the OLD footnote, moved out of the gutter and
+    given the button it was already asking for. No new claim.
+- **T3:** the intro's child-list panel MOVED into the hero's `aside` (above the
+  fold, and no longer the same list twice); the child grid is the dark band with
+  ringed icon-led `.card-dark` links; why-us takes the big-ember-numeral
+  treatment in the intro's formerly empty right column. Cadence
+  `deep → light → dark → light → light-alt → ember`.
+- **`/services`: the rows STAY ROWS, deliberately.** Turning six categories into
+  six cards is the tempting move and it is wrong — CLAUDE.md already records that
+  §16's tell 7 over-triggered on exactly this page because a multi-column list of
+  plain text links is a DIRECTORY, the correct archetype here. What the rows
+  lacked was an anchor and a hierarchy, so each leads with its practice-area mark
+  and a count, and each child link is a real hairline row. The growth group is
+  the dark band, which is what fixes the consecutive-`light` bug.
+- **The enquiry form STAYS IN A CARD** (explicit instruction), deliberately
+  unlike /contact's borderless `.field-bare` treatment: there the form IS the
+  page, so a card outline boxes the whole content; here it is one column beside
+  prose, and the card is what marks it as a distinct actionable object.
+  `.card-premium` wash, filled ember disc, one quiet `ArcRings` pair, the shared
+  `Textarea` in place of the hand-rolled one, and a hairline footer carrying the
+  phone fallback. `interactive={false}` is kept — the card is not pressable, and
+  Card's hover lift plus corner-arc draw would fight the real controls' focus
+  states.
+
+### Four real bugs, every one found by MEASURING rather than by looking
+1. ⛔ **`Stagger` silently deleted every divider on the new dark band.** Rows
+   measured `border-top-width: 0px` across the board. `Stagger` wraps each child
+   in its own `motion.div`, so each row is the ONLY child of its wrapper and
+   `first:border-t-0` matched all six. Third occurrence of this family in this
+   repo (`md:first:pl-0` on /contact, the zero-gutter /about dark band) — and I
+   wrote the warning about it in `CategoryHub` and then walked into it in
+   `ServiceLeaf` in the same session. **Fix: plain grid + per-item `Reveal`**,
+   which forwards `className` onto the element it renders, so the row IS the
+   grid item and `first:` / `nth-child` resolve against real siblings. The same
+   trap was live in T3's `WhyUs`.
+2. ⛔ **`Button variant="secondary"` on a dark panel was `text-ink-600` on an
+   `border-ink-100` outline** — near-invisible text plus a bright white hairline
+   on ink-800. `secondary` is `{light, dark}` and defaults to `tone="light"`;
+   the dark panel needs `tone="dark"` passed explicitly.
+3. ⛔ **At 375px the timeline table put its ENTIRE "Indicative time" column
+   off-screen.** `min-w-[480px]` inside a ~327px container behind an
+   `overflow-x-auto` a reader has no reason to look for: the table appeared to
+   have one column and no timings at all. Now `min-w-[320px]` with tighter
+   mobile row padding — two columns of short strings wrap fine in 327px. Found
+   by screenshotting the real 375px viewport, not by reading the class.
+4. Related-practice-areas rendered a fixed 3-column track for the 2 entries most
+   categories have, leaving an empty cell. Now count-aware, and the count is
+   derived from the SAME resolved array the cards render from.
+
+### Verification harness — three traps that produced phantom failures
+The pixel-contrast sampler is the right instrument for these pages (surfaces are
+`color-mix` gradients that no static resolver can evaluate), but it reported 12
+failures at 1440 and 24 at 375 that were all artifacts. Each fix is worth
+keeping:
+- ⚠️ **A pill button's ROUNDED CORNERS expose the page behind it**, so p95/p05 of
+  its sampled rect is fiction — it reported the ember CTA at **1.00:1**. Score
+  any element with an opaque background STATICALLY against that colour instead.
+- ⚠️ **Text clipped by an `overflow-x` ancestor still reports its full rect**, so
+  the sample averages the page outside the clip. Skip it.
+- ⚠️ **The fixed FAB and ScrollNav sit over the RIGHT EDGE of any full-width
+  heading at 375px**, so p05 picked up a dark disc and reported an ink-600 h2 on
+  canvas at 1.02:1. Hide `.whatsapp-fab, .scroll-nav, header` in the probe
+  stylesheet — CLAUDE.md already treats that overlap as separate and cosmetic.
+  An `elementFromPoint` check on the box CENTRE does not catch it; the overlap is
+  at the edge.
+- Also re-confirmed: `primeReveals` must step from Node awaiting each scroll —
+  IntersectionObserver delivers asynchronously, so one synchronous in-page loop
+  only ever lets the observer see the final position.
+
+### Measured results
+`npm run lint` 0 problems. `content:check` clean apart from the three standing
+unconfirmed-content warnings. `build` + prerender clean, and a byte-level check
+of the prerendered services HTML: exactly one `<h1>`, all `ld+json` blocks
+parse (4/4 on hubs, 5/5 on leaves), a canonical on each, and no `undefined` /
+`[object Object]` / `NaN` in any rendered string.
+
+Then a real Chrome over CDP against the dev server (never the in-app pane —
+`visibilityState: "hidden"` there suspends IntersectionObserver), asserting
+`innerWidth` / `visibilityState` / `pathname` before measuring anything:
+- **Pixel-sampled contrast: 0 failures.** 615 samples at 1440px over 6 routes,
+  385 at 375px over 4 routes. Tightest 4.64:1 at both widths.
+- **Surface cadence off the live DOM, zero consecutive repeats** on all three
+  templates (listed above). The `/services` repeat is fixed.
+- **Ember per fold**, hue census: worst NON-CtaBand fold is **1.23%**
+  (`/services`), **1.28%** (`/services/gst`), **1.89%** (leaf), against `/dsc`'s
+  own **1.27%**. Ceiling ~12%. Every fold above that is a CtaBand fold, which is
+  the site's one deliberate full-orange band.
+- **0 stuck reveals** on all routes after priming. The remaining zero-opacity
+  elements are hover affordances (31 on `/services` = one arrow per leaf row),
+  distinguished from stuck reveals by having no transform.
+- **`scrollWidth === innerWidth` at 375px** on all 7 routes checked, including
+  `/` and `/dsc` as regression controls.
+- **Reduced motion** via `Emulation.setEmulatedMedia`: 0 running animations, 0
+  elements stuck mid-opacity, and `SectionHeading`'s rule renders DRAWN rather
+  than absent (`initial={false}`) — it is structure, and a missing divider reads
+  as a bug.
+
+### Notes for whoever reads this next
+- **Route count is 65, not the 68 this file records above.** `nav.js` has no
+  diff in this session (`git status` confirms); the earlier number is stale
+  relative to the checked-out tree, not a regression from this pass.
+- **Not re-measured: Lighthouse.** These pages gained composited layers
+  (`ArcRings` per band) but nothing that touches an LCP element's paint timing.
+  That is reasoning, not a measurement — rebuild Phase 10's `_serve-h2.mjs`
+  median-of-3 harness before trusting a Performance score.
+- **Deliberately NOT used: `SurfaceTexture`.** Its four variants are DSC motifs
+  (a guilloché means "certificate"), so one on a services page would say
+  something untrue about it — the same call /about made. The heroes take
+  `ringsId` instead, which is non-semantic and already endorsed.
+- All CDP/audit scripts lived in the session scratchpad and are gone; nothing
+  was added under `scripts/`.
+
+## One section-header pattern sitewide — 22-08-2026
+NOT a phase. Clinton, immediately after the services premium pass: "keep the
+section heading same throughout the website i.e.: LABEL (eyebrow component) /
+Heading / Subheading (if there)."
+
+**`components/ui/SectionHeading.jsx` is now THE section header for the whole
+site.** 47 call sites across 24 files. ⛔ **Do not hand-roll
+`<Eyebrow> + <h2 className="mt-3 text-h2">` in a page again** — that pair was
+duplicated in ~30 files with four different heading measures and three
+different lede spacings, which is exactly the drift this component ends.
+
+### Two decisions Clinton made before the work started
+1. **The drawn hairline rule and the mono index are OPT-IN, not part of the
+   standard.** The standard is exactly the three parts he listed. `rule` /
+   `index` stay available and are used only where sections genuinely form a
+   sequence: the DSC menu groups and the /services statutory-vs-growth split.
+   Turning them on everywhere would have put a number on ~30 sections whose
+   order carries no meaning, and added a visible new line above every one.
+2. **Sections with no label get one written.** Short, plain, derived from the
+   section's own existing content. Every one is listed below so the wording can
+   be corrected.
+
+### The labels that are NEW copy (nothing else on the site changed wording)
+- `/about` — **"Who we are"** (over `site.positioning`), **"Our approach"**
+  (over "What sets us apart"), **"Where we are"** (over `site.location`).
+- `/about`'s StepFlow — **"How we work"**. It was passing no `eyebrow` at all,
+  so it was the one genuine gap the header audit found rather than an exclusion.
+- `/contact` — **"Send a message"**. ⚠️ **This reverses a recorded decision.**
+  CLAUDE.md's 21-08-2026 contact entry says that page runs "EXACTLY ONE EYEBROW
+  … the old version had three ('Get in touch' / 'Send a message' / 'Reach us
+  directly')". The sitewide instruction supersedes it, and only ONE of the three
+  came back — "Where we are" is left alone as a sticky panel title beside the
+  form. If /contact should stay minimal, this is the line to remove.
+- `/services` group headers — **"Services"** on both groups.
+
+### Where an existing label was PROMOTED rather than a sentence invented
+Three sections carried a label and no heading. The existing string became the
+heading and a plain category word became the label, so the structure is
+satisfied with no new claim: `WhoWeWorkWith` ("Clients" / "Who we work with"),
+`WhyThinkOrange` ("Why us" / "Why ThinkOrange"), `DscHub`'s why-us row
+("Why us" / "Why ThinkOrange").
+
+### Services eyebrows are RESTORED, not invented
+The 22-08-2026 premium pass had stripped them under the "max 1 eyebrow per 3
+sections" rule. The five on a T2 leaf are back and they are the ORIGINAL
+strings, which is what makes them earn their place here: **they are the six
+sub-nav labels**, so each one names the anchor the sticky bar above jumps to.
+
+### What is deliberately NOT a section header
+Recorded in the component's own docblock, and the header audit treats each as a
+pass rather than a gap:
+- `PageHero`'s eyebrow/h1 and the homepage Hero's (page headers, not sections)
+- `CtaBand`'s `display-lg` h2 (the one full-orange band, DESIGN.md §11.11)
+- Card and panel titles: `EnquiryCard`, the DSC enquiry strip, `Footer`'s mono
+  column labels, `CategoryHub`'s "In this category" and "Why ThinkOrange" rail
+  labels, `/dsc`'s hero aside, Article's "Services in this article"
+- Prose headings inside article and legal body copy
+- **The opening prose block directly under a hero has no header at all** and
+  that is consistent, not an oversight: `/dsc`'s intro, `CategoryHub`'s intro
+  and the T2 leaf's overview all lead with a lead paragraph.
+
+### Implementation notes worth keeping
+- **`FaqSection`, `StepFlow` and `ComingSoon` now render through
+  `SectionHeading` too**, so there is one definition rather than four. Their
+  narrow 4-col rails are the one legitimate measure override
+  (`headingClassName="max-w-[18ch]"`, `ledeClassName="max-w-[42ch]"`); the
+  standard 32ch/68ch would run past the column edge.
+- **`reveal={false}` where a call site already sits inside a `<Reveal>`.**
+  `SectionHeading` reveals itself by default, and double-wrapping installs a
+  second IntersectionObserver and stacks the delays.
+- **`Testimonial` needs `className="flex flex-col items-center"`** because that
+  section is centred: without it the wrapper div stretches and `Eyebrow`'s own
+  flex row aligns left inside it.
+- **`DscBand`'s band-2 header passes the short ember rule as `children`**, so it
+  stays part of the header instead of becoming a floating sibling. `as="h3"` +
+  `headingClassName="text-h3"` works only because `lib/cn.js` declares the
+  semantic font-size scale into twMerge's `font-size` group — without that fix
+  `text-h3` would be classified as a COLOUR and lose to `text-h2`.
+- `FaqSection` gained an unused-but-present `dark` prop, so a future dark FAQ
+  cannot forget it and ship an ink-500 lede on ink-900 (~1.5:1).
+
+### Two harness traps this pass added to the pile
+- ⚠️ **The auto-import helper inserted `import …` INTO the middle of a
+  multi-line import block** (`import {` … `} from`), because "last line starting
+  with `import `" is not the last import. It produced a parse error that reads
+  like a syntax bug in the component. Anchor on the closing `} from "…";` line.
+- ⚠️ **A contrast sampler must check BOTH axes for a clipping ancestor.** A
+  collapsed accordion panel is `overflow:hidden` at 0 height and its links still
+  report a full rect, so a horizontal-only clip check let four invisible FAQ
+  rows through and measured the surface behind them. Cost four phantom failures
+  at 375px.
+
+### Verified
+`npm run lint` 0 problems, `content:check` clean, `build` + prerender 65 routes,
+and the prerendered HTML for 5 representative routes has exactly one `<h1>` and
+no `undefined` / `[object Object]` in any rendered string.
+
+Real Chrome over CDP against the dev server, asserting
+`innerWidth`/`visibilityState`/`pathname` first:
+- **A dedicated header-structure probe** walked every `main section` on 16
+  routes and reported the (label, heading, lede) triple for each. Every section
+  header carries a LABEL; the only headings without one are the exclusions
+  listed above, each confirmed by name.
+- **Pixel-sampled contrast: 923 samples at 1440px over 10 routes, 793 at 375px
+  over 8 routes. 2 failures at 1440, 1 at 375 — all PRE-EXISTING and in files
+  this session never opened** (see below).
+- `scrollWidth === innerWidth` at 375px and exactly one `<h1>` on all 12 routes
+  checked. Reduced motion via `Emulation.setEmulatedMedia`: 0 running
+  animations and 0 elements stuck mid-opacity on 4 routes.
+
+### ⚠️ Two pre-existing contrast failures, NOT introduced here, one deliberate
+1. **`Chip`'s `active` variant is `bg-ember-400 text-white` — 3.15:1 measured**,
+   which is the exact pairing CLAUDE.md's first non-negotiable forbids and which
+   Phase 10 had already fixed once. It was changed back, and `Chip.jsx` carries
+   the line **"Do not change this white text in active at all"**, so it was left
+   alone. It renders on the homepage compliance-calendar filter row. Flagged,
+   not touched.
+2. **The homepage hero eyebrow measured 3.96:1** over the animated DarkVeil.
+   `Hero.jsx` is untouched this session (`git status` confirms). Phase 10 sampled
+   the hero across FOUR animation phases for exactly this reason — the veil
+   moves, so one frame proves nothing. Re-measure multi-phase before acting.
+
+## Per-practice-area hero textures; hero spec row removed — 22-08-2026
+NOT a phase. Clinton: "in hero section i want different background texture for
+each service group list gst, itr filling, so on. and remove the 4 stats given
+from the hero section." Then, on the first cut: "improve the texture design,
+now it looks simple and not looking good, make more complex and premium type."
+
+### The spec row is gone from the services templates only
+The four derived tiles (`Practice area / Process / Documents / Professional
+fees` on a leaf, `Services / Practice area / Delivered from / Professional
+fees` on a hub) added by the 22-08-2026 premium pass are removed from
+`ServiceLeaf`, `CategoryHub` and `ServicesHub`. ⚠️ **`/dsc` and `/about` still
+render theirs** — they came from their own earlier passes and were not part of
+this instruction. Say the word and they go the same way.
+
+### Six new motifs, one per practice area
+`src/content/services/textures.js` maps category slug -> variant, and **a leaf
+inherits its CATEGORY's motif**, so all five GST pages share one and all four
+Income Tax pages share another. That is what makes the texture read as "which
+part of the practice am I in" rather than as decoration that changes at random.
+
+    gst                       cadence   two-scale radial dial   (circular marks)
+    income-tax                strata    double horizontal rules (horizontal)
+    business-setup            frame     nested squares + marks  (rectilinear)
+    registrations-licences    emboss    rim + inner guilloché   (concentric)
+    accounting-audit          column    ruled ledger columns    (vertical)
+    tenders-finance           ascent    graduated diagonals     (diagonal)
+
+- **`/services` deliberately gets NO texture** and keeps its arc rings: it is
+  every practice area at once, so no single motif is true of it.
+- ⛔ **The four DSC variants are NOT reused.** Those mean something specific —
+  a guilloché says "certificate", a flourish says "eSign" — so putting one
+  behind a GST page would assert something untrue about it. Same reasoning that
+  kept textures off /about entirely.
+- `textures.js` is plain strings with no imports, so it is safe anywhere,
+  unlike `icons.js` which imports lucide and is component-side only. **Do not
+  merge the two.** Both go through a helper with a fallback; never index them.
+
+### ⚠️ "Complex and premium" is NOT a reversal of the 20-08-2026 "cheap" note
+That note was about FIGURATIVE illustration at high opacity — a USB-token
+silhouette, circuit pads, a dashed signing rule, i.e. clip-art of the subject.
+Richness is a different axis. These are built the way security-print engraving
+is: many fine strokes in graduated weights, layered, at LOW opacity. **The
+complexity is in the layer count, never in the brightness**, and no motif
+depicts its subject. Each is the same four-layer scaffold, so they read as one
+family while layer C tells them apart:
+
+    A  anchor      one wide, very low-opacity arc — mass, not line
+    B  guilloché   graduated fine concentric arcs (shared `<Guilloche>`)
+    C  signature   the distinguishing primitive
+    D  echo        a small bracketing cluster, the device CtaBand's corner echo
+                   already established
+
+⚠️ §3.1: the `<Echo>` groups are **translate + POSITIVE scale only**. Never a
+negative scale — a mirrored crescent is a different shape, and the point of
+`lib/arc.js` is that the site repeats exactly one.
+
+### `placement` is derived, and it was a real bug on the first cut
+`PageHero`'s optional `aside` is an opaque `.panel-dark` filling the right
+half, so a top-right composition on a hero that HAS one is almost entirely
+behind the panel — measured on the first pass, only the outer arc and a few
+tick ends survived, which is most of why Clinton said it looked simple.
+`SurfaceTexture` gained a `placement` prop (`default` top-right, `left`), and
+**`PageHero` derives it from `Boolean(aside)` rather than letting a call site
+pass it**, so a template cannot pair the two wrongly. Category hubs (which have
+the aside) get `left`; leaves (which do not) keep top-right.
+
+Only the six service variants are placement-aware — they take an `svgClass`
+prop. The four DSC variants ignore it and keep their hand-tuned positions.
+
+### Two JSX-syntax traps, both cost a build
+- `{/* … */}` is only valid in **child** position. Between JSX **attributes**
+  you need a bare `//` comment (what the rest of this codebase uses), and
+  inside a **ternary branch** (`{textured ? ( … ) : …}`) you need a bare
+  `/* … */` block comment, because the branch must be a single expression.
+  Both produced "Unexpected token" errors that read like a broken component.
+
+### Verified
+`npm run lint` 0 problems, `content:check` clean, `build` + prerender 65
+routes. Prerendered HTML for 4 routes: texture present on the hub and leaf,
+absent on `/services`, **`hero-spec` count 0 everywhere**, one `<h1>`, no
+`undefined` in any rendered string.
+
+Real Chrome over CDP, asserting `innerWidth`/`visibilityState`/`pathname`
+first:
+- **Geometry fingerprint, not shape counts.** A count-based check reported
+  `strata` and `ascent` as identical (both 6 lines) — the fingerprint has to
+  hash the actual `d` / `x1,y1,x2,y2` attributes. All six hash distinctly, and
+  a leaf correctly matches its own category's hash.
+- Rules **terminate exactly on the crescent**, verified against the circle
+  equation: `strata`'s first rule starts at x=81 for y=96 on r=158
+  (200-√(158²-104²)=81.1); `column`'s at y=77 for x=92 on r=164 (76.6).
+- **Pixel-sampled contrast over the hero folds: 0 failures, 178 samples,
+  tightest 5.01:1.** Full-page re-sweep afterwards: 0 failures at 1440px (381
+  samples) and 375px (281 samples), tightest 4.64:1 at both.
+- **Ember coverage on the hero fold: 1.25–1.28% per route, against `/dsc`'s own
+  1.29%** and a ~12% ceiling. The layering adds no colour weight, which is the
+  measurable proof that "complex" was done through stroke count rather than
+  brightness.
+- `scrollWidth === innerWidth` at 375px on all 10 routes checked.
+- **Reduced motion**: 0 running animations, texture wrapper transform `none`,
+  and the texture still RENDERS — it is static line work, so removing it under
+  reduced motion would be wrong.
+- **Duplicate gradient ids: only `cta-arc-fade`**, the pre-existing `CtaBand`
+  defect this file already records, present on `/` and `/dsc` equally. Every
+  new texture id is unique per mounted instance.
+
+### Follow-up: "What's included" is out of its card — 22-08-2026
+Clinton, on the T2 leaf: "fixed the design of this section do not put inside
+card." Two things were wrong and only one of them was the card.
+
+1. **THE CARD.** A list of short title+body pairs does not need elevation:
+   nothing in it is pressable and nothing is a separate object, which is
+   DESIGN.md's actual test for reaching for a card. On the 1800px container it
+   read as a large empty white box with the content floating at the top.
+2. ⛔ **THE RAGGED GAPS, which the card only made obvious.** The list was a
+   two-column CSS **GRID**, and a grid aligns items into ROWS — so every item
+   was stretched to the height of the tallest one beside it, which is why a
+   two-line entry sat above a lake of white space when its neighbour ran to
+   five. **Switched to CSS MULTI-COLUMN**, which has no row alignment at all:
+   items pack against each other and the rhythm is even down both columns
+   whatever the copy does. `break-inside-avoid` stops an item splitting across
+   the gap. Measured: `maxGapWithinColumn` is **0** on every leaf checked.
+
+Details worth keeping:
+- **The rule sits on TOP of each item, not the bottom.** With two columns of
+  unequal length a bottom rule leaves a hairline dangling under the shorter
+  one; a top rule terminates cleanly by construction.
+- **Reading order changed from row-major to column-major and that is an
+  improvement, not a regression.** DOM order is untouched (source order 1-8),
+  so assistive tech is unaffected; visually the left column is now items 1-4
+  instead of 1,3,5,7.
+- ONE `Reveal` around the whole list, never per item — a dozen lines resolving
+  one by one while a reader is reading them is what "body copy never animates"
+  protects against.
+- ⚠️ The text moved from a `bg-white` card onto the `canvas` section, which is
+  slightly darker, so every ratio in here shifted down. Re-measured rather than
+  assumed: **0 failures across 54 samples, tightest 9.77:1.**
+- Verified on four leaves with 6 and 8 items: no card, 2 columns, zero
+  within-column gap; at 375px it collapses to one column with no overflow.
+  `npm run lint` 0 problems, `content:check` clean, build + prerender 65
+  routes, and the prerendered HTML confirms no `card-premium` wrapper and the
+  multi-column class present.
+
+### Follow-up: "Is this you?" rebuilt on oversized numerals — 22-08-2026
+Clinton, on the T2 leaf's dark band: "fixed the design of this make it look
+more premium." Two problems, and the second one I had introduced myself an hour
+earlier.
+
+1. ⛔ **SECTION-LAYOUT-REPETITION I CREATED.** The moment "What's included"
+   below became a two-column ruled list, this band was the SAME layout family
+   two sections apart on one page. It is now DESIGN.md §11.4's oversized-mono-
+   numeral archetype (what `WhyThinkOrange` uses on the homepage): the numeral
+   carries the separation instead of a hairline, so the two blocks read as
+   different treatments rather than one printed twice. **Worth remembering that
+   fixing one section can break a neighbour's distinctness** — check the
+   families on the whole page after changing any one of them.
+2. ⛔ **THE SAME RAGGED-GAP BUG, third occurrence.** This was still a
+   two-column CSS **grid**, which aligns items into ROWS, so a one-line
+   statement was stretched to the height of the two-line one beside it — the
+   lake of white under row 03 in Clinton's screenshot. CSS multi-column again.
+   Measured `maxGapWithinColumn: 0` on every leaf checked, including a 5-item
+   one where the columns balance 3+2.
+
+**The numerals are `aria-hidden` but their colour was still measured**, per the
+standing lesson that `aria-hidden` means "not announced", not "exempt from
+contrast" — they are 26px glyphs a sighted reader uses to count. ember-400 on
+the ambient ink-900 band measures **5.85:1**, clear of the 4.5:1 floor.
+Statements moved ink-200 -> ink-100 at `text-body-lg` and measure **14.19:1**:
+at this size they are the section's content, not supporting copy.
+
+The per-item `Reveal` stagger is gone — one `Reveal` around the list. Six
+statements resolving one by one is what "body copy never animates" protects
+against, and the old code was doing exactly that.
+
+Verified: 4 leaves (6-item and 5-item), 2 columns, zero within-column gap;
+375px collapses both lists to one column with no overflow; full-page contrast
+**0 failures at 1440px (351 samples) and 375px (171 samples), tightest
+4.64:1**; reduced motion 0 running animations, 0 stuck, both lists at opacity
+1. Lint, `content:check`, build + prerender 65 routes clean, and the
+prerendered HTML confirms the multi-column class with no leftover row rules.
+
+### Follow-up: "Documents required" loses its cards too — 22-08-2026
+Clinton: "it is not looking good keep the layout as it is. do not show in card
+view." Third card removal on this template, and the pattern is now clear:
+**this page does not want card surfaces on its content sections.**
+
+- ⛔ **I argued for keeping the card here and was overruled.** My reasoning was
+  that these groups are mutually exclusive — a reader needs "Every applicant"
+  plus the ONE group matching how they are constituted — so the card edge said
+  "this set, not that set". It was a real argument but the wrong call: the
+  column break plus the ruled group header carry that boundary perfectly well,
+  and the boxes were the thing making the section look heavy. Recorded so the
+  next person does not re-derive the same argument and put them back.
+- **Layout is unchanged**, as asked: same three columns, same order, same
+  group headers with their ember count. Only the card surfaces are gone
+  (`cardLikeBlocks: 0` measured — no background, no border, no shadow on any
+  group block).
+- It had ALREADY been switched from grid to CSS multi-column in the same
+  session, which is what fixes the two visible defects behind the complaint: a
+  grid stretched the 3-item Proprietorship block to match the 6-item one beside
+  it, and a 5-group leaf left a hole in the second row of a 3-column track.
+  Multi-column packs by height — measured 5 groups across 3 columns as 1/2/2
+  with no empty cell.
+- Column gap widened `gap-x-5` -> `gap-x-14` and the per-group gap moved to
+  `mb-10`: with no card edge, whitespace is the only thing separating one
+  group from the next, so it has to do more work. ⚠️ Multi-column `gap` sets
+  the COLUMN gap only — the gap between stacked items must be `mb-*` on the
+  item.
+
+Verified: text moved off a `bg-white` card onto `canvas-alt`, so every ratio
+shifted down and was re-measured rather than assumed — **0 failures across 100
+samples, tightest 4.64:1**, including the `aria-hidden` ordinals and counts
+(aria-hidden means "not announced", not "exempt from contrast"). 375px
+collapses to one column with no overflow. Lint, `content:check`, build +
+prerender 65 routes all clean.
+
+### Follow-up: Timeline & fees rebuilt on the DSC pricing pattern — 22-08-2026
+Clinton: "for the timeline and fee section, create something similar to dsc
+pages pricing section."
+
+`DscProduct`'s pricing section is three beats — heading, then ONE paragraph
+with the CTA beside it, then a hairline-topped content row — and no box
+anywhere. The leaf now runs the same three beats.
+
+What went:
+- **The bordered white table.** `bg-white` + border + radius is a box by
+  another name, and this was the fourth such surface on the template.
+- **The `.panel-dark` "Get it in writing" panel.** Its copy was the one line a
+  reader needs to act on, so it IS the paragraph now, sitting beside the CTA
+  exactly as DSC's does. Copy unchanged.
+
+⚠️ **`<dl>`, not `<table>`, and that is what makes the layout work.** The data
+is stage -> duration pairs, which a description list expresses just as
+correctly — and unlike a table a `<dl>` can be laid out in COLUMNS. A
+two-column table stranded at a third of an 1800px container with a lake beside
+it was the actual reason that section always needed a panel to fill the space.
+Multi-column also packs by height, so no row is stretched (`timelineMaxGap: 0`,
+5 rows over 2 columns at 1440, 1 column at 375).
+
+**"Professional fees / On request" is pulled OUT of the list** and given
+`text-h4` weight above its own rule. DSC makes "On request" its entire section
+heading; this is the same decision — `fees` is null on every leaf and the
+honest answer is the point, not a footnote. Measured 4.97:1 (ember-600 on
+canvas, 18px).
+
+Nothing in the section animates except the paragraph and its CTA: tables and
+body copy never animate, and this is the section a reader checks a date
+against.
+
+The CTA uses `whatsappHref()` from `lib/whatsapp.js` and tabler's
+`IconBrandWhatsapp` with `variant="tertiary"` — the same three pieces
+`DscProduct`'s pricing CTA already uses, rather than a fourth local copy.
+
+### ⛔ Related services KEEPS its card — asked for, then reverted, then kept
+Sequence worth recording so nobody re-litigates it: I offered to strip the
+cards from Related services and the enquiry form, Clinton said "okay apply", I
+converted Related services to hairline link columns, and he then said "for
+related service keep in card view only". **Reverted; the cards are back.**
+
+The principle that survives it: **the four sections that lost their cards are
+STATIC CONTENT; the two that keep them are INTERACTIVE.** Related-service items
+are links and the enquiry form is a form, so in both the card edge is the
+affordance saying "this is a thing you act on" — which is the hierarchy
+DESIGN.md's elevation rule is actually about. Do not "tidy" either one to match
+the other four. (The enquiry card was never in scope anyway: Clinton's original
+services instruction was "for any enquiry form for this pages i want to keep in
+card". My offer to remove it contradicted that and should not have been made.)
+
+Card audit on the finished leaf: exactly ONE card surface outside links and
+buttons — the enquiry card. Everything else flagged by the detector is a form
+input or an ember icon disc inside a link.
+
+Verified: full-page contrast **0 failures, 344 samples at 1440px and 163 at
+375px, tightest 4.64:1**; related-service action rows on a single baseline at
+1440 (three at 375, correctly, one card per row); no horizontal overflow at
+either width; reduced motion 0 running animations and 0 stuck; lint,
+`content:check`, build + prerender 65 routes all clean.
+
+## Bug fix: reveals stopped animating on in-app navigation — 22-08-2026
+Clinton: "reveal effect is not working when i change route in between services
+pages." Real bug, sitewide, and it affected every template that serves more
+than one route — not just service leaves.
+
+### Root cause
+**React reconciles by element TYPE and POSITION.** Two service leaves are two
+different routes, but both render `<ServiceLeaf>` at the same depth of the
+route tree, so React kept the SAME component instance across the navigation and
+only changed its props. Every `useInView(..., { once: true })` latch inside
+`Reveal`, `Stagger` and `SectionHeading` therefore survived already flipped to
+true: the new page's content appeared fully opaque with no reveal at all, and
+scrolling never triggered anything because there was nothing left to trigger.
+
+⚠️ It is NOT a scroll-restoration problem — `RootLayout` has had a
+`window.scrollTo(0, 0)` on `pathname` since Phase 9 and it works. That was the
+first hypothesis and measuring killed it.
+
+### Measured, before and after
+`/services/gst/registration` -> `/services/gst/return-filing`, counting reveal
+wrappers sitting below opacity 0.99:
+
+| | hard load | after in-app nav | after scrolling the new page |
+|---|---|---|---|
+| before | 23 hidden | **6** | **6** (never revealed) |
+| after | 23 hidden | 21 | 2 |
+
+Leaf -> category hub behaves the same (14 on arrival, 1 after walking), i.e. an
+in-app navigation now matches a fresh load.
+
+### The fix
+`key={pathname}` on the `<Suspense>` boundary wrapping `<Outlet />` in
+`RootLayout`. On the boundary rather than a wrapper div so it adds no DOM node,
+and keys are not serialized so it cannot introduce a hydration mismatch.
+
+### Two things checked because the fix could plausibly have broken them
+1. ⚠️ **Does the dark Suspense fallback now flash on every navigation?** No.
+   It paints exactly ONCE per template chunk, on first fetch, which is
+   pre-existing `React.lazy` behaviour and not caused by the key. Proved by
+   revisiting: `/services/gst` -> leaf -> `/services/gst` again -> two more
+   routes left the counter at **1**. Leaf -> leaf (chunk already loaded) is
+   **0** — an already-resolved lazy module renders synchronously even on
+   remount.
+2. ⚠️ **Do the T2 sub-nav anchors now remount the page?** No. They change only
+   the HASH, so `pathname` is unchanged and the key is stable — measured **0
+   remounts**, hash set, scrolled to the target. If this had remounted, every
+   in-page jump would have replayed the reveals and lost the scroll position.
+
+Regression: 9 routes across every template family render with one `<h1>`,
+reveals present and no horizontal overflow. Lint, `content:check`, build +
+prerender 65 routes all clean.
+
+### /services rebuilt as a card hub, like /dsc — 22-08-2026
+Clinton: "fixed the service hub page like dsc hub page, show in card view."
+
+⚠️ **This overrides an earlier decision of mine on the same page.** The
+22-08-2026 premium pass deliberately kept plain directory ROWS here, citing the
+note above that §16's tell-7 detector over-triggered on /services because a
+multi-column list of text links is a DIRECTORY archetype, not a card grid. That
+was my call and Clinton overruled it. The tell is unaffected in practice: its
+threshold is 3 identical card grids on one page and this page has two, at
+different sizes.
+
+Structure now mirrors `/dsc`: a group heading, then a count-aware bento grid of
+icon-led cards. Statutory (5) is `sm:2 / lg:3` with the first card spanning two
+tracks, which fills exactly (2 + 3, no empty cell); Growth (1) spans the row.
+
+⛔ **THE CARD IS NOT A LINK, AND IT CANNOT BE.** Every card lists its
+category's child services as links, and an `<a>` inside an `<a>` is invalid
+HTML that browsers actively un-nest — it would break both the markup and the
+child links. So the card is a plain container and the real targets sit inside
+it: the heading, each child row, and "View category". That is also why it takes
+`interactive={false}` / `.panel-dark` rather than the pressable `.card-dark`
+treatment DscHub's product cards use — a hover ring on a container that is not
+itself clickable signals a target that does not exist. **Asserted in the
+verification: `document.querySelectorAll('a a').length === 0`.**
+
+The children stay listed inline. CONTENT-PLAN.md §8 calls this "the sitemap
+page users actually use", so boxing the categories must not cost the reader the
+one thing the page is for — all **31** child-service links are still present.
+
+⚠️ **The child list splits into two columns off the card's WIDTH, not its child
+count.** Keying it off the count (`children.length > 4`) split a 419px card's
+names into two ~190px columns where "Private Limited Company" and "One Person
+Company" both wrapped and the rows stopped lining up. `isWide()` derives from
+the SAME rules `gridColsFor`/`spanClassFor` use, so the grid and the card can
+never disagree. Measured: 857px card -> 2 columns, 419px -> 1, 1296px -> 2,
+327px (mobile) -> 1.
+
+Verified: 6 cards, 0 nested anchors, 31 child links, bento widths
+857+419 / 419x3 / 1296, contrast **0 failures at both 1440px (75 samples) and
+375px (78), tightest 4.97:1**, no horizontal overflow at 375px, reduced motion
+0 running / 0 stuck. Lint, `content:check`, build + prerender 65 routes clean.

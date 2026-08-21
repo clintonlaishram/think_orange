@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { ArcRings } from "@/components/ui/ArcRings";
 import { Card } from "@/components/ui/Card";
 import { Reveal } from "@/components/motion/Reveal";
 import { serviceCategories } from "@/content/nav";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // Homepage section 3 — CONTENT-PLAN.md §6 row 3, DESIGN.md §11.3. Dark
 // surface, bento grid — deliberately NOT a uniform 3×2 (§16 tell #7).
@@ -81,10 +81,13 @@ export function WhatWeDo() {
           above .arc-rings (z-index 0) — without it the rings sit over the copy. */}
       <Container className="relative">
         <Reveal>
-          <Eyebrow>What we do</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[24ch]">
-            Ways we keep you compliant — and out of trouble
-          </h2>
+          <SectionHeading
+            eyebrow="What we do"
+            heading="Ways we keep you compliant — and out of trouble"
+            headingClassName="max-w-[24ch]"
+            dark
+            reveal={false}
+          />
         </Reveal>
 
         <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-12">

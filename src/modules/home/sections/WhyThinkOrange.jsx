@@ -1,6 +1,6 @@
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Reveal } from "@/components/motion/Reveal";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // Homepage section 5 — CONTENT-PLAN.md §6 row 5. Light-alt surface, 2×2 grid
 // with oversized 01–04 mono numerals in ember: "Numbers carry the
@@ -32,7 +32,8 @@ export function WhyThinkOrange() {
   return (
     <section data-surface="light-alt" className="section-pad bg-canvas-alt">
       <Container>
-        <Eyebrow>Why ThinkOrange</Eyebrow>
+        {/* Label promoted to heading, as in WhoWeWorkWith. No new copy. */}
+        <SectionHeading eyebrow="Why us" heading="Why ThinkOrange" />
 
         <div className="mt-10 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-2">
           {differentiators.map((item, index) => (

@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Chip } from "@/components/ui/Chip";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger } from "@/components/motion/Stagger";
@@ -12,6 +11,7 @@ import {
   formatDueDate,
   upcomingDeadlines,
 } from "@/content/compliance-calendar";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // Homepage section 7 — CONTENT-PLAN.md §6 row 7, DESIGN.md §3.2 + §11.6. The
 // differentiator section: "the most useful thing on the page — give it room."
@@ -67,10 +67,11 @@ export function ComplianceCalendarHome() {
     <section data-surface="light" className="section-pad bg-canvas">
       <Container>
         <Reveal className="flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <Eyebrow>Compliance Calendar</Eyebrow>
-            <h2 className="mt-3 text-h2">What's due next</h2>
-          </div>
+          <SectionHeading
+            eyebrow="Compliance Calendar"
+            heading="What's due next"
+            reveal={false}
+          />
 
           <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
             {FILTERS.map((key) => (

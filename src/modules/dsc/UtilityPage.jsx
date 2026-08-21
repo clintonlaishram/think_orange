@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Check, Download, MessageCircle, Phone, RefreshCw } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { PageHero } from "@/components/layout/PageHero";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -28,6 +27,7 @@ import { dscValidityRenewalContent } from "@/content/dsc/validity-renewal-faqs";
 import { t } from "@/content/turnaround";
 import { howToJsonLd, faqPageJsonLd } from "@/lib/jsonld";
 import { dscEnquiryHref } from "@/lib/whatsapp";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // T5 — CONTENT-PLAN.md §9, §11.9; DESIGN.md §2.4. Covers 6 routes across
 // three genuinely different content shapes sharing one speed-first grammar:
@@ -194,8 +194,11 @@ function DriverDetail({ path, driver }) {
 
       <Section id="compatibility" surface="light">
         <Container>
-          <Eyebrow>Compatibility</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[32ch]">Supported systems &amp; downloads</h2>
+          <SectionHeading
+            eyebrow="Compatibility"
+            heading="Supported systems &amp; downloads"
+            headingClassName="max-w-[32ch]"
+          />
           <div className="mt-8 overflow-x-auto rounded-[var(--radius-md)] border border-ink-100">
             <table className="w-full min-w-[640px] border-collapse text-left">
               <thead className="bg-ink-50">
@@ -371,8 +374,11 @@ function ValidityRenewalFaqs({ path }) {
 
       <Section id="validity" surface="light">
         <Container>
-          <Eyebrow>Validity by certificate</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[32ch]">How long each certificate lasts</h2>
+          <SectionHeading
+            eyebrow="Validity by certificate"
+            heading="How long each certificate lasts"
+            headingClassName="max-w-[32ch]"
+          />
           <p className="mt-4 max-w-[68ch] text-body text-ink-500">
             A longer certificate costs more up front and less per year. Pick the row you need to
             see the process and documents for it.
@@ -480,8 +486,11 @@ function ValidityRenewalFaqs({ path }) {
 
       <Section id="renewal" surface="light-alt">
         <Container>
-          <Eyebrow>Renewal, re-issue &amp; revocation</Eyebrow>
-          <h2 className="mt-3 text-h2 max-w-[32ch]">What actually happens, and when</h2>
+          <SectionHeading
+            eyebrow="Renewal, re-issue &amp; revocation"
+            heading="What actually happens, and when"
+            headingClassName="max-w-[32ch]"
+          />
           {/* 20-08-2026: the prose was a lone `max-w-[68ch]` column, so the
               right two thirds of the section were empty. Now 7/5, with the
               next step promoted out of a trailing sentence into a panel beside
@@ -678,8 +687,10 @@ function PendingUtility({ path, label, slug }) {
       <Section surface="light">
         <Container>
           <div className="max-w-[68ch]">
-            <Eyebrow>Content coming soon</Eyebrow>
-            <h2 className="mt-3 text-h2">We&rsquo;re still writing this page</h2>
+            <SectionHeading
+              eyebrow="Content coming soon"
+              heading="We&rsquo;re still writing this page"
+            />
             <p className="mt-4 text-body-lg text-ink-500">
               Call, WhatsApp or email us and we&rsquo;ll help you the same way we would through
               the page.

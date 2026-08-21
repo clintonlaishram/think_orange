@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { Section } from "@/components/layout/Section";
 import { Container } from "@/components/layout/Container";
-import { Eyebrow } from "@/components/layout/Eyebrow";
 import { Reveal } from "@/components/motion/Reveal";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 // Homepage section 2 — REPLACES TrustStrip on the homepage (18-08-2026,
 // Clinton's request: the "We work with" partner marquee is out). TrustStrip
@@ -74,21 +74,17 @@ export function WhenToCallUs() {
     <Section surface="light">
       <Container>
         <div className="max-w-[52ch]">
-          <Eyebrow>When people call us</Eyebrow>
-          {/* ⚠️ The count is deliberately NOT in this heading (Clinton,
-              21-08-2026: "do not directly mention six"). The list below still
-              renders whatever `situations` holds, so the section says what it
-              does without asserting how many entries there are — which also
-              means adding or removing a row can never leave this line stale.
-              Same call as /about's "Every practice area, one point of
-              contact". */}
-          <h2 className="mt-4 text-h2 text-ink-600">
-            Most engagements start with one of these sentences.
-          </h2>
-          <p className="mt-4 text-body text-ink-500">
-            If one of them sounds like your week, the page it points to explains
-            exactly what the work involves and what we need from you.
-          </p>
+          {/* ⚠️ The count is deliberately NOT in this heading (Clinton, 21-08-2026:
+              "do not directly mention six"). The list below renders whatever
+              `situations` holds, so the section says what it does without asserting
+              how many entries there are — which also means adding or removing a row
+              can never leave this line stale. */}
+          <SectionHeading
+            eyebrow="When people call us"
+            heading="Most engagements start with one of these sentences."
+            lede="If one of them sounds like your week, the page it points to explains exactly what the work involves and what we need from you."
+            ledeClassName="max-w-[52ch] text-body sm:text-body"
+          />
         </div>
 
         <div className="mt-12 border-t border-ink-100">
