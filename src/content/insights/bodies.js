@@ -233,6 +233,83 @@ export const articleBodies = {
     closing:
       "We handle GeM registration, the Class 3 certificate and tender documentation together, because they are one workflow in practice even though they are three separate processes on paper. Tell us what you supply and we will map out what you are missing.",
   },
+
+  // Written 22-08-2026. Every value below is an s() key that already existed
+  // for roc-annual-compliance.js and private-limited-company.js — no new
+  // statutory research was introduced by this article. AOC-4's late-filing
+  // penalty is deliberately NOT stated: statutory.js's own note records that
+  // research returned conflicting figures, so the article describes the
+  // consequence in kind rather than quoting an amount.
+  "annual-roc-filings-companies-llps": {
+    lede: "The most expensive misunderstanding we correct is a simple one: that a company with no revenue has nothing to file. Registration with the Registrar of Companies creates an annual obligation that runs from incorporation until the entity is formally closed, and it does not pause for a quiet year.",
+    sections: [
+      {
+        heading: "What a company files each year",
+        paragraphs: [
+          "Two filings carry the year. Financial statements go to the Registrar in AOC-4, due " +
+            s("aoc4Window") +
+            ", and the annual return goes in MGT-7, due " +
+            s("mgt7Window") +
+            ". Both dates are measured from the annual general meeting, not from a fixed calendar date, which is why two companies can have entirely different deadlines in the same year.",
+          "Smaller companies file a shorter version of the annual return: " +
+            s("mgt7aApplicability") +
+            ". A small company here means one with " +
+            s("smallCompanyThreshold") +
+            " — both conditions, tested afresh each year against that year's figures rather than fixed at incorporation.",
+        ],
+      },
+      {
+        heading: "The filing that belongs to the director, not the company",
+        paragraphs: [
+          "DIR-3 KYC is due " +
+            s("dir3KycDeadline") +
+            " and is owed by every individual holding a Director Identification Number, whatever the company did that year. It is the one on this list that people miss most often, because it does not feel like a company filing at all.",
+          "Miss it and the consequence is immediate and personal: " +
+            s("dir3KycLateFee") +
+            ". The DIN is deactivated in the meantime, and a deactivated DIN cannot sign any MCA filing — so one forgotten form can hold up every other filing the company needs to make.",
+        ],
+      },
+      {
+        heading: "An LLP's calendar is different, and stricter in one respect",
+        paragraphs: [
+          "An LLP files Form 11, its annual return, by " +
+            s("llpForm11Due") +
+            ", and Form 8, the statement of account and solvency, by " +
+            s("llpForm8Due") +
+            ". These are fixed dates, so unlike a company's they do not move with a meeting.",
+          "The late fee is " +
+            s("llpLateFee") +
+            ". The absence of a cap is the part worth reading twice: a company's penalties are largely bounded, while a forgotten LLP filing keeps compounding for as long as it stays unfiled. We have seen dormant LLPs where the accumulated fee is the single largest number in the file.",
+        ],
+      },
+      {
+        heading: "The first-year items that are easy to leave behind",
+        bullets: [
+          "INC-20A, the declaration of commencement of business, due " +
+            s("inc20aWindow") +
+            " — until it is filed the company cannot legally commence business or borrow.",
+          "The LLP agreement in Form 3, due " +
+            s("llpAgreementWindow") +
+            ".",
+          "Books of account, which a company has to retain for " +
+            s("booksRetentionCompanies") +
+            " — a requirement that outlives most of the people who set the filing system up.",
+        ],
+        note: [
+          "None of these are annual, but they surface in the same conversation, because a company that missed one of them usually discovers it while trying to complete its first annual filing.",
+        ],
+      },
+      {
+        heading: "Why dormancy does not help",
+        paragraphs: [
+          "A company that traded nothing still holds a registration, still has directors, and still appears on a public register that lenders, buyers and tender portals read. Non-filing shows there. It is a common reason a bid is set aside or a loan application stalls, long before anyone mentions a penalty.",
+          "If a business genuinely has stopped, the answer is to close or dormant it properly through the process the Act provides, not to stop filing and hope. Stopping quietly costs more than closing deliberately, and the gap widens every year.",
+        ],
+      },
+    ],
+    closing:
+      "Income tax filings sit alongside all of this and follow their own calendar — ask us about those separately. If you are unsure which of the above your entity currently owes, send us your incorporation details and we will tell you exactly what is outstanding.",
+  },
 };
 
 export function getArticleBody(slug) {

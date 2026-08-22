@@ -1,4 +1,4 @@
-Insights article imagery. All four are IMAGE-PLAN.md §2 TIER 2 — licensed
+Insights article imagery. All are IMAGE-PLAN.md §2 TIER 2 — licensed
 contextual stock, no people in any frame. None depicts ThinkOrange's own office,
 team, documents or clients, and none is presented as doing so: they are
 subject-matter photographs beside editorial articles, which is the narrow use §2
@@ -29,3 +29,10 @@ gem-registration-tender-readiness.jpg
   "brown cardboard boxes on white metal rack" - CHUTTERSNAP
   https://unsplash.com/photos/BNBA1h-NgdY
   CDN: https://images.unsplash.com/photo-1587293852726-70cdb56c2866
+
+Downloaded 22-08-2026 from Unsplash at w=1600, q=80, same licence terms.
+
+annual-roc-filings-companies-llps.jpg
+  "A stack of thick folders on a white surface" - Beatriz Perez Moya
+  https://unsplash.com/photos/XN4T2PVUUgk
+  CDN: https://images.unsplash.com/photo-1468779036391-52341f60b55d

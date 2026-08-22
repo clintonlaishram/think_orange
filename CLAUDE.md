@@ -5358,3 +5358,128 @@ Verified: 6 cards, 0 nested anchors, 31 child links, bento widths
 857+419 / 419x3 / 1296, contrast **0 failures at both 1440px (75 samples) and
 375px (78), tightest 4.97:1**, no horizontal overflow at 375px, reduced motion
 0 running / 0 stuck. Lint, `content:check`, build + prerender 65 routes clean.
+
+## Homepage Insights section restored — fourth article written — 22-08-2026
+Clinton: "in home page insight article is not show fixed it". Not a styling bug —
+`Insights.jsx` returns `null` when `insights.length < MIN_ARTICLES_TO_SHOW` (4),
+and the array had dropped to 3 when the eSign article was commented out on
+21-08-2026. `src/content/insights/index.js` had already recorded this exact
+consequence in the pause comment.
+
+- **Fixed by writing a fourth NON-eSign article**, per Clinton's call, rather
+  than lowering the threshold (4 is deliberate — a feature-plus-three layout
+  degrades to feature-plus-two at 3, the thin editorial row the threshold
+  exists to prevent) or un-pausing the eSign article (it links to paused DSC
+  service routes).
+- **`annual-roc-filings-companies-llps`** — "The filings a company owes every
+  year, whether or not it traded". Topic chosen because it is entirely
+  Companies Act / LLP Act territory: no eSign, and **no income tax**, so
+  BLOCKERS.md §1 is untouched. Every value comes through `s()` and **not one
+  new statutory key was needed** — all eleven already existed for
+  `roc-annual-compliance.js` and `private-limited-company.js`
+  (`aoc4Window`, `mgt7Window`, `mgt7aApplicability`, `smallCompanyThreshold`,
+  `dir3KycDeadline`, `dir3KycLateFee`, `llpForm8Due`, `llpForm11Due`,
+  `llpLateFee`, `inc20aWindow`, `llpAgreementWindow`, `booksRetentionCompanies`).
+- ⚠️ **AOC-4's late-filing penalty is deliberately NOT quoted**, in kind only.
+  `statutory.js`'s own note on that key records that research returned
+  conflicting figures (₹100/day vs ₹1,000/day, likely fee vs additional
+  penalty). Same discipline as `fees: null` — state the consequence, defer the
+  unconfirmed number. The closing line points income-tax questions back to us
+  rather than answering them.
+- **New photo**: `src/assets/insights/annual-roc-filings-companies-llps.jpg`,
+  Unsplash (Beatriz Perez Moya, `XN4T2PVUUgk`), 1600×869, IMAGE-PLAN.md §2
+  Tier 2 — stacked document folders, **no people in frame**, recorded in
+  `ATTRIBUTION.txt`. In `src/assets/`, never `public/`, for the reason
+  `images.js`'s own header gives (public/ ships the untouched 1600px JPEG to
+  every deploy on top of the emitted variants).
+  - It lands as a 112px secondary-row thumbnail, **not** the feature panel, so
+    it never sits under the feature's scrim — the measured-contrast caveat
+    recorded for that panel (19-08-2026) does not apply to it. Reorder
+    `insights` so this becomes article 1 and that measurement has to be redone:
+    the photo is very light.
+- The eSign entry stays commented, in `index.js` AND `images.js`. Its comment
+  now records consequence 1 as resolved rather than live; uncommenting it
+  restores a fifth article, not a fourth.
+- Verified: `npm run lint` 0 problems, `content:check` clean (**the insights
+  warning is gone**; only the three standing hero-stat/testimonial warnings
+  remain), `build` + prerender **66 routes** (up from 65), the prerendered
+  `dist/index.html` carries all four article links and the new headline, and
+  `dist/insights/annual-roc-filings-companies-llps/` exists with its avif/webp
+  variants emitted. Live on the dev server: the homepage section renders with
+  all four cards, and the article page shows the correct `<h1>`, five body
+  headings, all six sampled statutory values interpolated, no `undefined` /
+  `[object Object]` / `NaN`, and a "More insights" row of the other three.
+  - ⚠️ Image `naturalWidth` reads **0** in the in-app preview pane — the
+    documented `visibilityState: "hidden"` artifact, not a broken asset:
+    an EXISTING article's image reports identically 0 in the same pane, and
+    fetching the avif directly returns 200 `image/avif`.
+
+## Image skeleton loading state, sitewide — 22-08-2026
+NOT a phase. Clinton: "in all image added skeleton loading, as image take time to
+load." One change in `<Img>` plus one class in theme.css covers every image on the
+site, because `<Img>` is already the single funnel (CLAUDE.md's no-bare-`<img>`
+non-negotiable is what makes this a one-file change).
+
+- **What it replaces.** IMAGE-PLAN.md §8.4 assumed vite-imagetools would emit a
+  base64 LQIP; the installed version does not, so an unloaded image left its
+  reserved box **transparent** — right for CLS, but on a slow connection a
+  visitor saw a hole in the layout rather than a photo arriving.
+- **`.img-skeleton` (theme.css)** is a flat surface tone with ONE slow sheen
+  passing over it, 1.6s.
+  - ⚠️ **SURFACE-AWARE VIA CUSTOM PROPERTIES (`--skeleton-base` /
+    `--skeleton-sheen`), never per-call-site classes.** A skeleton stands in for
+    the image's own box, so an ink-50 rectangle on a dark section is a bright
+    hole punched in the page — worse than the gap it replaces. Declared on
+    `:root` and overridden under `[data-surface="dark"|"deep"|"ember"]`, inherited
+    exactly the way `--surface-accent` already is. Verified live: the homepage
+    resolves three distinct tones across `deep` (hero), `dark` (Insights feature
+    panel) and `light` (the 112px thumbnails).
+  - **The sheen is a TRANSFORM on a pseudo-element, not an animated
+    `background-position`** — background-position repaints the whole box every
+    frame, and these boxes are large (a 1160px article header, the feature panel).
+- ⛔ **THE CACHED-IMAGE TRAP, and it is the reason for the layout effect.**
+  `onLoad` only fires for a load that happens after React attaches the handler.
+  On a prerendered page whose image is already in the HTTP cache — a repeat
+  visit, a back navigation, any second view — the browser decodes it BEFORE
+  hydration, `onLoad` never fires, and the skeleton would shimmer forever over a
+  fully loaded photo. `<Img>` now reads `node.complete && node.naturalWidth > 0`
+  in an isomorphic layout effect on mount. `naturalWidth > 0` is what separates
+  a real decode from a failed request, which also reports `complete: true`.
+  Measured on a warm-cache reload: 4 skeletons, **0 still visible, 6/6 images
+  loaded, 0 running animations**.
+- ⛔ **`data-loaded="true"` is what STOPS the sheen, and it is not decoration.**
+  The skeleton stays mounted at opacity 0 so the cross-fade can run — so without
+  the `.img-skeleton[data-loaded="true"]::after { animation: none }` rule its
+  infinite animation keeps ticking on every loaded image for the rest of the
+  session. Measured before the fix: **4 running animations still going long
+  after all 4 images had decoded.** After: 3 while 3 are pending, **0 once all
+  have loaded.**
+- **`onError` settles the state too.** A permanent shimmer over a broken request
+  reads as "still loading", which is worse than the empty box. (Consequence
+  worth knowing when testing: `Network.setBlockedURLs` on images CANNOT
+  photograph this state — blocking errors the request and correctly settles the
+  skeleton. Hold the requests open with `Fetch.requestPaused` and never continue
+  the `Image` ones instead. That cost one useless screenshot.)
+- **`skeleton={false}` on the three TRANSPARENT PNGs** — `ProductShot`,
+  `DscBand`'s illustration, `DscHub`'s group aside. There is no photo-shaped box
+  to hold there; a filled rectangle would cover the plinth's wash, arc rings and
+  key light. Everything else (hero, all insights imagery) keeps it.
+- **`placeholderSrc` still WINS over the skeleton** where it is supplied — a real
+  LQIP of the actual photo beats a generic shimmer. The §8.4 route to one is
+  unchanged (import a `?w=24` variant, which Vite auto-inlines as base64).
+- **Reduced motion**: `.img-skeleton::after { display: none }`. §9.6's global
+  floor collapses the duration but parks the sheen at the keyframe's END state —
+  a bright band sitting still across the box. A skeleton's honest reduced-motion
+  form is the flat tone alone. Verified via `Emulation.setEmulatedMedia`: sheen
+  `display: none`, **0 running animations**, tone still rendering.
+- **No hydration risk**: server and client first render both emit
+  `data-loaded="false"`; only the mount effect can change it. Verified — exactly
+  **1** console error per route, the long-standing sitewide React #418
+  (`args[]=HTML`), byte-identical on `/about` and `/dsc`.
+- Verified: `npm run lint` 0 problems, `content:check` clean, `build` +
+  prerender 66 routes, and a real Chrome over CDP against `npx serve dist`
+  (never `vite preview`, never the in-app pane) asserting
+  `innerWidth`/`visibilityState`/`pathname` first — throttled load shows the
+  skeletons up, animating, then fading out image by image as each decodes;
+  screenshotted with image requests held pending to confirm the treatment reads
+  as quiet rather than loud.

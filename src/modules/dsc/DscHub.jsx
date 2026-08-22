@@ -314,6 +314,9 @@ export default function DscHub({ path }) {
                       sitting on a LIGHT section (the token, in the intro
                       above); on ink it would be a box around a box. */}
                   <Img
+                    // Transparent PNG rendered straight onto the dark surface —
+                    // no photo-shaped box, so no skeleton. See ProductShot.
+                    skeleton={false}
                     {...aside}
                     ratio={`${aside.width} / ${aside.height}`}
                     className="mx-auto w-full max-w-[520px] !bg-transparent"

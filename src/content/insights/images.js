@@ -12,7 +12,7 @@
 // a 2x display on the widest of those. avif and webp only — the original JPEG
 // stays on disk in public/ as the source of truth.
 //
-// Sources and licences: src/assets/insights/ATTRIBUTION.txt. All four are
+// Sources and licences: src/assets/insights/ATTRIBUTION.txt. All are
 // IMAGE-PLAN.md §2 Tier 2 contextual stock with no people in frame.
 //
 // Sources live in src/assets/, NOT public/, deliberately — and this differs
@@ -20,7 +20,7 @@
 // under public/ is copied to dist VERBATIM as well as being processed, so that
 // pattern ships the untouched 1600px JPEG (and its ATTRIBUTION.txt) to every
 // deploy even though no page ever requests it: 684KB of dead weight for these
-// four. From src/assets only the emitted avif/webp variants are written. Worth
+// each. From src/assets only the emitted avif/webp variants are written. Worth
 // migrating the hero the same way next time that file is open.
 import entityChoice from "../../assets/insights/private-limited-vs-llp-vs-opc.jpg?w=224;384;768;1152;1600&format=avif;webp&as=picture";
 // ⛔ eSign PAUSED — 21-08-2026. Commenting the import keeps the source file out
@@ -28,6 +28,7 @@ import entityChoice from "../../assets/insights/private-limited-vs-llp-vs-opc.jp
 // import dscEsign from "../../assets/insights/class-3-dsc-or-aadhaar-esign.jpg?w=224;384;768;1152;1600&format=avif;webp&as=picture";
 import gstRegistration from "../../assets/insights/when-gst-registration-stops-being-optional.jpg?w=224;384;768;1152;1600&format=avif;webp&as=picture";
 import gemTenders from "../../assets/insights/gem-registration-tender-readiness.jpg?w=224;384;768;1152;1600&format=avif;webp&as=picture";
+import rocFilings from "../../assets/insights/annual-roc-filings-companies-llps.jpg?w=224;384;768;1152;1600&format=avif;webp&as=picture";
 
 // `alt` describes the PHOTOGRAPH, not the headline: the heading is adjacent real
 // text, so restating it would repeat information a screen reader already has,
@@ -49,6 +50,10 @@ const IMAGES = {
   "gem-registration-tender-readiness": {
     picture: gemTenders,
     alt: "Stacked cardboard cartons on warehouse racking",
+  },
+  "annual-roc-filings-companies-llps": {
+    picture: rocFilings,
+    alt: "Three thick document folders stacked on a pale surface",
   },
 };
 

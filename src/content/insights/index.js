@@ -54,14 +54,15 @@ export const insights = [
   // automatically, since that export is derived from this array.
   //
   // ⚠️ TWO CONSEQUENCES, BOTH INTENTIONAL AND BOTH REVERSED BY UNCOMMENTING:
-  //   1. `insights` drops to 3, below `MIN_ARTICLES_TO_SHOW` (4), so the
-  //      HOMEPAGE INSIGHTS SECTION NOW RENDERS NOTHING. The threshold is left
-  //      at 4 deliberately — the section is a feature-plus-three layout, and
-  //      lowering it to 3 would render a feature plus TWO, which is the thin
+  //   1. `insights` dropped to 3, below `MIN_ARTICLES_TO_SHOW` (4), so the
+  //      HOMEPAGE INSIGHTS SECTION RENDERED NOTHING. ✅ RESOLVED 22-08-2026 by
+  //      writing a fourth non-eSign article (annual-roc-filings-companies-llps)
+  //      rather than lowering the threshold: the section is a feature-plus-three
+  //      layout, and 3 would render a feature plus TWO, which is the thin
   //      editorial row that threshold exists to prevent.
-  //   2. An article page's "More insights" row now offers 2 cards, not 3.
-  // Restore either by uncommenting this entry, or by writing a fourth
-  // non-eSign article.
+  //   2. An article page's "More insights" row offers the other three.
+  // This entry stays commented until eSign is un-paused; uncommenting it (with
+  // its import and IMAGES entry in ./images.js) restores a fifth article.
   // {
   //   slug: "class-3-dsc-or-aadhaar-esign",
   //   title: "Class 3 DSC or Aadhaar eSign: which signature your filing actually accepts",
@@ -107,6 +108,26 @@ export const insights = [
       title: "GeM Registration & Tender Readiness — What to Prepare | ThinkOrange Consulting",
       description:
         "What GeM registration involves for a seller, the documents a live bid needs, and the MSME benefits that apply on government tenders.",
+    },
+    confirmed: true,
+  },
+  // Written 22-08-2026 to restore the section's four-article floor after the
+  // eSign article above was paused. Deliberately non-eSign and non-income-tax:
+  // it draws only on Companies Act / LLP Act keys, all of which are already in
+  // statutory.js with a basis and a source from roc-annual-compliance.js.
+  {
+    slug: "annual-roc-filings-companies-llps",
+    title: "The filings a company owes every year, whether or not it traded",
+    excerpt:
+      "A dormant company still has a filing calendar. Missing it is the quiet way a business acquires penalties, a deactivated DIN and a director who cannot sign anything.",
+    category: "Compliance",
+    readMinutes: 6,
+    published: PUBLISHED,
+    related: ["roc-annual-compliance", "private-limited-company", "llp-registration"],
+    meta: {
+      title: "Annual ROC Compliance for Companies & LLPs | ThinkOrange Consulting",
+      description:
+        "AOC-4, MGT-7, DIR-3 KYC and the LLP's Form 8 and Form 11 — what every registered company and LLP files each year, when it is due, and what non-filing actually costs.",
     },
     confirmed: true,
   },

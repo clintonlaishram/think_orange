@@ -133,6 +133,9 @@ export function DscBand() {
             {/* Was a bare <img alt="dsc"> — CLAUDE.md routes every image
                 through <Img>, and "dsc" is not an alt text. */}
             <Img
+              // Transparent PNG on the band's own surface — same reasoning as
+              // ProductShot: there is no photo-shaped box to hold.
+              skeleton={false}
               src="/images/home/dsc.png"
               alt="A signed digital document on a laptop beside a USB signing token."
               className="mx-auto w-full h-full max-w-[800px]"

@@ -301,6 +301,90 @@ p {
   --surface-border: var(--color-ember-500);
 }
 
+/* ============================================================
+   Image skeleton — the loading state behind every <Img>.
+   IMAGE-PLAN.md §8.4 assumed vite-imagetools would emit a base64 LQIP; the
+   installed version does not, so <Img> had nothing to show while a photo
+   downloaded and the reserved box simply sat transparent. This is the interim
+   treatment: a flat surface-matched tone with one slow sheen passing over it.
+
+   ⚠️ SURFACE-AWARE VIA CUSTOM PROPERTIES, not per-call-site classes. A skeleton
+   is a temporary stand-in for the image's own box, so an ink-50 rectangle on a
+   dark section reads as a bright hole punched in the page — worse than the
+   transparent gap it replaces. The tokens below are inherited through
+   data-surface exactly the way --surface-accent already is, so a component
+   dropped onto either family needs no prop.
+
+   ⚠️ The sheen is a TRANSFORM on a pseudo-element, never a background-position
+   animation: background-position repaints the whole box every frame, and these
+   boxes are large (a 1160px article header, the homepage feature panel).
+   ============================================================ */
+:root {
+  --skeleton-base: var(--color-ink-50);
+  --skeleton-sheen: color-mix(in srgb, var(--color-canvas) 85%, transparent);
+}
+
+[data-surface="dark"] {
+  --skeleton-base: color-mix(in srgb, var(--color-ink-700) 45%, var(--color-ink-900));
+  --skeleton-sheen: color-mix(in srgb, var(--color-ink-500) 40%, transparent);
+}
+
+[data-surface="deep"] {
+  --skeleton-base: color-mix(in srgb, var(--color-ink-700) 35%, var(--color-ink-950));
+  --skeleton-sheen: color-mix(in srgb, var(--color-ink-500) 35%, transparent);
+}
+
+[data-surface="ember"] {
+  --skeleton-base: color-mix(in srgb, var(--color-ink-950) 12%, var(--color-ember-400));
+  --skeleton-sheen: color-mix(in srgb, var(--color-canvas) 35%, transparent);
+}
+
+.img-skeleton {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--skeleton-base);
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.img-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Wider than the box so the gradient's soft edges stay off screen at rest. */
+  width: 220%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 35%,
+    var(--skeleton-sheen) 50%,
+    transparent 65%,
+    transparent 100%);
+  transform: translateX(-60%);
+  animation: img-skeleton-sweep 1.6s var(--ease-inout) infinite;
+}
+
+/* The skeleton stays mounted at opacity 0 so it can cross-fade out. Stopping
+   the sheen here is what keeps a loaded page from running one infinite
+   animation per image for the rest of the session. */
+.img-skeleton[data-loaded="true"]::after {
+  animation: none;
+}
+
+@keyframes img-skeleton-sweep {
+  from { transform: translateX(-60%); }
+  to   { transform: translateX(0%); }
+}
+
+/* §9.6's global floor collapses the duration but leaves the sheen parked at the
+   keyframe's END state, which is a bright band sitting still across the box.
+   A skeleton's honest reduced-motion form is the flat tone alone. */
+@media (prefers-reduced-motion: reduce) {
+  .img-skeleton::after {
+    display: none;
+  }
+}
+
 [data-surface="ember"] h1,
 [data-surface="ember"] h2,
 [data-surface="ember"] h3,

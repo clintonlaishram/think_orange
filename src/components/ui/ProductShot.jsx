@@ -104,6 +104,11 @@ export function ProductShot({
         alt={alt}
         width={width}
         height={height}
+        // No skeleton: this is a TRANSPARENT PNG standing on the plinth, so a
+        // filled loading rectangle would cover the panel's wash, its arc rings
+        // and its key light — visibly wrong rather than merely early. The
+        // plinth is itself the holding surface here.
+        skeleton={false}
         ratio={`${width} / ${height}`}
         className={cn("relative mx-auto !bg-transparent", imgClassName)}
       />
