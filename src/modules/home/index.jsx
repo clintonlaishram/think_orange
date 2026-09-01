@@ -38,7 +38,7 @@ import { CtaBand } from "@/modules/home/sections/CtaBand";
 // "We work with" partner marquee is out of the homepage. Same slot (section
 // 2, straight after the hero), same light surface, so the cadence above is
 // unchanged. TrustStrip itself is NOT deleted, just commented out below: it
-// is the only surface on the site that names the eMudhra/SignX partnership,
+// is the only surface on the site that names the certifying-authority partnership,
 // and IMAGE-PLAN.md §7.4's approved-marks note lives in that file. It has no
 // other call site, so nothing else is affected.
 //

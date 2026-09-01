@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CheckCircle2 } from "lucide-react";
+import { Check, CheckCircle2 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
 import { PageHero } from "@/components/layout/PageHero";
@@ -11,6 +11,7 @@ import { StepFlow } from "@/components/ui/StepFlow";
 import { Reveal } from "@/components/motion/Reveal";
 import { CtaBand } from "@/modules/home/sections/CtaBand";
 import { partnerContent } from "@/content/partner-with-us";
+import { t } from "@/content/turnaround";
 import { PartnerEnquiryForm } from "@/modules/partner-with-us/PartnerEnquiryForm";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
@@ -72,8 +73,12 @@ export default function PartnerWithUs({ path }) {
         // Was "DSC Partner Programme", which is very nearly the H1 sitting
         // directly beneath it — the same duplication the /dsc hub's eyebrow was
         // fixed for. An audience label says something the H1 does not.
-        eyebrow="For CAs, advocates & consultants"
-        h1="Become a ThinkOrange DSC Partner"
+        // ⛔ 02-09-2026: the whole page was a REFERRAL programme and is now the
+        // opposite — partners issue certificates themselves. The H1 carries
+        // that distinction rather than leaving it to body copy: "for your own
+        // clients" is the entire proposition.
+        eyebrow={partnerContent.eyebrow}
+        h1={partnerContent.h1}
         lede={partnerContent.heroLede}
         texture="certificate"
         textureId="partner-hero"
@@ -84,187 +89,237 @@ export default function PartnerWithUs({ path }) {
             the page, and the old single CTA sent people to /contact, i.e. off
             it. A plain <a href="#…"> is correct here — react-router must not
             treat a fragment as a route change. */}
-        <div className="flex flex-wrap gap-3">
-          <Button as="a" href="#apply" variant="primary">
-            Apply to partner with us
-          </Button>
-          <Button as={Link} to="/contact" variant="secondary" tone="dark">
-            Talk to us first
-          </Button>
+        <div>
+          {/* The six unmarked assertions from Clinton's reference — no joining
+              fee, own login, clients stay yours, and so on. ⚠️ The reference's
+              stat strip beside these carried "[X]% commission" and "[X hrs]
+              activation"; both are placeholders it flags itself, so neither is
+              here. See MISSING-PAGES.md. */}
+          <ul className="flex flex-wrap gap-x-7 gap-y-2.5">
+            {partnerContent.heroTicks.map((tick) => (
+              <li key={tick} className="flex items-center gap-2 text-body-sm font-medium text-ink-100">
+                <Check className="h-4 w-4 shrink-0 text-ember-300" strokeWidth={2.5} aria-hidden="true" />
+                {tick}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button as="a" href="#apply" variant="primary">
+              Apply to become a partner
+            </Button>
+            <Button as={Link} to="/contact" variant="secondary" tone="dark">
+              Talk to us first
+            </Button>
+          </div>
+          {/* ⚠️ NOT "we reply within one working day" — the reference says
+              that, but it is a turnaround commitment, so it comes from
+              turnaround.js like every other one on this site. */}
+          <p className="mt-4 text-body-sm text-ink-300">
+            No commitment. {t("enquiryResponseTime")}.
+          </p>
         </div>
       </PageHero>
 
-      {/* WHO IT'S FOR — hairline-divided rows, not four bordered boxes.
-          `whoItsFor` entries are complete sentences with no title, so a card
-          gives each one a box and a shadow to carry a single line of text. The
-          homepage's light sections earn their depth from hairlines and
-          whitespace instead, which is also what stops this section repeating
-          the hero's split-with-a-panel composition immediately below it. */}
+      {/* WHY THROUGH US. Four claims, hairline columns rather than cards —
+          each is a complete paragraph, and a box around a paragraph is a box
+          doing nothing. */}
       <Section surface="light">
         <Container>
-          <Reveal>
-            <SectionHeading
-              eyebrow="Who it&apos;s for"
-              heading="Built for the people already trusted with a client&apos;s filings"
-              headingClassName="max-w-[32ch]"
-              reveal={false}
-            />
-          </Reveal>
-
-          {/* Per-item `Reveal as="li"` rather than `<Stagger>`: Stagger wraps
-              every child in its own `motion.div`, which would put a <div>
-              between the <ul> and its <li>s and break the list's semantics —
-              the same reason the homepage hero's capability rows do this too.
-              `Reveal` renders the element itself and forwards `className`. */}
-          <ul className="mt-10 grid grid-cols-1 gap-x-12 sm:grid-cols-2">
-            {partnerContent.whoItsFor.map((point, index) => (
-              <Reveal
-                as="li"
-                key={point}
-                delay={index * 0.06}
-                className="flex items-start gap-4 border-t border-[var(--surface-border)] py-5"
-              >
-                <ArcGlyph
-                  variant="corner"
-                  className="mt-1 h-5 w-5 shrink-0"
-                  style={{ color: "var(--surface-accent)" }}
-                />
-                <p className="text-body text-ink-500">{point}</p>
+          <SectionHeading
+            eyebrow="Why enrol through ThinkOrange"
+            heading="The certifying authority issues it. We make sure you can run the business."
+            lede="Anyone can hand you a login. The difference shows up in the first month, when a client's application is rejected for a reason the portal explains badly and you need someone who knows why."
+          />
+          <div className="mt-10 grid grid-cols-1 gap-x-10 gap-y-8 md:grid-cols-2">
+            {partnerContent.whyUs.map((item, index) => (
+              <Reveal key={item.title} delay={Math.min(index, 3) * 0.06} className="border-t border-ink-200 pt-5">
+                <h3 className="text-h4 text-ink-600">{item.title}</h3>
+                <p className="mt-2 max-w-[62ch] text-body-sm text-ink-500">{item.body}</p>
               </Reveal>
             ))}
-          </ul>
+          </div>
         </Container>
       </Section>
 
-      {/* HOW IT WORKS — the sitewide step treatment (19-08-2026), which this
-          page was missed by. Scroll-linked progress line, node thresholds
-          measured off the real DOM. This is also the page's dark band.
-          The heading deliberately does NOT spell the step count in words: two
-          separate hardcoded counts have already gone stale in this codebase
-          (`ServicesHub`'s "twenty-one services", `content:check`'s "of 21"), and
-          "Four steps" would be a third the moment a step is added. */}
-      <Section surface="dark">
+      {/* SWITCHING — the page's one dark band. An existing reseller is the
+          readiest partner there is, which is why the reference leads on this
+          and why it gets its own surface rather than a card. */}
+      <Section surface="dark" className="surface-ambient">
+        <Container>
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
+            <div className="lg:col-span-6">
+              <SectionHeading
+                eyebrow={partnerContent.switching.eyebrow}
+                heading={partnerContent.switching.heading}
+                lede={partnerContent.switching.body}
+                dark
+              />
+              <Reveal className="mt-8">
+                <Button as="a" href="#apply" variant="primary">
+                  Talk to us about switching
+                </Button>
+              </Reveal>
+            </div>
+            <div className="lg:col-span-6">
+              <ul className="space-y-4">
+                {partnerContent.switching.pains.map((pain, index) => (
+                  <Reveal
+                    as="li"
+                    key={pain.title}
+                    delay={index * 0.06}
+                    className="border-t border-ink-700 pt-4"
+                  >
+                    <h3 className="text-h4 text-canvas">{pain.title}</h3>
+                    <p className="mt-1 text-body-sm text-ink-100">{pain.body}</p>
+                  </Reveal>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </Container>
+      </Section>
+
+      {/* WHO IT'S FOR. ⚠️ Every entry describes someone who ISSUES. If a future
+          edit makes one of these read as "send the client to ThinkOrange", it
+          has reverted the page to the referral framing this rewrite removed. */}
+      <Section surface="light">
+        <Container>
+          <SectionHeading
+            eyebrow="Who this suits"
+            heading="Practices that already own the client relationship"
+            lede="The common thread is that you are already the person your client asks. This keeps that intact instead of interrupting it."
+          />
+          <div className="mt-10 grid grid-cols-1 gap-x-10 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
+            {partnerContent.whoItsFor.map((item, index) => (
+              <Reveal
+                key={item.title}
+                delay={Math.min(index, 5) * 0.05}
+                className="border-t border-ink-200 pt-5"
+              >
+                <h3 className="text-h4 text-ink-600">{item.title}</h3>
+                <p className="mt-2 text-body-sm text-ink-500">{item.body}</p>
+              </Reveal>
+            ))}
+          </div>
+        </Container>
+      </Section>
+
+      {/* ONBOARDING — the site's one step treatment. */}
+      <Section surface="light-alt">
         <StepFlow
-          eyebrow="How it works"
-          heading="From application to a dispatched token"
-          intro="No technical setup on your side, and no minimum commitment per order."
-          surface="dark"
-          // ⚠️ SHAPE ADAPTED AT THE CALL SITE, and it is not optional.
-          // `StepFlow` renders `step.desc` (the key every DSC `process` array
-          // uses); `partnerContent.howItWorks` calls the same field `body`,
-          // matching its siblings `whatYouGet` in that content file. Passing
-          // the array straight through renders the four TITLES and silently
-          // drops every body — React renders `undefined` as nothing, so there
-          // is no error, no warning and no visual clue beyond four bare
-          // headings. Caught by screenshot, not by reading the diff.
-          // Adapted here rather than renaming the content key, so the prose
-          // file stays internally consistent.
-          steps={partnerContent.howItWorks.map((step, index) => ({
-            step: index + 1,
-            title: step.title,
-            desc: step.body,
-          }))}
+          eyebrow="How onboarding works"
+          heading="From application to your first issued certificate"
+          intro="Straightforward, but not instant — the certifying authority runs its own checks and we do not shortcut them."
+          surface="light"
+          steps={partnerContent.onboarding}
         />
       </Section>
 
-      {/* WHAT WE HANDLE — 21-08-2026, Clinton: "from the hero section remove
-          right side card and below stats also".
-          The card and the spec row are gone, so the hero is back to the plain
-          full-width copy block every other PageHero renders (with its texture
-          kept). But `whatWeHandle` ONLY lived in that card — the previous pass
-          moved it into the hero and deleted its standalone section — so
-          removing the card outright would have silently dropped five lines of
-          real, reviewed copy off the page. It is restored here instead.
-          Placed after "How it works" because it is that section's operational
-          counterpart: those are the steps, these are the parts we own.
-          The panel treatment is unchanged, just relocated — which also makes
-          this section the same composition as the homepage's PartnerProgramme
-          teaser, the surface that carries a shorter version of this exact list.
-          Surface is `light`, so the cadence gains no consecutive repeat:
-          deep → light → dark → light → light-alt → light → light-alt → ember. */}
+      {/* WHAT YOU TAKE ON. Kept prominent rather than buried near the form:
+          issuing yourself means carrying the verification obligation yourself,
+          and a partner who learns that after signing is the wrong partner. */}
       <Section surface="light">
         <Container>
-          {/* `items-center` so the two-line heading sits against the middle of a
-              ~340px panel rather than at its top edge — without it the left
-              column is all dead space below the h2. Same reason the DSC hub's
-              intro centres its prose against the ProductShot beside it. */}
-          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-16">
-            <Reveal className="lg:col-span-5">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
+            <div className="lg:col-span-5">
               <SectionHeading
-                eyebrow="What we handle"
-                heading="Everything after you make the referral"
-                headingClassName="max-w-[24ch]"
-                reveal={false}
+                eyebrow="Before you apply"
+                heading="What the programme asks of you"
+                lede={partnerContent.responsibilitiesNote}
               />
-            </Reveal>
-            <Reveal delay={0.12} className="lg:col-span-7">
-              <WhatWeHandlePanel points={partnerContent.whatWeHandle} />
-            </Reveal>
+            </div>
+            <div className="lg:col-span-7">
+              <ul className="border-t border-ink-200">
+                {partnerContent.responsibilities.map((point, index) => (
+                  <Reveal
+                    as="li"
+                    key={point}
+                    delay={Math.min(index, 4) * 0.05}
+                    className="flex gap-4 border-b border-ink-200 py-4"
+                  >
+                    <CheckCircle2
+                      className="mt-0.5 h-5 w-5 shrink-0 text-ember-600"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                    <span className="text-body text-ink-500">{point}</span>
+                  </Reveal>
+                ))}
+              </ul>
+            </div>
           </div>
         </Container>
       </Section>
 
-      {/* WHAT YOU GET — the homepage's `WhyThinkOrange` archetype: an oversized
-          mono numeral carrying the hierarchy instead of an icon or a card
-          (DESIGN.md §16 tell 6 — no icon-in-a-circle). These entries genuinely
-          have a title AND a body, which is the shape that archetype is for, so
-          it fits without inventing a single word.
-          ember-500, not ember-400: §4.5 clears ember-400 on `canvas` for large
-          display only (3.06:1), and this section is canvas-alt, where it drops
-          to 2.8:1 — under the 3.0 floor even as large text. */}
+      {/* EARNINGS. ⛔ Every retail range and margin in the reference is a
+          bracketed placeholder that its own dev note flags as needing real
+          values, so nothing numeric is published — the table shows what you can
+          issue and who buys it, and quotes on application. Set `retail` and
+          `margin` in the content file and the cells fill in with no code
+          change. Tables never animate. */}
       <Section surface="light-alt">
         <Container>
-          <Reveal>
-            <SectionHeading
-              eyebrow="What you get"
-              heading="A programme built to stay out of your way"
-              headingClassName="max-w-[32ch]"
-              reveal={false}
-            />
-          </Reveal>
-
-          <div className="mt-10 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-2">
-            {partnerContent.whatYouGet.map((tile, index) => (
-              <Reveal key={tile.title} delay={index * 0.06} className="flex gap-6">
-                <span
-                  aria-hidden="true"
-                  className="shrink-0 font-mono text-stat font-black leading-none text-ember-500"
-                >
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <div className="pt-1">
-                  <h3 className="text-h3 text-ink-600">{tile.title}</h3>
-                  <p className="mt-2 max-w-[46ch] text-body text-ink-500">{tile.body}</p>
-                </div>
-              </Reveal>
-            ))}
+          <SectionHeading
+            eyebrow="Earning potential"
+            heading="What you can issue, and who buys it"
+            lede={partnerContent.earnings.note}
+          />
+          <div className="mt-10 overflow-x-auto">
+            <table className="w-full min-w-[720px] border-collapse text-left">
+              <thead>
+                <tr className="border-b border-ink-200">
+                  {["Certificate", "Validity", "Typical retail", "Your margin", "Who buys it"].map((h) => (
+                    <th
+                      key={h}
+                      scope="col"
+                      className="py-3 pr-6 font-mono text-body-sm uppercase tracking-[0.1em] text-ink-400"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {partnerContent.earnings.rows.map((row) => (
+                  <tr key={row.product} className="border-b border-ink-100 align-top">
+                    <th scope="row" className="py-4 pr-6 text-body font-medium text-ink-600">
+                      {row.product}
+                      {row.note && (
+                        <span className="mt-0.5 block text-body-sm font-normal text-ink-400">
+                          {row.note}
+                        </span>
+                      )}
+                    </th>
+                    <td className="py-4 pr-6 text-body-sm text-ink-500">{row.validity}</td>
+                    <td className="py-4 pr-6 text-body-sm text-ink-500">
+                      {row.retail ?? "On request"}
+                    </td>
+                    <td className="py-4 pr-6 text-body-sm font-medium text-ember-600">
+                      {row.margin ?? "Quoted on application"}
+                    </td>
+                    <td className="py-4 text-body-sm text-ink-500">{row.buyer}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </Container>
       </Section>
 
-      {/* APPLY — `tone="bare"`, no card. The 21-08-2026 contact redesign moved
-          the site's other public form onto this tone for a reason that applies
-          identically here: a bordered white box holding five bordered white
-          inputs IS a card inside a card, and it made this page's form look like
-          a different product from /contact's.
-          `scroll-mt-32` clears the fixed header plus the hero's anchor jump. */}
+      {/* APPLY */}
       <Section id="apply" surface="light" className="scroll-mt-32">
         <Container>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
-            <Reveal className="lg:col-span-5">
+            <div className="lg:col-span-5">
               <SectionHeading
                 eyebrow="Apply"
                 heading="Tell us about your practice"
-                headingClassName="max-w-[26ch]"
-                reveal={false}
+                lede="We read every application and come back to you — including when the answer is that the programme is not the right fit yet. If you already issue certificates elsewhere, say so; we will tell you plainly whether our terms beat what you have."
               />
-              <p className="mt-4 max-w-[52ch] text-body-lg text-ink-500">
-                We&apos;ll confirm the commission structure, onboarding steps and next order
-                details once we hear from you.
-              </p>
-            </Reveal>
-            <Reveal delay={0.12} className="lg:col-span-7">
-              <PartnerEnquiryForm tone="bare" />
+              <RegistrationDocuments documents={partnerContent.registrationDocuments} />
+            </div>
+            <Reveal delay={0.1} className="lg:col-span-7">
+              <PartnerEnquiryForm />
             </Reveal>
           </div>
         </Container>
@@ -272,8 +327,8 @@ export default function PartnerWithUs({ path }) {
 
       <Section surface="light-alt">
         <FaqSection
-          heading="About the partner programme"
-          intro="What partners ask before applying. Anything not answered here, ask us directly — we would rather set expectations now."
+          heading="What partners ask before applying"
+          intro="Switching, commission, verification and what happens to your client relationship."
           items={partnerContent.faqs.map((faq, index) => ({
             id: index,
             question: faq.q,
@@ -282,62 +337,72 @@ export default function PartnerWithUs({ path }) {
         />
       </Section>
 
-      <CtaBand />
+      <CtaBand
+        heading="Issue certificates without sending clients elsewhere."
+        lede="Tell us what your practice files and the volume you expect, and we will come back with your slab in writing before you commit to anything."
+      />
     </>
   );
 }
 
 /**
- * `whatWeHandle` as a hairline-divided ledger on a dark panel. Deliberately the
- * SAME construction as the homepage's PartnerProgramme teaser panel, which
- * carries a shorter version of this exact list — the teaser and its destination
- * should not be two different designs of one idea.
+ * The documents required at registration, exactly as Clinton listed
+ * them (PAN, Aadhaar, MSME or latest bank statement, Aadhaar-linked phone,
+ * mail ID).
  *
- * `data-surface="dark"` is load-bearing, not cosmetic: it is what makes every
- * descendant reading var(--surface-accent) / var(--surface-border) resolve to
- * the dark values, and it lets theme.css's `[data-surface="dark"] h3` supply the
- * canvas heading colour rather than a `!text-white` override. Without it, this
- * dark panel nested in a LIGHT section would resolve every one of those to the
- * light values (ember-600, ink-100).
+ * ⛔ THIS IS A CHECKLIST, NOT FORM FIELDS, AND THAT IS DELIBERATE. Three of
+ * the five are DOCUMENTS — scans handed over during onboarding — and
+ * two of them are PAN and Aadhaar. Putting identity numbers into a public
+ * web form that relays them through a third-party email service is not
+ * something to do casually anywhere, and certainly not while all five legal
+ * pages, the privacy policy included, are still `sections: null`. Aadhaar in
+ * particular carries its own statutory restrictions on collection and
+ * storage.
  *
- * `.grain` needs a positioned ancestor and a clipped box; `.panel-dark` supplies
- * both. `ArcRings` needs a gradientId unique to this mount — `url(#id)` resolves
- * document-wide, not per-<svg>.
+ * So the form collects only what is genuinely DATA — the Aadhaar-linked phone
+ * number and the mail ID that becomes the login — and this panel tells an
+ * applicant what to have ready. The documents are collected in the onboarding
+ * conversation, which is also where they are actually needed.
+ *
+ * ⚠️ If this is ever changed to collect PAN or Aadhaar numbers directly, the
+ * privacy policy has to be written first, and the transport has to be
+ * something better than a client-side email relay.
  */
-function WhatWeHandlePanel({ points }) {
+function RegistrationDocuments({ documents }) {
   return (
-    <div
+    <Reveal
       data-surface="dark"
-      className="panel-dark grain relative overflow-hidden rounded-[var(--radius-lg)] p-7 md:p-8"
+      className="panel-dark grain relative mt-10 overflow-hidden rounded-[var(--radius-lg)] p-6 md:p-7"
     >
       <ArcRings
         rings={PANEL_RINGS}
-        gradientId="partner-hero-panel-arc"
-        color="var(--color-ink-400)"
-        svgClassName="-right-20 -bottom-28 h-[300px] w-[300px]"
+        color="var(--color-ink-600)"
+        gradientId="partner-docs-arc"
+        svgClassName="-right-20 -top-24 h-[320px] w-[320px]"
       />
-
-      {/* `relative` lifts the content above .arc-rings (z-index 0). */}
       <div className="relative">
-        <h3 className="font-mono text-eyebrow uppercase text-xs md:text-sm">
-          What we handle for you
-        </h3>
-        {/* `divide-y` puts a rule BETWEEN items only, so there is no stray line
-            under the last row. DESIGN.md §6.4's dark hairline is ink-800, and a
-            divided list reads as a ledger — the right register for this brand. */}
-        <ul className="mt-6 divide-y divide-ink-800">
-          {points.map((point) => (
-            <li key={point} className="flex items-start gap-3 py-3.5 first:pt-0 last:pb-0">
-              <CheckCircle2
-                className="mt-0.5 h-4 w-4 shrink-0 text-ember-400"
-                strokeWidth={1.5}
+        <h3 className="text-h4 text-canvas">What to have ready</h3>
+        <p className="mt-2 text-body-sm text-ink-200">
+          These are asked for at registration. Nothing here is uploaded on this page — we collect
+          them with you once your application is through.
+        </p>
+        <dl className="mt-5 space-y-4">
+          {documents.map((doc) => (
+            <div key={doc.label} className="flex gap-3 border-t border-ink-700 pt-3">
+              <ArcGlyph
+                variant="corner"
                 aria-hidden="true"
+                className="mt-1 h-4 w-4 shrink-0"
+                style={{ color: "var(--color-ember-300)" }}
               />
-              <span className="text-body-sm text-ink-200">{point}</span>
-            </li>
+              <div>
+                <dt className="text-body-sm font-medium text-canvas">{doc.label}</dt>
+                <dd className="mt-0.5 text-body-sm text-ink-200">{doc.detail}</dd>
+              </div>
+            </div>
           ))}
-        </ul>
+        </dl>
       </div>
-    </div>
+    </Reveal>
   );
 }

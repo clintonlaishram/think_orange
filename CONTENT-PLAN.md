@@ -19,7 +19,7 @@ Everything here is sourced from the Company Profile PDF or the profile artwork. 
 | Strapline | Empowering Businesses \| Ensuring Compliance \| Driving Growth | Logo lockup |
 | Positioning line | Your Trusted Partner for Tax, Compliance & Business Solutions | Profile |
 | Closing CTA | Simplify compliance. Accelerate growth. | Profile |
-| DSC authority | Premium partner with eMudhra, SignX and other certifying authorities | Profile PDF |
+| DSC authority | ⛔ **SUPERSEDED 02-09-2026 — do not state.** The profile PDF names specific certifying authorities; Clinton has since instructed that none be named on the site ("do not use signx it is for the other company name", then "remove eMudhra also"). Say **"a licensed Certifying Authority"** instead. See §9 | Profile PDF, countermanded |
 | Token stock | HYP2003 tokens | Profile PDF |
 | Audience | SMEs, startups, growing enterprises & professionals across India | Profile |
 
@@ -174,16 +174,22 @@ This is the engineering decision that determines whether the project takes three
 | ID | Template | Routes | Nature |
 |---|---|---|---|
 | **T1** | Home | 1 | Bespoke, hand-built |
-| **T2** | Service Leaf | 21 | Data-driven, one component |
+| **T2** | Service Leaf | 31 | Data-driven, one component (was 21 before the 17-08-2026 menu restructure) |
 | **T3** | Category Hub | 8 | Data-driven, one component |
-| **T4** | DSC Product | 4 | Data-driven, commerce-leaning |
-| **T5** | Utility / Download | 6 | Data-driven, speed-first, no marketing chrome |
+| ~~**T4**~~ | ~~DSC Product~~ | **0** | ⛔ **RETIRED 02-09-2026** — the five certificate pages and the token page were merged into `/dsc`. No route resolves to T4 and its module is deleted. See §9 |
+| **T5** | Utility / Download | **1** | `/dsc/buy-token` only. Was 6 (four driver pages, the drivers hub, Documents Required); all are now sections of the two DSC pages. Still speed-first, still no marketing chrome. See §9 |
 | **T6** | Editorial | 2 | Bespoke long-form |
 | **T7** | Contact | 1 | Bespoke, form-centric |
 | **T8** | Legal | 5 | Prose renderer, content from your CA |
 | **T9** | 404 | 1 | Bespoke, small |
 
-Four bespoke pages. Five templates. Everything else is data.
+⚠️ **This table and §4's "49 routes" are the two places most likely to be
+stale** — the route count has moved repeatedly (49 → 68 → 54) as the menus and
+the DSC tree were restructured. `nav.js` is the only authority; `sitemapPaths()`
+is what actually gets built. Treat the numbers here as narrative, not truth.
+
+Four bespoke pages. Everything else is data. T10 (Insights) was added
+19-08-2026 and is not in the table above.
 
 ---
 
@@ -193,14 +199,14 @@ Follows the `DESIGN.md` §11.1 surface cadence exactly. Fourteen sections; no la
 
 | # | Section | Surface | Content | Presentation |
 |---|---|---|---|---|
-| 1 | **Hero** | Deep | Eyebrow: `GST · INCOME TAX · DSC · COMPLIANCE`. H1 with one serif-italic phrase. Lede: one sentence, Salem-based, pan-India, what you handle. Primary CTA *Talk to an Expert*, secondary *Explore Services*. Trust line: `Salem, Tamil Nadu · Pan-India delivery · eMudhra & SignX partner` | 7/5 asymmetric over Arc Field (`DESIGN.md` §8). Right column: floating deadline card showing the next three statutory due dates |
-| 2 | **Trust strip** | Light | Certifying-authority and platform marks: eMudhra, SignX, GeM, MCA, GSTN, Tally, Zoho Books. Only marks you can legitimately display | Thin full-bleed marquee, greyscale at 60% opacity, colour on hover, pauses on hover |
+| 1 | **Hero** | Deep | Eyebrow: `GST · INCOME TAX · DSC · COMPLIANCE`. H1 with one serif-italic phrase. Lede: one sentence, Salem-based, pan-India, what you handle. Primary CTA *Talk to an Expert*, secondary *Explore Services*. Trust line: `Salem, Tamil Nadu · Pan-India delivery` — ⛔ the certifying-authority partner clause is REMOVED, see §9 | 7/5 asymmetric over Arc Field (`DESIGN.md` §8). Right column: floating deadline card showing the next three statutory due dates |
+| 2 | **Trust strip** | Light | Platform marks only: GeM, MCA, GSTN, Tally, Zoho Books. ⛔ The two certifying-authority marks are REMOVED (§9). Only marks you can legitimately display. NOTE: this section is currently commented out on the homepage, replaced by *When people call us* | Thin full-bleed marquee, greyscale at 60% opacity, colour on hover, pauses on hover |
 | 3 | **What we do** | Dark | Six categories with a one-line promise each. Copy adapted from your profile's service descriptions | Bento grid (`DESIGN.md` §11.3). GST as the large card carrying its four leaf-links inline |
 | 4 | **Who we work with** | Light | Four audience segments: SMEs & growing enterprises · Startups & founders · Professionals & consultants · Government contractors & vendors. One line each on the specific problem you solve for them | Four-column hairline-separated row, no cards. Each links to a filtered enquiry |
 | 5 | **Why ThinkOrange** | Light alt | Your four confirmed differentiators, each expanded to two sentences: All solutions under one roof · Technology-driven & accurate · Pan-India, digital-first · Client-centric, tailored | 2×2 grid with oversized `01–04` mono numerals in ember. Numbers carry the hierarchy, not icons |
 | 6 | **How we work** | Dark | Four steps: *Tell us what you need → We scope it and quote in writing → We file and keep you posted → You get confirmation and records*. Emphasise written scope before work starts | Horizontal arc stepper, connector draws on scroll (`DESIGN.md` §11.5) |
 | 7 | **Compliance Calendar** | Light | Next 6–8 statutory deadlines from `compliance-calendar.json`. GSTR-1, GSTR-3B, TDS payment and returns, advance tax, ITR, AOC-4, MGT-7 | Data rows with filter chips. The most useful thing on the page — give it room (`DESIGN.md` §11.6) |
-| 8 | **DSC band** | Deep | Class 3 Individual · Class 3 Organisation · DGFT (IEC) · Buy Tokens. Lead with the eMudhra/SignX partnership — it is verifiable authority | Four cards on dark, ember-ringed icons. A note strip: *Pricing on request — message us on WhatsApp*. **No published prices** until you confirm them |
+| 8 | **DSC band** | Deep | Class 3 Individual · Class 3 Organisation · Combo · DGFT (IEC). ⛔ Do NOT lead with a named certifying-authority partnership (§9) — the line is now "through a licensed Certifying Authority". Cards deep-link into `/dsc` sections; the DSC pages are no longer separate routes | Four cards on dark, ember-ringed icons. A note strip: *Pricing on request — message us on WhatsApp*. **No published prices** until you confirm them |
 | 9 | **Driver downloads** | Light | HYP2003 · ePass 2003 · Watchdata Proxkey · mToken, each with supported OS line | Four compact utility cards, download-glyph links. Deliberately plain — this is a service block, not a sales block |
 | 10 | **Partner programme** | Light alt | Condensed pitch for CAs, tax practitioners, advocates and consultants reselling DSC. Four benefit tiles | Split 6/6, navy inset panel on the light surface, `Enquire about partnership →` |
 | 11 | **Testimonial** | Deep | **Omit from v1.** You have no collected testimonials, and inventing them is both dishonest and easy to spot. Ship without it; add when you have two real ones with names and consent | — |
@@ -283,41 +289,88 @@ Each gets the same structure, seeded from your profile PDF bullets. Full source 
 
 ---
 
-## 9. T4 — DSC Product (4 pages) and T5 — Utility (6 pages)
+## 9. The DSC pages — `/dsc` and `/dsc/buy-token`
 
-### T4 — DSC product pages
+> ⛔ **REWRITTEN 02-09-2026.** This section used to specify **T4 — DSC Product
+> (4 pages)** and **T5 — Utility (6 pages)**, i.e. ten DSC routes. That is no
+> longer the architecture. On Clinton's instruction the whole DSC tree was
+> merged into **two** pages, and the certifying-authority names came off the
+> site entirely. The old text is superseded, not merely amended — following it
+> would rebuild pages that were deliberately removed. `CLAUDE.md` carries the
+> full record of the change and why.
 
-Closer to a product page than a service page, because the buying decision is short.
+**T4 is retired.** The five certificate pages (`class-3-individual`,
+`class-3-organisation`, `combo-dsc`, `dgft-iec`, `renewal-reissue`) and the
+token page were merged into `/dsc`; no route resolves to T4 and its module is
+deleted. **T5 now serves exactly one route**, `/dsc/buy-token`. The four driver
+pages, the drivers hub, Documents Required and Validity/Renewal are all
+sections of those two pages. Every retired path emits a redirect stub at build
+time — see `dscRetiredRoutes` in `nav.js`.
 
-1. Compact hero — certificate type, validity options, `Enquire on WhatsApp`
-2. What it is used for — income tax portal, GST portal, MCA/ROC, e-tendering, EPFO, DGFT/ICEGATE. Concrete portal names, since that is how people search
-3. Validity and token — 2-year / 3-year, FIPS-compliant token, what ships in the box
-4. Documents required — with the video-verification step called out, since it surprises people
-5. How to get it — 4 steps, same-day where applicable
-6. Pricing — **"on request" until confirmed.** A WhatsApp CTA, not a fake price
-7. Driver support — link across to the relevant driver page
-8. FAQs
-9. CTA
+### ⛔ Authority note — SUPERSEDED
 
-**Authority note:** lead every DSC page with the eMudhra / SignX partnership. It is your strongest verifiable credential and it directly answers the buyer's real question — *is this certificate genuine?*
+This section previously read: *"lead every DSC page with the eMudhra / SignX
+partnership. It is your strongest verifiable credential and it directly answers
+the buyer's real question — is this certificate genuine?"*
 
-### T5 — Utility pages
+**That instruction no longer applies. No certifying authority is named anywhere
+on the site.** Clinton, 02-09-2026: *"do not use signx it is for the other
+company name"*, and then, asked what should replace the partnership line,
+*"remove eMudhra also"*.
 
-Per `DESIGN.md` §2.4 and §11.9. Covers the four driver pages, the drivers hub, and Documents Required for DSC.
+The pages still answer *is this certificate genuine?* — they answer it without
+a name: **"issued through a licensed Certifying Authority, not a reseller of
+unknown standing."** ⚠️ **Do not reintroduce either name** from this document's
+history, from git, or from any of the supplied reference documents — all of
+them name a certifying authority, so a copy-paste will do it silently. It needs
+Clinton's explicit go-ahead.
 
-**No animated hero. No marketing chrome above the fold.** Structure:
+### `/dsc` — the decision
 
-1. H1 + one line + **download buttons immediately**
-2. Compatibility table — OS, architecture, version, file size, release date
-3. Installation steps — numbered, screenshot per step
-4. Troubleshooting accordion — token not detected, driver install fails, browser can't see the certificate, Java/portal issues
-5. One quiet ember-bordered card at the foot: *Need a new DSC? We issue Class 3 certificates — [enquire]*
+Minimal by instruction (*"keep it minimal… expand the field according to user
+selection"*). It carries only what a visitor comes to decide:
 
-That final card is the entire commercial mechanism on these pages. Everything above it exists to be genuinely useful.
+1. Compact hero — H1, lede, one CTA, and a spec row of **derived** facts only
+2. **The certificate finder** — two questions (which portal, whose name) that
+   name the certificate, its documents and its validity. This is what replaced
+   five pages: a reader answers rather than guesses which page to open
+3. Portal guide — a scanning table of which certificate each portal needs
+4. Documents required — one checklist per certificate, opened on selection
+5. After you get it — driver install, portal registration, renewal, lost token
+6. Partner programme — as a section, not a footnote
+7. CTA
 
-**Two engineering flags.** First, do not host third-party driver binaries yourself without checking the vendor's redistribution terms — link to the official source, or host with permission. Second, if you do host files, serve them with correct `Content-Type` and a checksum shown on the page; a compliance firm distributing unverifiable executables is a bad look.
+### `/dsc/buy-token` — the reference material
 
-Target LCP on these pages: **under 1.2 seconds.**
+Ordering first, then the token explainer, then driver support, issuance steps,
+validity and renewal, and FAQs. Everything technical lives here so `/dsc` stays
+short.
+
+- **Ordering is platform + quantity + an order action.** There is no checkout:
+  no backend and no payment provider exist, and a form collecting billing and
+  shipping addresses while the privacy policy is a placeholder would be worse
+  than none. It routes to WhatsApp with the selection pre-filled.
+- **Pricing stays "on request"** until Clinton confirms a figure — the same
+  `fees: null` discipline as everywhere else. A WhatsApp CTA, never a fake
+  price.
+- **Only one token is described** (HYP2003). ePass 2003, Watchdata Proxkey and
+  mToken were deleted on instruction — we stock and issue onto one.
+
+### Still true, and still binding
+
+The T5 discipline survives the restructure and applies to the driver and
+documents sections wherever they render:
+
+- **No marketing chrome.** No scroll-reveals in the driver material — a reader
+  there has a token that has stopped working.
+- **Driver downloads:** do not host third-party binaries without checking the
+  vendor's redistribution terms; link to the official source or host with
+  permission. If you do host, serve correct `Content-Type` and show a checksum
+  — a compliance firm distributing unverifiable executables is a bad look.
+  ⚠️ Every download URL is currently `null` and renders as "ask us", because
+  two of the four tokens had no unambiguous official source. That is the
+  honest state, not an unfinished one.
+- **Target LCP: under 1.2 seconds.**
 
 ---
 
@@ -339,14 +392,45 @@ Target LCP on these pages: **under 1.2 seconds.**
 
 The DSC channel-partner programme — from your profile: *"DSC business partnership opportunities for entrepreneurs and professionals."*
 
-1. Hero — *Become a ThinkOrange DSC Partner*
-2. Who it's for — CAs, tax practitioners, advocates, consultants, IT service providers
-3. How it works — 4 steps: apply → get onboarded → order per client → we handle issuance and dispatch
-4. What you get — 4 tiles. **Commission structure, joining fee and processing times must be confirmed by you before this page publishes.** The draft preview asserted "no upfront investment" and "same-day processing" — those are commitments, not copy
-5. What we handle — verification, dispatch, driver support, renewal reminders
-6. Partner enquiry form — name, firm, city, practice type, expected monthly volume
-7. FAQs
-8. CTA
+> ⛔ **CORRECTED 02-09-2026 — the model described here was wrong.** Clinton:
+> *"CA, CS, Tax practitioner[s] don't refer their clients. They themselves
+> onboard with us to process the DSC for their clients."* Steps 3 and 5 below
+> described a REFERRAL programme — the partner hands the work over and we
+> issue. They do not. A partner enrols through us and issues certificates
+> **themselves**: own login, own video verification, own client relationship,
+> own margin.
+>
+> ⚠️ **The tell is the verb: partners ISSUE, they do not REFER.** If a sentence
+> could be read as "send your client to ThinkOrange", it has reverted.
+
+1. Hero — *Issue Digital Signature Certificates for your own clients*, plus the
+   claims Clinton has confirmed: no joining fee, own issuing login, clients stay
+   yours, free onboarding, partner-rate tokens, English and Tamil support
+2. Why enrol through us — we are a practising compliance firm, not a token desk
+3. Switching — for practitioners already issuing under another certifying
+   authority. No switching cost, no lock-in, clients unaffected
+4. Who it suits — CAs, CSs, tax practitioners, advocates, existing resellers,
+   IT vendors, token dealers, corporate service firms. Every one of them ISSUES
+5. Onboarding — apply → KYC and agreement → login activated → training → you issue
+6. What you take on — identity verification, video verification with the actual
+   applicant, record-keeping, not sharing the login, prompt revocation. Video
+   verification is set by the Controller of Certifying Authorities, so this is
+   an obligation the partner carries, not a house rule
+7. Earning potential — what you can issue and who buys it. **Commission,
+   retail ranges and margins must be confirmed by Clinton before any number is
+   published.** The reference document's own note argues that "on request"
+   loses against competitors publishing a figure and suggests a floor — that is
+   a commercial call, not a content one
+8. Apply form — name, firm, **phone linked with Aadhaar**, **mail ID (becomes
+   the login)**, city, practice type, do-you-issue-today, expected volume, notes
+9. FAQs, CTA
+
+⛔ **PAN, Aadhaar and the MSME/bank statement are NOT form fields.** They are
+documents collected during onboarding, shown on the page as a "what to have
+ready" checklist. Putting identity numbers through a public form into a
+third-party email relay is not acceptable while the privacy policy is still a
+placeholder, and Aadhaar carries its own statutory restrictions on collection
+and storage. If that ever changes, the policy has to be written first.
 
 ---
 
@@ -513,6 +597,8 @@ Ground truth for the writing phase. Decoded from the PDF; these are your own wor
 **Business Loan & Financing Support** — Bank loan documentation and application support · Business projection reports and financial forecasting · CMA data preparation for working capital and term loans · Loan negotiation and coordination with banks and financial institutions · Personal loan and mortgage documentation assistance
 
 **Digital Signature Certificate (DSC) Services** — DSC issuance for individuals, companies and government organisations · Premium partner with eMudhra, SignX and other leading certifying authorities · HYP2003 DSC token sales · DSC renewal and technical support · DSC business partnership opportunities for entrepreneurs and professionals
+
+> ⚠️ This block is a VERBATIM quote from the source PDF and is left unaltered as a record of what that document said. It is **not** a licence to use it: the certifying-authority names in it must not appear on the site (§9), and the partnership bullet describes the referral model that §10 has since corrected.
 
 **Government Tender Support Services** — End-to-end tender documentation and application support · GeM (Government e-Marketplace) registration and bidding assistance · Tender portal navigation and online submission · Coordination with government departments and officials
 

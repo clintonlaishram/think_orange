@@ -8,7 +8,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 // Homepage section 2 — REPLACES TrustStrip on the homepage (18-08-2026,
 // Clinton's request: the "We work with" partner marquee is out). TrustStrip
 // is commented out in home/index.jsx rather than deleted — it has no other
-// call site, but it is the only surface that names the eMudhra/SignX
+// call site, but it is the only surface that names the certifying-authority
 // partnership and it carries IMAGE-PLAN.md §7.4's approved-marks reasoning.
 //
 // Same slot, same light surface, so DESIGN.md §11.1's alternation is

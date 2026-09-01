@@ -23,8 +23,7 @@ import ServicesHub from "@/modules/services/ServicesHub";
 import CategoryHub from "@/modules/services/CategoryHub";
 import ServiceLeaf from "@/modules/services/ServiceLeaf";
 import DscHub from "@/modules/dsc/DscHub";
-import DscProduct from "@/modules/dsc/DscProduct";
-import UtilityPage from "@/modules/dsc/UtilityPage";
+import DscBuyToken from "@/modules/dsc/DscBuyToken";
 import About from "@/modules/about";
 import PartnerWithUs from "@/modules/partner-with-us";
 import Contact from "@/modules/contact";
@@ -42,8 +41,7 @@ const components = {
   CategoryHub,
   ServiceLeaf,
   DscHub,
-  DscProduct,
-  UtilityPage,
+  DscBuyToken,
   About,
   PartnerWithUs,
   Contact,

@@ -6,8 +6,6 @@ import {
   hasLightTop,
   primaryNav,
   serviceCategories,
-  dscPanelColumns,
-  dscPartnerPromo,
   site,
 } from "@/content/nav";
 import { cn } from "@/lib/cn";
@@ -31,17 +29,13 @@ const PANELS = {
       items: category.children,
     })),
   },
-  dsc: {
-    ariaLabel: "Digital Signature Certificates",
-    columns: dscPanelColumns.map((column) => ({
-      label: column.label,
-      items: column.items,
-      note: column.note,
-    })),
-    // The DSC panel's fourth "column" — a promo card, not a link list. See
-    // dscPartnerPromo's own comment in nav.js.
-    promo: dscPartnerPromo,
-  },
+  // ⛔ 02-09-2026 (Clinton: "keep dsc and resources as a single tab like
+  // home"). The DSC panel is GONE. `primaryNav`'s DSC entry no longer carries
+  // a `panel` key, so it renders through the plain <Link> branch below and
+  // never looks this map up. Services is the only mega panel left — which is
+  // also why the switch-between-panels transition (documented at length below)
+  // now has nothing to switch between; it is left intact rather than unwound,
+  // since it is the enter/exit behaviour for the remaining panel too.
 };
 
 const PANEL_EASE = [0.22, 1, 0.36, 1];

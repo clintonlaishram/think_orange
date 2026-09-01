@@ -33,7 +33,7 @@ export const dscValidityRenewalContent = {
   faqs: [
     {
       q: "How long does a Digital Signature Certificate last?",
-      a: "It depends on the certificate type and the term you choose at issuance — most of our certificates offer a 1, 2 or 3-year term, and a combo (sign + encrypt) certificate is offered at 2 or 3 years. See each certificate's own page for its specific options.",
+      a: "It depends on the certificate type and the term you choose at issuance — most of our certificates offer a 1, 2 or 3-year term, and a combo (sign + encrypt) certificate is offered at 2 or 3 years. The certificate types section above lists the options for each.",
     },
     {
       q: "Can I have more than one DSC at the same time?",

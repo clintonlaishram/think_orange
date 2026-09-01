@@ -31,12 +31,11 @@
 // Relative imports, explicit extensions, no JSX — plain-Node-importable,
 // same discipline as every file under src/content/ (see the comment atop
 // gst-registration.js).
-import { site, findRoute, dscDriversHub, dscDocumentsPage } from "../content/nav.js";
+import { site, findRoute } from "../content/nav.js";
 import { getServiceContent } from "../content/services/index.js";
 import { getCategoryContent } from "../content/services/category-content.js";
-import { getDscProduct } from "../content/dsc/products.js";
-import { getDriver } from "../content/dsc/drivers.js";
-import { dscHubContent, dscDocumentsMeta } from "../content/dsc/hub-content.js";
+import { dscHubContent } from "../content/dsc/hub-content.js";
+import { tokenProduct } from "../content/dsc/token.js";
 import { aboutContent } from "../content/about.js";
 import { partnerContent } from "../content/partner-with-us.js";
 import { getLegalContent } from "../content/legal/index.js";
@@ -54,13 +53,6 @@ function fallbackFor(route) {
   };
 }
 
-function driversHubMeta() {
-  return {
-    title: `${dscDriversHub.label} | ThinkOrange Consulting`,
-    description:
-      "Install the right driver for your DSC USB token before signing on any government portal. HYP2003, ePass 2003, Watchdata Proxkey and mToken.",
-  };
-}
 
 /** Resolves {title, description, canonical, robots} for one path. Never
  * throws — a route this misses falls back to defaultMeta rather than
@@ -91,21 +83,12 @@ export function resolveSeo(path) {
       break;
     }
 
-    case "T4": {
-      const product = slug ? getDscProduct(slug) : undefined;
-      m = product?.meta ?? fallbackFor(route);
+    // ⛔ 02-09-2026: T4 has no routes left. T5 has exactly one — the Buy Token
+    // tab, which keeps /dsc minimal.
+    case "T5":
+      m = tokenProduct.meta;
       break;
-    }
 
-    case "T5": {
-      if (slug === dscDriversHub.slug) m = driversHubMeta();
-      else if (slug === dscDocumentsPage.slug) m = dscDocumentsMeta;
-      else {
-        const driver = slug ? getDriver(slug) : undefined;
-        m = driver?.meta ?? fallbackFor(route);
-      }
-      break;
-    }
 
     case "T6":
       m = path === "/about" ? aboutContent.meta : partnerContent.meta;

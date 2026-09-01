@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/Button";
 import { DscShowcase } from "@/components/ui/DscShowcase";
 import { Reveal } from "@/components/motion/Reveal";
 import { ProductShot } from "@/components/ui/ProductShot";
-import { dscProducts as dscNav, site } from "@/content/nav";
-import { dscProducts as dscContent } from "@/content/dsc/products";
+import { dscSectionIds, site } from "@/content/nav";
+import { certificateVariants } from "@/content/dsc/certificates";
 import { dscIcon } from "@/content/dsc/icons";
 import { Img } from "@/components/ui/Img";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -44,7 +44,7 @@ const ASSURANCES = [
   {
     icon: ShieldCheck,
     title: "Licensed CA issuance",
-    desc: "Through eMudhra and SignX",
+    desc: "Through a licensed Certifying Authority",
   },
   {
     icon: Usb,
@@ -98,7 +98,7 @@ export function DscBand() {
                     <span className="text-ember-300">simplified for you.</span>
                   </>
                 }
-                lede="Issued through our eMudhra and SignX partnership — both licensed certifying authorities, not a reseller of unknown standing. That is the question every buyer actually has about a digital signature."
+                lede="Issued through a licensed Certifying Authority — not a reseller of unknown standing. That is the question every buyer actually has about a digital signature."
                 headingClassName="max-w-[22ch]"
                 ledeClassName="max-w-[54ch]"
                 dark
@@ -164,15 +164,20 @@ export function DscBand() {
         </Reveal>
 
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {dscNav.map((product, index) => {
+          {/* ⛔ 02-09-2026: was six links to six DSC pages. There is one DSC
+              page now, so each card names a certificate and deep-links into
+              the section of /dsc that covers it. The cards are built from
+              `certificateVariants` — the certificates themselves — rather than
+              from a nav array of routes that no longer exists. Four are shown:
+              the grid is `lg:grid-cols-4` and a fifth would leave a hole. */}
+          {certificateVariants.slice(0, 4).map((variant, index) => {
             // Shared map, and resolved through a helper that always returns a
-            // component — an unmapped slug used to render `<undefined />`, a hard
+            // component — an unmapped key used to render `<undefined />`, a hard
             // React crash. See content/dsc/icons.js.
-            const Icon = dscIcon(product.slug);
-            const lede = dscContent.find((p) => p.slug === product.slug)?.lede;
+            const Icon = dscIcon(variant.key);
 
             return (
-              <Reveal key={product.slug} delay={Math.min(index, 5) * 0.06}>
+              <Reveal key={variant.key} delay={Math.min(index, 5) * 0.06}>
                 {/* `card-dark` is the SAME class <Card surface="dark"> uses —
                     the gradient wash, hover ring and corner-arc draw all come
                     from one definition in theme.css, so this hand-rolled link
@@ -180,7 +185,7 @@ export function DscBand() {
                     inline hover (ungated -translate-y-1 plus a static border
                     swap) is gone; .card-dark's is pointer-gated. */}
                 <Link
-                  to={product.path}
+                  to={`/dsc#${dscSectionIds.certificates}`}
                   className="card-dark group flex h-full flex-col rounded-[var(--radius-md)] lg:rounded-[var(--radius-lg)] p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950"
                 >
                   <ArcGlyph
@@ -191,8 +196,8 @@ export function DscBand() {
                   <span className="flex h-11 w-11 items-center justify-center rounded-full border border-ember-400/60">
                     <Icon className="h-5 w-5 text-ember-400" strokeWidth={1.5} aria-hidden="true" />
                   </span>
-                  <h4 className="mt-4 text-h4 text-canvas">{product.label}</h4>
-                  <p className="mt-2 text-body-sm text-ink-300">{lede}</p>
+                  <h4 className="mt-4 text-h4 text-canvas">{variant.label}</h4>
+                  <p className="mt-2 text-body-sm text-ink-300">{variant.bestFor}</p>
                   {/* The whole card is the link, so its accessible name
                       already includes the product title above — this row is a
                       visual affordance only, not a second "Learn more" link

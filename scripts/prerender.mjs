@@ -26,7 +26,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { site, sitemapPaths } from "../src/content/nav.js";
+import { site, sitemapPaths, dscRetiredRoutes } from "../src/content/nav.js";
 import { resolveSeo } from "../src/lib/seo.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -100,6 +100,57 @@ function writeRobots() {
   writeFileSync(path.join(DIST, "robots.txt"), txt, "utf-8");
 }
 
+
+/**
+ * Redirect stubs for retired URLs.
+ *
+ * ⛔ 02-09-2026: the five DSC certificate pages were merged into /dsc. Those
+ * paths are live, are in the currently-deployed sitemap.xml, and are linked
+ * from elsewhere — deleting them outright would 404 every one.
+ *
+ * This is a static host, so there is no server to answer 301 with. The stub
+ * does the three things a static page can:
+ *   - `<link rel="canonical">` at the destination, so a crawler that lands
+ *     here attributes the page to /dsc rather than indexing a duplicate;
+ *   - `<meta name="robots" content="noindex,follow">`, so the stub itself
+ *     never competes with the page it points at while still passing the link
+ *     on;
+ *   - a `<meta http-equiv="refresh" content="0">` plus a `location.replace`,
+ *     which moves a real visitor immediately and does not leave the stub in
+ *     their back-button history the way `location.href` would.
+ *
+ * A visible link is rendered too, for the case where both JS and the refresh
+ * are unavailable — a blank page with no way forward is the one outcome worth
+ * ruling out.
+ *
+ * These paths are deliberately NOT added to sitemap.xml: `sitemapPaths()`
+ * derives from `allRoutes`, which no longer contains them, and asking a
+ * crawler to index a noindex redirect is a contradiction.
+ */
+function writeRedirects() {
+  for (const route of dscRetiredRoutes) {
+    const to = `${ORIGIN}${route.redirectTo}`;
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Moved — ${route.label} | ThinkOrange Consulting</title>
+<meta name="robots" content="noindex,follow">
+<link rel="canonical" href="${to}">
+<meta http-equiv="refresh" content="0; url=${route.redirectTo}">
+<script>location.replace(${JSON.stringify(route.redirectTo)});</script>
+</head>
+<body>
+<p>${route.label} is now part of <a href="${route.redirectTo}">Digital Signature Certificates</a>.</p>
+</body>
+</html>
+`;
+    const outFile = path.join(DIST, route.path.replace(/^\//, ""), "index.html");
+    mkdirSync(path.dirname(outFile), { recursive: true });
+    writeFileSync(outFile, html, "utf-8");
+  }
+}
+
 async function main() {
   if (!existsSync(path.join(DIST, "index.html"))) {
     throw new Error("dist/index.html not found — run `vite build` before prerendering.");
@@ -129,12 +180,15 @@ async function main() {
   const notFoundHtml = renderHtmlFor(template, notFoundBody, resolveSeo("*"));
   writeFileSync(outputFileFor("*"), notFoundHtml, "utf-8");
 
+  writeRedirects();
   writeSitemap(paths);
   writeRobots();
 
   rmSync(SSR_OUT, { recursive: true, force: true });
 
-  console.log(`[prerender] wrote ${paths.length} routes + 404.html + sitemap.xml + robots.txt`);
+  console.log(
+    `[prerender] wrote ${paths.length} routes + ${dscRetiredRoutes.length} redirects + 404.html + sitemap.xml + robots.txt`
+  );
 }
 
 main().catch((error) => {

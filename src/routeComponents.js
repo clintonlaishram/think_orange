@@ -17,8 +17,7 @@ export function resolveComponent(entry, components) {
     CategoryHub,
     ServiceLeaf,
     DscHub,
-    DscProduct,
-    UtilityPage,
+    DscBuyToken,
     About,
     PartnerWithUs,
     Contact,
@@ -37,10 +36,12 @@ export function resolveComponent(entry, components) {
       if (entry.path === "/services") return ServicesHub;
       if (entry.path === "/dsc") return DscHub;
       return CategoryHub;
-    case "T4":
-      return DscProduct;
+    // ⛔ 02-09-2026: T4 (DSC product) is retired — the five certificate pages
+    // and the token page are gone, and `DscProduct.jsx` with them. T5 was
+    // retired alongside them and then brought back the same day for exactly
+    // one route: /dsc/resources, the technical tab that keeps /dsc minimal.
     case "T5":
-      return UtilityPage;
+      return DscBuyToken;
     case "T6":
       return entry.path === "/about" ? About : PartnerWithUs;
     case "T7":

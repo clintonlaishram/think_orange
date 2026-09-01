@@ -4,8 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, ChevronRight, Phone } from "lucide-react";
 import {
   serviceCategories,
-  dscPanelColumns,
-  dscPartnerPromo,
   standalonePages,
   site,
 } from "@/content/nav";
@@ -34,23 +32,12 @@ const SECTIONS = [
       items: category.children,
     })),
   },
-  {
-    key: "dsc",
-    // 17-08-2026: "Digital Signatures" here too, matching the desktop
-    // primaryNav relabel — see nav.js's comment on `primaryNav`.
-    label: "Digital Signatures",
-    hubPath: "/dsc",
-    hubLabel: "View all DSC services",
-    groups: dscPanelColumns.map((column) => ({
-      label: column.label,
-      items: column.items,
-    })),
-    // Mobile equivalent of the desktop mega panel's promo card — same
-    // `dscPartnerPromo` data, rendered by `PromoCard` below rather than as
-    // one more `groups` entry (a promo card isn't a `{label, items}` link
-    // list, and `groups.map` below assumes every entry is).
-    promo: dscPartnerPromo,
-  },
+  // ⛔ 02-09-2026: the DSC accordion group is GONE (Clinton: "keep dsc and
+  // resources as a single tab like home… it will only have /dsc route only").
+  // Digital Signatures is now a flat link in the list below, alongside Home
+  // and About Us — matching the desktop nav, which drops its DSC panel for the
+  // same reason. The two navbars do NOT derive from one array (see the
+  // Partner With Us note below), so both had to change.
 ];
 
 export function MobileNav({ className }) {
@@ -324,6 +311,16 @@ export function MobileNav({ className }) {
                 );
               })}
 
+              {/* ⛔ 02-09-2026: Digital Signatures is a flat Row now, not an
+                  accordion group — one page, one link, exactly like Home. It
+                  sits directly after the Services accordion so the nav order
+                  still matches the desktop `primaryNav`. */}
+              <Row
+                to="/dsc"
+                label="Digital Signatures"
+                index={SECTIONS.length + 1}
+              />
+
               {standalonePages
                 .filter((page) => page.slug !== "partner-with-us")
                 .map((page, i) => (
@@ -331,7 +328,7 @@ export function MobileNav({ className }) {
                     key={page.path}
                     to={page.path}
                     label={page.label}
-                    index={SECTIONS.length + 1 + i}
+                    index={SECTIONS.length + 2 + i}
                   />
                 ))}
             </nav>
@@ -340,7 +337,7 @@ export function MobileNav({ className }) {
                 the cascade, so the eye lands on the CTA once the list has
                 settled rather than competing with it. */}
             <div
-              style={{ "--i": SECTIONS.length + 4 }}
+              style={{ "--i": SECTIONS.length + 5 }}
               className="mobile-sheet-item relative shrink-0 space-y-3 border-t border-ink-800 px-6 py-5"
             >
               <a

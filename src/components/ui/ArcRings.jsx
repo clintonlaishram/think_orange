@@ -20,6 +20,15 @@ import { arcPath } from "@/lib/arc";
  *                  <defs> mounted last.
  * @param svgClassName Position/size of the ring composition. The wrapper
  *                  clips it, so bleeding off an edge is safe.
+ *
+ * ⚠️ Extra props are forwarded to the wrapper. This exists because `.arc-rings`
+ * is UNLAYERED CSS and sets `z-index: 0`, which beats Tailwind's
+ * `@layer utilities` — so a caller needing the rings BEHIND in-flow text
+ * (`z-index: -1`) cannot express it as a class and has to pass `style`.
+ * Forwarding was missing, so such a style was silently dropped: exactly the bug
+ * `ArcGlyph` had before Phase 5, and just as invisible, since the rings still
+ * render and `pointer-events: none` hides the stacking error from any
+ * `elementFromPoint` check.
  */
 export function ArcRings({
   rings,
@@ -27,9 +36,10 @@ export function ArcRings({
   color = "var(--color-ember-400)",
   svgClassName,
   className,
+  ...props
 }) {
   return (
-    <div className={cn("arc-rings", className)} aria-hidden="true">
+    <div className={cn("arc-rings", className)} aria-hidden="true" {...props}>
       <svg viewBox="0 0 400 400" fill="none" className={cn("absolute", svgClassName)}>
         <defs>
           {/* ONE gradient shared by every ring via userSpaceOnUse, so the fade

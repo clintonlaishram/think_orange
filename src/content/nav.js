@@ -191,151 +191,143 @@ export const serviceCategories = [
   },
 ];
 
-// --- DSC pages ------------------------------------------------------------
-// T4 = product page, T5 = utility page (speed-first, no marketing chrome).
+// --- DSC: ONE PAGE ---------------------------------------------------------
 //
-// ⚠️ 17-08-2026: restructured against the client's revised DSC & eSign menu
-// (thinkorange-dsc-menu.html — content only, that file's own visual mockup
-// was NOT implemented). New: `combo-dsc`, `dsc-renewal-reissue` and
-// `aadhaar-esign` (all T4, no content file yet — aadhaar-esign is a new
-// eSign product family, not a DSC certificate, but reuses the T4 shell:
-// `DscProduct.jsx`'s per-field optional chaining — `validityOptions`,
-// `driverSlugs`, `tokenNote` all already render-or-skip — means a content
-// entry with those fields empty/absent degrades cleanly). Two new T5 pages:
-// `dscValidityFaqsPage`, `dscEsignVsDscPage` (no content file yet either).
-// `DscProduct.jsx` and `UtilityPage.jsx` both gained a graceful fallback for
-// an unwritten slug (they used to `return null` — a genuinely blank page,
-// worse than T2's `PendingLeaf` — which this restructure would have shipped
-// six of without that fix). See MISSING-PAGES.md for the writing backlog.
-export const dscProducts = [
-  { slug: "class-3-individual", 
-    path: "/dsc/class-3-individual", 
-    label: "Class 3 DSC — Individual", 
-    template: "T4" 
-  },
-  { slug: "class-3-organisation", 
-    path: "/dsc/class-3-organisation", 
-    label: "Class 3 DSC — Organisation", 
-    template: "T4" 
-  },
-  { slug: "combo-dsc", 
-    path: "/dsc/combo-dsc", 
-    label: "Combo DSC (Sign + Encrypt)", 
-    template: "T4" 
-  },
-  { slug: "dgft-iec", 
-    path: "/dsc/dgft-iec", 
-    label: "DGFT (IEC) DSC", 
-    template: "T4" 
-  },
-  { slug: "dsc-renewal-reissue", 
-    path: "/dsc/renewal-reissue", 
-    label: "Renewal & Re-issue", 
-    template: "T4" 
-  },
-  { 
-    slug: "buy-tokens", 
-    path: "/dsc/buy-tokens", 
-    label: "Buy DSC Tokens", 
-    template: "T4" 
-  },
-  // ⛔ eSign PAUSED — 21-08-2026, Clinton: "for now comment out all content and
-  // pages about esign". Commented out rather than deleted; uncomment this entry
-  // (and every other ⛔ eSign PAUSED block across the repo) to restore.
-  // { 
-  //   slug: "aadhaar-esign",
-  //   path: "/dsc/aadhaar-esign", 
-  //   label: "Aadhaar eSign", 
-  //   template: "T4" 
-  // },
-];
-
-export const dscDocumentsPage = {
-  slug: "documents-required",
-  path: "/dsc/documents-required",
-  label: "Documents Required for DSC",
-  template: "T5",
-};
-
-// New (17-08-2026) — see this section's header comment. No content file
-// yet; `UtilityPage.jsx`'s fallback renders a "still being written" state
-// until one exists.
-export const dscValidityFaqsPage = {
-  slug: "validity-renewal-faqs",
-  path: "/dsc/validity-renewal-faqs",
-  label: "Validity, Renewal & FAQs",
-  template: "T5",
-};
-
-// ⛔ eSign PAUSED — 21-08-2026. Its consumers (DscHub.jsx, UtilityPage.jsx) are
-// commented out alongside it, so nothing imports this while it is off.
-// export const dscEsignVsDscPage = {
-//   slug: "esign-or-dsc",
-//   path: "/dsc/esign-or-dsc",
-//   label: "eSign or DSC — Which Do You Need?",
-//   template: "T5",
-// };
-
-// The drivers hub absorbs what was a third nav level — the four driver pages
-// are listed ON the hub, never in a nested flyout (CONTENT-PLAN.md §3.5).
-export const dscDriversHub = {
-  slug: "drivers",
-  path: "/dsc/drivers",
-  label: "Token Driver Downloads",
-  template: "T5",
-  children: [
-    { slug: "hyp2003", path: "/dsc/drivers/hyp2003", label: "HYP2003 Driver Downloads", template: "T5" },
-    { slug: "epass-2003", path: "/dsc/drivers/epass-2003", label: "ePass 2003 Driver Downloads", template: "T5" },
-    { slug: "watchdata-proxkey", path: "/dsc/drivers/watchdata-proxkey", label: "Watchdata Proxkey Driver Downloads", template: "T5" },
-    { slug: "mtoken", path: "/dsc/drivers/mtoken", label: "mToken Driver Downloads", template: "T5" },
-  ],
-};
-
-const dscProduct = (slug) => dscProducts.find((p) => p.slug === slug);
-
-// Presentation grouping for the DSC mega panel (DESIGN.md §10.3). Groups the
-// pages above; it does not define new routes. Three link-columns, matching
-// the revised menu's "Digital Signature Certificates" / "Tokens & Resources"
-// / "eSign Solutions" split. Looked up by slug rather than array index —
-// `dscProducts` above no longer has a stable index per item now that it's
-// grown, so a positional reference (`dscProducts[3]`) would silently point
-// at the wrong product the next time an item is inserted.
+// ⛔ 02-09-2026 (Clinton, two instructions the same day):
+//   1. "for the dsc i do not need multiple page like class 3 - individual,
+//      class -3 organisation, like that so combine the 5 pages in one."
+//   2. "keep dsc and resources as a single tab like home… so now it will only
+//      have /dsc route only."
 //
-// `note` on "Buy DSC Tokens" is the exact token-brand subtitle from the
-// revised menu, copied verbatim — display copy only. It does NOT change
-// `buy-tokens`'s own product content (`content/dsc/products.js`), which
-// still centres on HYP2003 as the stocked token and doesn't mention mToken
-// or InnaIT — worth Clinton confirming whether that page's copy should catch
-// up. See MISSING-PAGES.md.
-export const dscPanelColumns = [
-  {
-    label: "Digital Signature Certificates",
-    items: [
-      dscProduct("class-3-individual"),
-      dscProduct("class-3-organisation"),
-      dscProduct("combo-dsc"),
-      dscProduct("dgft-iec"),
-      dscProduct("dsc-renewal-reissue"),
-    ],
-  },
-  {
-    label: "Tokens & Resources",
-    items: [
-      { ...dscProduct("buy-tokens"), note: "HYP2003 · mToken · InnaIT" },
-      dscDocumentsPage,
-      dscDriversHub,
-      dscValidityFaqsPage,
-    ],
-  },
-  // ⛔ eSign PAUSED — 21-08-2026. Removing this column removes the eSign group
-  // from the mega panel, the mobile accordion AND the /dsc hub's sections in one
-  // move, because `dscGroups` (content/dsc/groups.js) derives membership from
-  // this export rather than restating it.
-  // {
-  //   label: "eSign Solutions",
-  //   items: [dscProduct("aadhaar-esign"), dscEsignVsDscPage],
-  // },
-];
+// THE ENTIRE DSC TREE IS NOW ONE ROUTE. Eleven pages became sections of /dsc:
+// five certificate pages, the token page, Documents Required, Validity &
+// Renewal, the drivers hub and its four driver pages. `dscProducts`,
+// `dscPanelColumns`, `dscDocumentsPage`, `dscValidityFaqsPage` and
+// `dscDriversHub` are GONE as exports — every one of them existed to describe
+// a route, and there is one route left.
+//
+// Content was MOVED, not rewritten. It lives in content/dsc/ exactly as it
+// did (certificates.js, drivers.js, products.js, validity-renewal-faqs.js)
+// and `DscHub.jsx` renders it as sections. Structure and framing follow the
+// two reference documents Clinton supplied (ThinkOrange_DSC_Hub_V7.html and
+// _V4.html), both of which set their canonical to /dsc and are written as one
+// landing page rather than a hub over children.
+//
+// ⚠️ Templates T4 (DSC product) and T5 (DSC utility) no longer have any route
+// pointing at them and their modules are deleted. Do not reintroduce a
+// template branch for either without a route to justify it.
+
+// The section anchors of /dsc. Declared here, once, because three surfaces
+// have to agree on them: the mega-panel-free nav link's deep links, the hub's
+// own <Section id>s and its sticky sub-nav. A tab, a link and a section that
+// disagree by one character scroll nowhere and light up never.
+export const dscSectionIds = {
+  finder: "finder",
+  portals: "portals",
+  certificates: "certificates",
+  documents: "documents",
+  process: "process",
+  partner: "partner",
+};
+
+// The Resources page's own anchors. Kept separate from `dscSectionIds` so a
+// section cannot be moved between the two pages by accident — an id that lives
+// in the wrong object silently produces a sub-nav tab that scrolls nowhere.
+// ⛔ 02-09-2026 (Clinton): "protal guide and document has to be dsc page. in
+// resouce page i ha[ve] to mainly focus on token and driver, the[ir] validity
+// and renewal." So `portals` and `documents` moved to `dscSectionIds` above,
+// and Resources is now the token/driver page: drivers, validity & renewal, and
+// the FAQ set that mostly answers questions about them.
+export const dscResourceSectionIds = {
+  drivers: "drivers",
+  renewal: "renewal",
+  faqs: "faqs",
+};
+
+// ⛔ 02-09-2026, later the same day (Clinton): "i want to keep the page
+// minimal. now it['s] filled up with the content… remove the pan-drive and
+// content. for [token] keep it in another tab like digital signature."
+//
+// So /dsc did NOT stay the only DSC route after all. It keeps the hero, the
+// finder, the certificates, how-it-works and the partner programme — the
+// decision the visitor came to make — and everything technical moves here.
+// This is precisely what ThinkOrange_DSC_Resources_V1.html is: a "DSC
+// Resources Centre" whose own copy says to keep the detailed technical
+// information "away from the main DSC sales page".
+//
+// The USB token offer is NOT here. It was DELETED outright on Clinton's
+// instruction, not relocated — see content/dsc/certificates.js. Certificates
+// still state that they are issued ON a token, because that is how a Class 3
+// certificate works and removing it would make those sections wrong; what is
+// gone is selling the token as a product of its own.
+// ⛔ 02-09-2026, later again (Clinton): "actually change resou[rce] page to
+// buy token." The Resources tab became the Buy Token page — the same route
+// family, renamed and repurposed around ordering a USB token, with the driver,
+// validity and renewal material kept because it is all token lifecycle.
+// `/dsc/resources` never shipped (it was created earlier the same day), so
+// there is no old URL to redirect from.
+export const dscResourcesPage = {
+  slug: "buy-token",
+  path: "/dsc/buy-token",
+  label: "Buy Token",
+  template: "T5",
+};
+
+/**
+ * Every retired DSC path, and the slug it used to answer to.
+ *
+ * Kept — not deleted — for three jobs, each of which fails silently without it:
+ *
+ *  1. `scripts/prerender.mjs` emits a redirect stub for each path, so an old
+ *     link, bookmark or search result lands on /dsc instead of a 404. All
+ *     eleven are live today and are in the currently-deployed sitemap.xml.
+ *  2. `slugIndex` below resolves the old slugs, because six service leaves
+ *     still carry certificate slugs in `related` (gst-registration,
+ *     llp-registration, private-limited-company, trademark-registration,
+ *     iec-registration, icegate-registration). Those arrays are deliberately
+ *     NOT rewritten: the slug still names a real, specific certificate — it
+ *     just no longer has a page of its own — so the related card keeps its
+ *     accurate label and points at the page that now covers it.
+ *  3. `hash` sends a reader to the section that absorbed the page, rather than
+ *     dropping them at the top of a long page to hunt for it.
+ *
+ * ⚠️ `label` must stay in step with content/dsc/certificates.js and
+ * content/dsc/drivers.js. It is not imported from either because this file
+ * sits at the top of the content graph and is loaded by the Node scripts; it
+ * must stay dependency-free.
+ */
+export const dscRetiredRoutes = [
+  { slug: "class-3-individual", path: "/dsc/class-3-individual", label: "Class 3 DSC — Individual", hash: dscSectionIds.certificates },
+  { slug: "class-3-organisation", path: "/dsc/class-3-organisation", label: "Class 3 DSC — Organisation", hash: dscSectionIds.certificates },
+  { slug: "combo-dsc", path: "/dsc/combo-dsc", label: "Combo DSC (Sign + Encrypt)", hash: dscSectionIds.certificates },
+  { slug: "dgft-iec", path: "/dsc/dgft-iec", label: "DGFT (IEC) DSC", hash: dscSectionIds.certificates },
+  { slug: "dsc-renewal-reissue", path: "/dsc/renewal-reissue", label: "DSC Renewal & Re-issue", hash: dscSectionIds.certificates },
+  // ⚠️ `buy-tokens` redirects to /dsc with NO hash. Its content was deleted,
+  // so there is no section to land on — sending a reader to a fragment that
+  // does not exist would leave them at the top of the page wondering what they
+  // missed. /dsc's certificates section explains that every certificate ships
+  // on a token, which is the honest remainder of what that page was for.
+  // ⚠️ Now that a real Buy Token page exists again, the retired
+  // /dsc/buy-tokens URL points at it rather than at /dsc. It briefly redirected
+  // to /dsc while the token offer was deleted; this is the better destination
+  // and the reason the redirect table carries an explicit `to`.
+  { slug: "buy-tokens", path: "/dsc/buy-tokens", label: "Buy DSC Tokens", to: "/dsc/buy-token" },
+  { slug: "documents-required", path: "/dsc/documents-required", label: "Documents Required for DSC", hash: dscSectionIds.documents },
+  { slug: "validity-renewal-faqs", path: "/dsc/validity-renewal-faqs", label: "Validity, Renewal & FAQs", hash: dscResourceSectionIds.renewal, resources: true },
+  { slug: "drivers", path: "/dsc/drivers", label: "Token Driver Downloads", hash: dscResourceSectionIds.drivers, resources: true },
+  { slug: "hyp2003", path: "/dsc/drivers/hyp2003", label: "HYP2003 Driver Downloads", hash: dscResourceSectionIds.drivers, resources: true },
+  { slug: "epass-2003", path: "/dsc/drivers/epass-2003", label: "ePass 2003 Driver Downloads", hash: dscResourceSectionIds.drivers, resources: true },
+  { slug: "watchdata-proxkey", path: "/dsc/drivers/watchdata-proxkey", label: "Watchdata Proxkey Driver Downloads", hash: dscResourceSectionIds.drivers, resources: true },
+  { slug: "mtoken", path: "/dsc/drivers/mtoken", label: "mToken Driver Downloads", hash: dscResourceSectionIds.drivers, resources: true },
+].map((route) => ({
+  ...route,
+  redirectTo:
+    // ⚠️ Derived from `dscResourcesPage.path`, never a literal. That page has
+    // already been renamed once (/dsc/resources → /dsc/buy-token) and a
+    // hardcoded string here would have silently pointed eight redirect stubs
+    // at a 404.
+    route.to ?? `${route.resources ? dscResourcesPage.path : "/dsc"}#${route.hash}`,
+}));
 
 // The DSC mega panel's fourth "column" — a promo CARD, not a link list, so
 // MegaPanel.jsx renders it through a distinct branch rather than
@@ -349,10 +341,21 @@ export const dscPanelColumns = [
 // site authenticates a partner — so it's routed to WhatsApp rather than a
 // dead or fabricated link, the same "no backend yet, route to a human"
 // pattern as EnquiryCard and DscEnquiryStrip elsewhere in the DSC tree.
+// ⛔ 02-09-2026 (Clinton): "CA, CS, Tax practitioner[s] don't refer their
+// clients. They themselves onboard with us to process the DSC for their
+// clients." The old description — "Offer certificates to your own clients. We
+// handle issuance, verification, dispatch and support" — described the
+// referral model, where the partner hands the work over. They do not. A
+// partner enrols through us and issues the certificates THEMSELVES.
+// ⛔ 02-09-2026 (Clinton): "do not use signx it is for the other company name"
+// — and eMudhra with it. No certifying authority is named anywhere on the
+// site now; the claim is "a licensed Certifying Authority".
+// ⚠️ The tell is the verb: partners ISSUE, they do not REFER, and "we handle
+// issuance" is exactly the sentence that gets it wrong.
 export const dscPartnerPromo = {
-  heading: "Partner Programme",
+  heading: "DSC Partner Programme",
   description:
-    "Offer certificates to your own clients. We handle issuance, verification, dispatch and support.",
+    "Issue certificates for your own clients under your own issuing login — rather than sending them elsewhere mid-engagement.",
   cta: { label: "Become a DSC Partner", path: "/partner-with-us" },
   secondaryLabel: "Partner login",
 };
@@ -432,7 +435,15 @@ export const legalPages = [
 export const primaryNav = [
   { label: "Home", path: "/" },
   { label: "Services", panel: "services", hubPath: "/services", hubLabel: "View all services" },
-  { label: "Digital Signatures", panel: "dsc", hubPath: "/dsc", hubLabel: "View all DSC services" },
+  // ⛔ 02-09-2026 (Clinton: "keep dsc and resources as a single tab like
+  // home"). No `panel` key, so `Header.jsx` renders it through the same plain
+  // <Link> branch as Home and About Us — there is one DSC page, and a dropdown
+  // over a single destination is a menu that asks a question with one answer.
+  { label: "Digital Signatures", path: "/dsc" },
+  // ⛔ 02-09-2026: "for [token] keep it in another tab like digital signature",
+  // then "change resou[rce] page to buy token". A second flat tab, not a
+  // dropdown — same reasoning as the DSC tab above.
+  { label: "Buy Token", path: dscResourcesPage.path },
   { label: "About Us", path: "/about" },
 ];
 
@@ -451,14 +462,10 @@ export const allRoutes = [
     })),
   ]),
   { path: "/dsc", label: "Digital Signature Certificates", template: "T3" },
-  ...dscProducts.map((p) => ({ ...p, parent: "/dsc" })),
-  { ...dscDocumentsPage, parent: "/dsc" },
-  { ...dscValidityFaqsPage, parent: "/dsc" },
+  { ...dscResourcesPage, parent: "/dsc" },
   // ⛔ eSign PAUSED — 21-08-2026. Off the route table, so no file is prerendered
   // for it and `sitemapPaths()` cannot list it.
   // { ...dscEsignVsDscPage, parent: "/dsc" },
-  { ...dscDriversHub, children: undefined, parent: "/dsc" },
-  ...dscDriversHub.children.map((d) => ({ ...d, parent: dscDriversHub.path })),
   insightsIndexPage,
   ...insightArticlePages,
   ...standalonePages,
@@ -484,12 +491,12 @@ export const footerColumns = [
   {
     heading: "Digital Signatures",
     links: [
-      ...dscProducts.map(({ path, label }) => ({ path, label })),
-      { path: dscDocumentsPage.path, label: dscDocumentsPage.label },
-      { path: dscValidityFaqsPage.path, label: dscValidityFaqsPage.label },
-      // ⛔ eSign PAUSED — 21-08-2026.
-      // { path: dscEsignVsDscPage.path, label: dscEsignVsDscPage.label },
-      { path: dscDriversHub.path, label: dscDriversHub.label },
+      { path: "/dsc", label: "Digital Signature Certificates" },
+      { path: `/dsc#${dscSectionIds.finder}`, label: "Which DSC do I need?" },
+      { path: dscResourcesPage.path, label: "Buy a DSC Token" },
+      { path: `/dsc#${dscSectionIds.documents}`, label: "Documents Required" },
+      { path: `${dscResourcesPage.path}#${dscResourceSectionIds.drivers}`, label: "Token Driver Downloads" },
+      { path: `${dscResourcesPage.path}#${dscResourceSectionIds.faqs}`, label: "DSC FAQs" },
     ],
   },
   {
@@ -573,7 +580,10 @@ export function serviceSelectOptions() {
     {
       group: "Digital Signature Certificates",
       options: [
-        ...dscProducts.map(({ slug, label }) => ({ value: slug, label })),
+        // One DSC option now, not six — there is one DSC page, and a form
+        // that offers six variants of it invites a choice the site no longer
+        // makes the reader take.
+        { value: "dsc", label: "Digital Signature Certificate" },
         { value: "dsc-partner", label: "DSC partner enquiry" },
       ],
     },
@@ -598,13 +608,18 @@ export const serviceLeavesBySlug = new Map(
  */
 const slugIndex = new Map([
   ...serviceLeavesBySlug,
-  ...dscProducts.map((p) => [p.slug, p]),
-  [dscDocumentsPage.slug, dscDocumentsPage],
-  [dscValidityFaqsPage.slug, dscValidityFaqsPage],
+  // ⛔ 02-09-2026: every retired DSC slug still resolves, to the /dsc section
+  // that absorbed it. Six service leaves carry certificate slugs in `related`
+  // and those arrays are deliberately unchanged — the slug still names a real,
+  // specific certificate, it just no longer has a page of its own, so the
+  // related card keeps its accurate label and links to the page that now
+  // covers it. `path` is the anchored destination, so a reader lands on the
+  // section rather than at the top of a long page.
+  ...dscRetiredRoutes.map((r) => [r.slug, { ...r, path: r.redirectTo }]),
+  ["dsc", { slug: "dsc", path: "/dsc", label: "Digital Signature Certificates" }],
+  [dscResourcesPage.slug, dscResourcesPage],
   // ⛔ eSign PAUSED — 21-08-2026.
   // [dscEsignVsDscPage.slug, dscEsignVsDscPage],
-  [dscDriversHub.slug, dscDriversHub],
-  ...dscDriversHub.children.map((d) => [d.slug, d]),
   [insightsIndexPage.slug, insightsIndexPage],
   ...insightArticlePages.map((a) => [a.slug, a]),
 ]);

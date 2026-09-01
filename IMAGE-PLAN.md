@@ -45,7 +45,7 @@ Ranked by trust earned per rupee spent. The top four cost almost nothing and mos
 
 | # | Asset | Why it works | Effort |
 |---|---|---|---|
-| 1 | **eMudhra / SignX partnership certificate** | Your single strongest verifiable credential. It directly answers *"is this DSC genuine?"* — the buyer's actual question | Photograph or scan the document. One hour |
+| 1 | ~~**Certifying-authority partnership certificate**~~ | ⛔ **DO NOT SOURCE — 02-09-2026.** This asked for a photograph of the partnership certificate as "your single strongest verifiable credential". Clinton has since instructed that **no certifying authority be named on the site** ("do not use signx it is for the other company name", then "remove eMudhra also"), and such an image would name one on its face. CONTENT-PLAN.md §9 has the full note | — |
 | 2 | **Certificate of Incorporation** | Proves the entity is real and registered. Shows CIN, which you need on the site anyway | Scan |
 | 3 | **Office exterior with signage** | Proves physical existence. The single most reassuring photograph on any local professional-services site | Phone camera, good light |
 | 4 | **The actual DSC tokens you stock** | You sell HYP2003 tokens. Photograph them — in the box, out of the box, in a laptop port | Phone camera, white sheet, window light |
@@ -67,7 +67,7 @@ Every image the site needs, with its route, purpose and specification. `[T1/T2]`
 |---|---|---|---|---|
 | `home-editorial` | Founder or team member at work, mid-task, not posed | §5 Why ThinkOrange, arc-masked | 4:5 | **T1** |
 | `home-office` | Office exterior with signage | §14 footer band or About link card | 16:10 | **T1** |
-| `trust-marks` | eMudhra, SignX, GeM, MCA, GSTN, Tally, Zoho wordmarks | §2 trust strip | SVG | See §7.4 |
+| `trust-marks` | GeM, MCA, GSTN, Tally, Zoho wordmarks — ⛔ the two certifying-authority marks are REMOVED (CONTENT-PLAN.md §9) | §2 trust strip | SVG | See §7.4 |
 
 | `home-hero` | Desk / workspace mid-task, or office interior. **No people unless T1.** Shot to sit behind two overlapping cards, so the visual interest must live in the outer thirds — the centre is covered | 4:5 | **T1** |
 
@@ -245,7 +245,9 @@ Publishing a client's GSTIN in a screenshot is a personal-data disclosure under 
 
 ### 7.4 Partner and platform marks
 
-The trust strip displays eMudhra, SignX, GeM, MCA, GSTN, Tally and Zoho marks. **Check each brand's guidelines before publishing**, and only display marks you have a genuine relationship with or are permitted to reference. eMudhra and SignX are partners — ask them for the approved partner logo and the permitted wording. Platform marks like GSTN and MCA describe portals you work with; word the strip so it reads *"we work with"*, never as endorsement or accreditation.
+The trust strip displays GeM, MCA, GSTN, Tally and Zoho marks. ⛔ **The two certifying-authority marks were removed on 02-09-2026** — no certifying authority is named anywhere on the site (CONTENT-PLAN.md §9), so do not request or add an approved partner logo. **Check each remaining brand's guidelines before publishing**, and only display marks you have a genuine relationship with or are permitted to reference. Platform marks like GSTN and MCA describe portals you work with; word the strip so it reads *"we work with"*, never as endorsement or accreditation.
+
+⚠️ The trust strip is currently commented out on the homepage (replaced by *When people call us*), so none of these render today.
 
 ---
 

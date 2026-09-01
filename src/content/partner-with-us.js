@@ -1,87 +1,238 @@
 // PARTNER-WITH-US CONTENT (T6, /partner-with-us) — CONTENT-PLAN.md §10.
 //
-// ⛔ Commission structure, joining fee and processing times are explicitly
-// flagged in CONTENT-PLAN.md §10 as needing confirmation before this page
-// publishes real numbers — the draft preview asserted "no upfront investment"
-// and "same-day processing", which are commitments, not copy, and neither is
-// stated here. `whatYouGet`'s commercial tiles describe THAT each of these
-// exists and will be confirmed during onboarding, never a rate, amount or
-// timeframe — same discipline as `fees: null` and `turnaround.js`, just for
-// facts that aren't shaped like a fee or a duration so they don't fit either
-// file directly.
+// ⛔ 02-09-2026 (Clinton): "CA, CS, Tax practitioner[s] don't refer their
+// clients. They themselves onboard with us to process the DSC for their
+// clients. right now it is writ[ten] in [a] different interpretation."
+//
+// THIS FILE WAS ENTIRELY REWRITTEN ON THAT NOTE. Every previous sentence
+// described a REFERRAL programme — "Refer your clients' DSC needs to us",
+// "Commission on referrals", "You refer the requirement to us with your
+// client's details; we handle verification, issuance, the token and dispatch".
+// That is the opposite of the product. A partner is not handing work over;
+// they enrol through ThinkOrange and issue certificates
+// THEMSELVES — their own login, their own video verification, their own
+// client relationship, their own margin. We enable and support; we do not take
+// the client.
+//
+// ⚠️ THE DISTINCTION IS LOAD-BEARING IN THE COPY, not a matter of tone. If a
+// sentence could be read as "send your client to ThinkOrange", it is wrong.
+// The tell is the verb: partners ISSUE, they do not REFER.
+//
+// Structure and much of the wording follow the reference Clinton supplied
+// (thinkorange-dsc-usecase-pages.html). ⛔ THAT FILE MARKS ITS OWN UNCONFIRMED
+// FIGURES with a `.tbc` class and carries two explicit "Note to ThinkOrange"
+// blocks saying they need real values before publishing. Every one of those is
+// therefore ABSENT here:
+//   - the commission percentage (`[X]%`)
+//   - login activation time (`[X hrs]`)
+//   - retail price ranges and margin percentages in the earnings table
+//   - "we reply within one working day" — a turnaround commitment, so it comes
+//     from `turnaround.js` (`enquiryResponseTime`, value null) like every other
+//     one on this site, never typed in.
+// What the reference asserts WITHOUT a tbc mark is Clinton's own claim and is
+// carried over: no joining fee, no minimum volume, your own login, your
+// clients stay yours, free onboarding, partner-rate tokens, English and Tamil
+// support. See MISSING-PAGES.md for the two that still want a human check.
+
 export const partnerContent = {
   meta: {
-    title: "Partner With Us — DSC Referral Programme | ThinkOrange Consulting",
+    title: "Become a DSC Partner | ThinkOrange Consulting",
     description:
-      "Refer your clients' Digital Signature Certificate needs to ThinkOrange — we handle verification, issuance, dispatch and renewal. For CAs, advocates and consultants.",
+      "Partner with ThinkOrange and issue Class 3, Combo and DGFT certificates for your own clients — your own login, your own verification, your clients stay yours.",
   },
+  eyebrow: "DSC Partner Programme",
+  h1: "Issue Digital Signature Certificates for your own clients",
   heroLede:
-    "Refer your clients' DSC needs to us and we handle verification, issuance, dispatch and renewal — you stay their point of contact, we do the certificate work behind it.",
+    "Partner with ThinkOrange and process certificates yourself — your own login, your own verification, your own margin. Whether you already issue DSCs and want better terms, or you are a practice tired of sending clients elsewhere mid-engagement.",
+
+  // Unmarked assertions from the reference — Clinton's own claims, no numbers.
+  heroTicks: [
+    "No joining fee",
+    "Your own issuing login",
+    "Your clients stay yours",
+    "Free onboarding & training",
+    "Tokens at partner rates",
+    "Support in English & Tamil",
+  ],
+
+  // Why through ThinkOrange rather than any other channel.
+  whyUs: [
+    {
+      title: "A practising compliance firm, not a token dealer",
+      body: "We file GST returns, run internal audits and incorporate companies. When you ask which certificate a particular filing needs, the answer comes from someone who does that filing — not a sales desk reading off a product list.",
+    },
+    {
+      title: "Support that speaks your client's language",
+      body: "English and Tamil, from Salem. When your client cannot install a driver on a Friday evening, that call gets resolved rather than becoming a ticket number.",
+    },
+    {
+      title: "We issue for government and PSU work ourselves",
+      body: "Certificates issued to public sector undertakings and government departments carry stricter scrutiny than routine retail issuance. We handle that in-house, which is why the unusual cases you eventually hit are ones we have already seen.",
+    },
+    {
+      title: "Tokens as well as certificates",
+      body: "Compliant tokens supplied at partner rates alongside the certificate, so you are not sourcing hardware from a separate vendor and hoping the driver matches.",
+    },
+  ],
+
+  // For practitioners already issuing under another certifying authority.
+  switching: {
+    eyebrow: "Already issuing DSCs?",
+    heading: "Switching costs you nothing",
+    body: "If you already issue certificates through another certifying authority, you are not starting over. Your clients, your pricing and your working method stay exactly as they are — only the account behind them changes, and certificates already issued elsewhere stay valid until they expire.",
+    pains: [
+      {
+        title: "Commission that stopped improving",
+        body: "Slabs that never moved as your volume grew.",
+      },
+      {
+        title: "Support that does not answer",
+        body: "A ticket queue while a client waits on a tender deadline.",
+      },
+      {
+        title: "Approvals that take days",
+        body: "Applications sitting without explanation while you field the calls.",
+      },
+    ],
+  },
+
+  // Who this suits. Every one of these ISSUES; none of them refers.
   whoItsFor: [
-    "Chartered Accountants and tax practitioners filing on behalf of clients",
-    "Advocates handling e-filing, tenders or ROC work",
-    "Business consultants and company secretaries",
-    "IT service providers already supporting the same client base",
-  ],
-  howItWorks: [
     {
+      title: "CAs, CSs & tax practitioners",
+      body: "Issue certificates alongside the filings you already do, instead of sending a client elsewhere mid-engagement.",
+    },
+    {
+      title: "Advocates & consultants",
+      body: "Clients handling tenders, ROC work or trademark filings need certificates. Keep that revenue inside the practice.",
+    },
+    {
+      title: "Existing DSC resellers",
+      body: "Already issuing under another certifying authority? Switch to us for better terms and support that answers.",
+    },
+    {
+      title: "IT & software vendors",
+      body: "You already sell to the businesses that need certificates. Add DSCs and tokens to the same client relationship.",
+    },
+    {
+      title: "Token dealers",
+      body: "Selling the hardware but not the certificate that goes on it means half the margin on every sale.",
+    },
+    {
+      title: "Corporate service firms",
+      body: "Incorporation and compliance practices — director certificates are part of the job anyway.",
+    },
+  ],
+
+  onboarding: [
+    {
+      step: 1,
       title: "Apply",
-      body: "Tell us a little about your practice and the volume of DSC requests you typically see.",
+      desc: "Tell us about your practice, your expected volume, and whether you already issue certificates elsewhere.",
     },
     {
-      title: "Get onboarded",
-      body: "We confirm the commission structure, any joining requirements and how orders flow between us.",
+      step: 2,
+      title: "KYC and partner agreement",
+      desc: "We verify your details and you sign an agreement covering verification obligations, conduct and commercial terms. The documents required at registration are listed with the application form below.",
     },
     {
-      title: "Order per client",
-      body: "Send us a client's DSC requirement as it comes up — no minimum commitment per order.",
+      step: 3,
+      title: "Your issuing login is activated",
+      desc: "Your account is created under our certifying-authority partnership and the credentials are issued to you — the mail ID you apply with becomes your login username.",
     },
     {
-      title: "We issue and dispatch",
-      body: "Verification, video KYC, issuance and token dispatch happen on our end, under our eMudhra/SignX partnership.",
+      step: 4,
+      title: "Onboarding session",
+      desc: "We walk you through raising an application, running video verification correctly, downloading to a token, and the errors that come up most. Free, and for as long as you need.",
+    },
+    {
+      step: 5,
+      title: "You issue",
+      desc: "You raise applications directly from that point. We stay available for escalations, unusual cases and anything the portal throws at you.",
     },
   ],
-  whatYouGet: [
-    {
-      title: "Commission on referrals",
-      body: "Earn on every certificate issued through you — the exact structure is confirmed when you apply, not advertised as a flat rate here.",
-    },
-    {
-      title: "Transparent fees",
-      body: "Any joining or account fee, if applicable, is confirmed with you before you commit — nothing assumed either way in advance.",
-    },
-    {
-      title: "Confirmed timelines",
-      body: "Processing timelines are set once you're onboarded and confirmed against your actual order volume, not promised generically.",
-    },
-    {
-      title: "A dedicated contact",
-      body: "One line for partner orders and questions — not the general enquiry queue.",
-    },
+
+  // ⚠️ What a partner takes on. This is not boilerplate: video verification is
+  // mandated by the Controller of Certifying Authorities, and a certificate
+  // issued on inadequate verification is a problem for the applicant, for
+  // the certifying authority and for the partner. Stating it plainly is part
+  // of the offer.
+  responsibilities: [
+    "Verifying your client's identity documents properly before applying",
+    "Conducting video verification with the actual applicant, never a stand-in",
+    "Keeping application records as the certifying authority requires",
+    "Not sharing your login, or issuing on behalf of another practice",
+    "Telling us promptly if a certificate needs revoking",
   ],
-  whatWeHandle: [
-    "Identity verification and the mandatory video KYC step",
-    "Certificate issuance through our eMudhra and SignX partnership",
-    "Token dispatch to your client's address",
-    "Driver installation support if your client's token isn't detected",
-    "Renewal reminders before a client's certificate lapses",
+  responsibilitiesNote:
+    "These are not house rules. Video verification is set by the Controller of Certifying Authorities, and partners who treat it seriously have no difficulty here.",
+
+  // ⛔ `retail` and `margin` are NULL on every row, and stay that way. The
+  // reference prints "₹[X] – ₹[X]" and "Up to [X]%" in each cell and flags them
+  // in its own dev note as needing real values — they are placeholders, not
+  // figures. Same `fees: null` discipline as everywhere else; set them here and
+  // the table renders them with no code change.
+  earnings: {
+    rows: [
+      { product: "Class 3 — Individual", note: "Signing, or Combo", validity: "2 years", retail: null, margin: null, buyer: "Professionals, proprietors and directors filing in their own name" },
+      { product: "Class 3 — Organisation", note: "Signing, or Combo", validity: "2 years", retail: null, margin: null, buyer: "Companies and LLPs — ROC, EPFO, corporate tender bids" },
+      { product: "Combo (Sign + Encrypt)", note: null, validity: "2 years", retail: null, margin: null, buyer: "Bidders on GeM, CPP Portal and state e-procurement" },
+      { product: "DGFT (IEC)", note: null, validity: "2 years", retail: null, margin: null, buyer: "Importers and exporters on DGFT and ICEGATE" },
+      { product: "FIPS-compliant tokens", note: "HYP2003", validity: "Hardware — no expiry", retail: null, margin: null, buyer: "Every new certificate, plus replacements" },
+      { product: "Renewals", note: null, validity: "2 years", retail: null, margin: null, buyer: "Your existing base, every two years — no new business development" },
+    ],
+    note:
+      "Margins improve with volume, and your own slab is confirmed in writing when you apply, before you commit to anything. You set what you charge your own clients. Renewals are worth noting separately: once a client base is issued under you, it comes back on a two-year cycle.",
+  },
+
+  // ⛔ The documents required at registration, exactly as Clinton listed them.
+  // These are
+  // DOCUMENTS TO HAVE READY, not fields on this website's form — see
+  // PartnerApplicationForm.jsx for why identity numbers are not collected here.
+  registrationDocuments: [
+    { label: "PAN", detail: "Of the applicant — the person the partner login will belong to." },
+    { label: "Aadhaar", detail: "For identity verification during onboarding." },
+    { label: "MSME certificate or latest bank statement", detail: "Either one, as proof of the practice or business." },
+    { label: "Phone number linked with Aadhaar", detail: "Verification one-time passwords are sent to this number, so it has to be the one Aadhaar holds." },
+    { label: "Mail ID", detail: "This becomes your login username, so use one you will keep." },
   ],
+
   faqs: [
     {
-      q: "Do I need to be a DSC reseller or have any technical setup?",
-      a: "No. You refer the requirement to us with your client's details; we handle verification, issuance, the token and dispatch. You don't need to stock tokens or run any technical process yourself.",
+      q: "Can I switch from another certifying authority?",
+      a: "Yes, and many partners do. There is no switching cost and no lock-in. Your existing clients stay with you — only the account issuing the certificates changes. Certificates already issued elsewhere remain valid until they expire.",
     },
     {
-      q: "Can I refer a client I've already started the process for elsewhere?",
-      a: "Yes — send us where things stand and we'll confirm what's still needed rather than restarting the process from scratch.",
+      q: "Do I need technical knowledge?",
+      a: "No more than you already have. The issuing portal is a web application, and token installation is the same process your clients go through. The onboarding session covers it and we stay available afterwards.",
     },
     {
-      q: "Is there a minimum number of certificates I need to refer?",
-      a: "No minimum is required to apply or to send us your first order.",
+      q: "Is there a joining fee or a minimum volume?",
+      a: "No joining fee and no minimum monthly commitment. If any opening balance or advance applies to your account, it is confirmed with you in writing before you commit — never assumed either way in advance.",
     },
     {
-      q: "How is commission paid, and when?",
-      a: "Payment structure and frequency are confirmed with you directly during onboarding — this isn't published generically because it can vary by volume and certificate type.",
+      q: "Do my clients become ThinkOrange clients?",
+      a: "No. Your clients are yours. We do not contact them for anything other than the verification steps that require it, and we do not market to them.",
+    },
+    {
+      q: "Who conducts the video verification?",
+      a: "You do, with your client, on your own schedule. That is what issuing yourself means — and it is also why the timeline is in your hands rather than someone else's.",
+    },
+    {
+      q: "Do I have to stock tokens?",
+      a: "Not necessarily. Holding a small stock means you can hand a client their token the same day, which is why most partners do, but ordering per certificate is also available.",
+    },
+    {
+      q: "What if an application is rejected?",
+      a: "We help you work out what was missing and resubmit. Whether any resubmission charge applies is confirmed with you during onboarding rather than stated generically here.",
+    },
+    {
+      q: "Can I issue for clients outside Tamil Nadu?",
+      a: "Yes. Verification is done by video and tokens are couriered, so your client's location does not limit you.",
+    },
+    {
+      q: "What commission will I earn?",
+      a: "It depends on the certificate and your volume, and your slab is quoted in writing when you apply — we would rather give you your actual number than a headline one you may not qualify for. Tell us the volume you expect and we will come back with it.",
     },
   ],
 };

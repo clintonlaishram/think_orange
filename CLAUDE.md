@@ -5483,3 +5483,619 @@ non-negotiable is what makes this a one-file change).
   skeletons up, animating, then fading out image by image as each decodes;
   screenshotted with image requests held pending to confirm the treatment reads
   as quiet rather than loud.
+
+## DSC collapsed to two pages: /dsc + /dsc/resources — 02-09-2026
+NOT a phase. Clinton, across three instructions in one day, working from three
+supplied reference documents (`ThinkOrange_DSC_Hub_V7.html`,
+`ThinkOrange_DSC_Hub_V4.html`, `ThinkOrange_DSC_Resources_V1.html` — CONTENT
+and STRUCTURE only; none of their visual language was implemented):
+  1. "for the dsc i do not need multiple page like class 3 - individual,
+     class -3 organisation, like that so combine the 5 pages in one."
+  2. "keep dsc and resources as a single tab like home. show become a partner
+     in dsc page as a section. so now it will only have /dsc route only."
+  3. "i want to keep the page minimal. now it['s] filled up with the content…
+     expand the field according to user selection. remove the pan-drive and
+     content. for [token] keep it in another tab like digital signature.
+     improve the design and animation of find your certificate."
+
+**Eleven DSC pages became two.** `/dsc` carries the decision; `/dsc/resources`
+carries the reference material. Route count 66 → 54.
+
+- **⛔ THE USB TOKEN OFFER IS DELETED, not relocated** (instruction 3, confirmed
+  explicitly). `src/content/dsc/products.js` is gone. **What deliberately
+  survives is every certificate's `tokenNote` and the statement that a Class 3
+  certificate is issued ON a FIPS-compliant token** — that is how the
+  certificate works, and stripping it would leave the certificates section
+  wrong about what a buyer receives. What is gone is selling the token as a
+  product. Copy is recoverable from git history.
+- **New content:** `content/dsc/certificates.js` (the five certificates merged
+  out of the retired product files — MOVED, every string is the string that was
+  there — plus the portal guide, the signature/encryption/combo distinction,
+  the four-step process, aftercare and the merged 12-FAQ set) and
+  `content/dsc/finder.js` (the wizard). `groups.js` is deleted: it derived DSC
+  menu groups from `dscPanelColumns`, and there is no DSC mega panel any more.
+- **`dscProducts`, `dscPanelColumns`, `dscDocumentsPage`, `dscValidityFaqsPage`
+  and `dscDriversHub` are GONE as nav.js exports.** Every one described a
+  route. Templates **T4 is retired entirely**; **T5 now serves exactly one
+  route**, `/dsc/resources`. `DscProduct.jsx` and `UtilityPage.jsx` are deleted.
+- **Nav: two flat tabs, no dropdown.** `primaryNav` is Home / Services /
+  Digital Signatures / Resources / About Us. The DSC entry has no `panel` key,
+  so `Header.jsx` renders it through the plain `<Link>` branch it already had —
+  no Header change was needed. **`MobileNav.jsx` DID need one**: the two
+  navbars do not derive from one array, so the DSC accordion group had to be
+  removed and a flat `Row` added by hand. Same trap as the 17-08-2026 "Partner
+  With Us" removal.
+
+### ⛔ `dscRetiredRoutes` and the redirect stubs — do not delete this export
+All 13 retired paths are live today and in the deployed sitemap.xml. The export
+does three jobs, each of which fails **silently** without it:
+  1. `scripts/prerender.mjs`'s `writeRedirects()` emits a stub per path.
+  2. `slugIndex` resolves the old slugs — **six service leaves still carry
+     certificate slugs in `related`** (gst-registration, llp-registration,
+     private-limited-company, trademark-registration, iec-registration,
+     icegate-registration) and those arrays are deliberately NOT rewritten: the
+     slug still names a real certificate, so the related card keeps its
+     accurate label and links to the page that now covers it.
+  3. `hash` lands the reader on the section that absorbed the page.
+- The stub is `canonical` at the destination + `robots: noindex,follow` + a
+  0s meta-refresh + `location.replace` (not `.href` — replace keeps the stub
+  out of the back-button history), plus a visible link for the no-JS/no-refresh
+  case. This is a static host; there is no server to answer 301 with.
+- **`buy-tokens` redirects to `/dsc` with NO hash**, because its content was
+  deleted and there is no section to land on.
+- Stubs are deliberately absent from sitemap.xml — asking a crawler to index a
+  noindex redirect is a contradiction.
+
+### ⛔ COLLAPSED PANELS MUST STAY MOUNTED — a real bug, caught by probing the BUILD
+Both pages open one row at a time. The first cut wrapped each panel in
+`{isOpen && …}` inside an `AnimatePresence`, which **unmounts it while
+collapsed** — so a probe of `dist/` found **not one** certificate's detail and
+**not one** driver's troubleshooting text in the prerendered HTML. These two
+pages replace eleven, and are the only place several of them now exist, so that
+silently made the site far less crawlable than before the merge. Fixed with
+`grid-template-rows: 0fr → 1fr` plus `invisible` when closed:
+- The content is always in the DOM, so it prerenders.
+- `aria-controls` always points at a real element — the dangling-reference bug
+  the site's own `Accordion` had to work around when it used AnimatePresence.
+- `invisible` is what takes a closed panel's links out of the tab order and the
+  accessibility tree. **Measured: 0 tabbable elements inside closed panels.**
+- ⚠️ Reading the diff would not have caught this. Grep the built HTML.
+
+### The finder (`modules/dsc/DscFinder.jsx`)
+- **`capacity` decides whether question two is asked at all**: "ask" (GST,
+  income tax, tenders, DGFT), "ind"/"org" where the portal settles it (MCA is
+  "ind" — directors sign as officers; EPFO is "org" — it validates against the
+  establishment record), "none" for renewal and the foreign-national route.
+- **The step rail shows TWO steps for a forced route and THREE for one that
+  asks.** Showing "Step 1 of 3" and then skipping step two is the small lie
+  that makes a wizard feel broken.
+- **RESULTS SELECT BY REFERENCE.** A result names a `certificate` key and the
+  component resolves the label, validity, verification note and document
+  checklist out of `certificates.js` at render time. Copying a checklist into
+  `finder.js` would fork it. The foreign-national route is the one exception
+  and carries its own documents — it is a verification ROUTE, not one of the
+  five certificates, so there is nothing to resolve against.
+- **Results render on demand, not prerendered, and that is safe ONLY because**
+  `/dsc`'s certificates section and `/dsc/resources` carry every certificate,
+  checklist, portal row and FAQ as ordinary visible content. Nothing is
+  reachable only through JavaScript. If those sections are ever collapsed
+  behind interaction, the results must be rendered statically instead.
+- **No URL hash sync**, unlike V7 (`#dsc/gst/org`). The hash is already spoken
+  for by the sub-nav, the footer's DSC column and every redirect stub, and
+  `RootLayout` scrolls on pathname change.
+- `dscSectionIds` / `dscResourceSectionIds` (nav.js) are the ONE definition of
+  every anchor, because five surfaces address them: the sub-nav, the footer
+  column, the homepage DSC band and driver row, the cross-page links, and every
+  redirect stub.
+
+### Two facts deliberately NOT published
+- **V7's "Class 2 was discontinued by the CCA in January 2021"** is a dated
+  regulatory fact and would need `statutory.js` with a source. The Class 2 FAQ
+  states the practical position instead ("Class 3 is the only class still
+  issued"). Recorded in MISSING-PAGES.md as a research item.
+- **V7's result cards carry literal `₹[X]` and `[X hrs]` placeholders.** None
+  was carried over. Fees are "On request" (`fees: null` discipline) and timing
+  comes from `turnaround.dscIssuanceTurnaround` (value null → "Confirm with
+  us"). The hero spec row is fully derived: certificate count off
+  `certificateVariants`, the two certifying authorities the page already names.
+
+### Verified
+`npm run lint` (0 problems), `content:check` (clean apart from the three
+standing unconfirmed-content warnings), `build` + prerender (54 routes + 13
+redirect stubs), and a link-integrity scan of `dist/` — **2,675 internal refs,
+0 broken**. Then a real Chrome over CDP against `npx serve dist` (never `vite
+preview`, never the in-app pane — `visibilityState: "hidden"` there suspends
+IntersectionObserver, so every `Reveal` renders at opacity 0 and the finder
+looks blank), asserting `innerWidth`/`visibilityState`/`pathname` first:
+- **Surface cadence off the live DOM, zero consecutive repeats.** `/dsc`:
+  deep → dark → light → dark → light-alt → ember (6 sections, down from 13).
+  `/dsc/resources`: deep → light → dark → light → light-alt → light → ember.
+- **Pixel-sampled contrast: 0 failures** — 76 + 133 samples at 1440px, 72 + 104
+  at 375px, tightest pass 4.64:1 on both pages at both widths.
+- Finder end to end: 10 portals, forced routes skip question two, the foreign
+  route renders its own 6-item checklist and correctly shows "Confirm with us"
+  for validity, focus moves to the panel, and a real Enter key advances it.
+- Expansion: panel 0 → 404px (certificates) and 0 → 978px (drivers) with real
+  text, `+` rotating to 135°, single-open enforced, 0 tabbable elements in
+  closed panels.
+- Redirects land on the right section: `/dsc/class-3-individual` →
+  `/dsc#certificates`, `/dsc/drivers/mtoken` → `/dsc/resources#drivers`,
+  `/dsc/buy-tokens` → `/dsc`.
+- `scrollWidth === innerWidth` at 375px on both pages. Reduced motion via
+  `Emulation.setEmulatedMedia`: 0 running animations, 0 stuck mid-opacity, and
+  the finder and both disclosure lists still fully usable.
+- Console: exactly **1** error per route, and it reproduces byte-identically on
+  `/about` and `/` which this change never touched — the long-standing sitewide
+  React #418 already recorded here. No new hydration mismatch.
+
+### Verification traps worth keeping
+- ⚠️ **A contrast probe must not take the static-background shortcut through a
+  gradient.** `.panel-dark` and `.surface-ambient` are transparent
+  `background-color` plus a `background-image`, so a naive ancestor walk climbs
+  straight past a dark panel to the light section behind it and reports the
+  panel's own text at **1.00:1**. Cost three phantom failures; the real values
+  were 17.65 / 14.42 / 10.03:1. Only take the shortcut when nothing between the
+  text and that opaque colour paints a background-image.
+- ⚠️ **It found one REAL failure, which was mine:** the step rail's upcoming
+  step at `ink-400` on ink measured **2.63:1**. CLAUDE.md already records
+  ink-400 as "not a body-text colour on dark" from Phase 10 and I used it
+  anyway. Now ink-300.
+- ⚠️ **Backticks inside a comment in a CDP probe written as a template literal
+  terminate the string.** `` `.panel-dark` `` in a probe comment produced
+  `ReferenceError: dark is not defined` from Node, which reads like a bug in
+  the page.
+- ⚠️ **Settle before clearing the console buffer**, or an exception from the
+  previous navigation lands after the clear and reports 2 errors on the one
+  page you changed most.
+- ⚠️ `btn.querySelector('svg')` returns the icon disc, not the trailing `+`.
+  Read the LAST svg — and read `.rotate`, not `.transform`: Tailwind v4
+  compiles `rotate-*` to the individual `rotate` property.
+
+### Refined the same day — minimal /dsc, Resources tab, and the two-dark fix
+Four further instructions from Clinton, applied on top of the merge above.
+
+- ⛔ **"two dark is having consecutively in hero and next to it".** The hero is
+  `deep` and the finder was `dark` — **two different surface tokens, so the
+  cadence check passed them**, but two adjacent dark surfaces read as one
+  continuous slab and the fold disappears. **THE HERO CANNOT CHANGE:** the
+  layout contract requires every page's opening section to be dark, because the
+  header is fixed and transparent over it. So the finder moved to `light` and
+  `DscFinder` was restyled for a light surface — `.card-premium` choice cards,
+  a light step rail — while **the result panel stays `.panel-dark`**, the
+  established dark-panel-on-light-section pattern, so the answer still lands
+  with weight.
+  ⚠️ **A cadence check that only compares adjacent TOKENS will not catch this
+  class of problem.** The check now also asserts **no two adjacent dark-family
+  surfaces** (deep/dark/ember). Both pages pass on both properties.
+  ⚠️ `.card-premium`'s press feedback is `a:active > .card-premium` — a choice
+  card is a `<button>`, not a link wrapping a card, so that rule can never fire
+  there and `active:` utilities supply it instead. Not hover-gated: Tailwind v4
+  wraps every `hover:` in `@media (hover: hover)`, so a touch user would
+  otherwise get nothing back from a tap.
+- **Portal guide and Documents moved to `/dsc`; Resources is now the token and
+  driver page** ("in resouce page i ha[ve] to mainly focus on token and driver,
+  the[ir] validity and renewal"). `dscSectionIds` gained `portals`/`documents`
+  and `dscResourceSectionIds` lost them, so the retired-URL redirects retarget
+  automatically — `/dsc/documents-required` now lands on `/dsc#documents`.
+- ⛔ **The "certificates we issue" section is DELETED** ("i do not need
+  certificate we issue also"). The five certificates are still fully described
+  — by the finder, which names one and shows its documents, validity and
+  caveats, and by the document checklists — but listing all five again
+  underneath was the same content twice on one page. `certificateVariants` is
+  unchanged and is still what both of those resolve against.
+- **"How it works" became "After you get it"** on /dsc, rebuilt on the
+  homepage's oversized-mono-numeral archetype (DESIGN.md §11.4) rather than a
+  card grid. ⚠️ **The four issuance steps were MOVED to /dsc/resources, not
+  dropped — and the `HowTo` JSON-LD moved WITH them.** Schema has to sit on the
+  page that renders the steps, or it asserts structure the reader cannot see.
+- **`CtaBand` now takes optional `heading` / `lede`** (additive — omit them and
+  the output is byte-identical, which every other page relies on). /dsc closes
+  with "Still not sure which one? Send it to us." and /dsc/resources with
+  "Token not being detected? Send us a screenshot." ⚠️ The /dsc lede's closing
+  clause — *including when the answer is that you do not need a new certificate
+  at all* — is the most useful sentence on the band and is adapted from
+  Clinton's own V7 reference. It is a promise about honesty, not a turnaround
+  or a price, so it needs no confirmation.
+- **`components/ui/Disclosure.jsx` (new)** is the open-one-at-a-time list,
+  extracted once both pages needed it. Deliberately NOT `Accordion` — that one
+  renders its `answer` inside a `<p>`, so a panel containing a table or a list
+  would be invalid nesting.
+
+### ⛔ A sub-nav tab pointing at a deleted section — and why the probe missed it
+Removing the certificates section left `/dsc` with **no `SubNav` at all**, and
+the check reported `subnavTargetsExist: true` — **vacuously, because `.every()`
+on an empty list is true.** Restored with tabs built only from sections that
+actually render. **Assert the tab COUNT as well as that every tab resolves**, or
+an empty bar passes as a healthy one.
+
+### Verified after the refinement
+`lint` 0 problems, `content:check` clean, `build` + prerender (54 routes + 13
+redirects), link integrity **2,675 refs / 0 broken**. Real Chrome over CDP:
+- Cadence `/dsc` deep → light → light-alt → dark → light → light-alt → ember;
+  `/dsc/resources` deep → light → dark → light-alt → light → light-alt → ember.
+  **Zero consecutive repeats AND zero adjacent dark-family pairs on both.**
+- **Pixel-sampled contrast 0 failures** — 124 + 74 samples at 1440px, 102 + 65
+  at 375px, tightest 4.64:1.
+- Sub-nav: 5 tabs on /dsc, 4 on Resources, every target resolves.
+- Finder still works on the light surface (result panel still `.panel-dark`);
+  documents disclosure 0 → 192px; 8 portal rows; 4 aftercare steps; 19 FAQs.
+- `scrollWidth === innerWidth` at 375px; reduced motion 0 running / 0 stuck on
+  both; 1 console error per route, identical on untouched `/about`.
+
+### Ring composition on the finder — and a real prop-forwarding bug it exposed
+Clinton: "in the find your certificate section show the ring effect on bottom
+left conner." `<ArcRings>` bled off the bottom-left of the finder section, two
+rings at 0.11/0.07 — below CtaBand's 0.12/0.07/0.045 ladder, which stays the
+one loud band. Measured ember coverage of that fold: **0.79%** against the ~12%
+ceiling, and contrast is unchanged (0 failures, 133 samples at 1440px).
+
+- **The arc is TRANSLATED into the corner, never mirrored** — §3.1's "one
+  specific shape" only holds while every instance keeps the same handedness.
+- ⛔ **`ArcRings` was silently dropping `style`.** It never accepted or spread
+  extra props, so the `zIndex: -1` this call site needs went nowhere. Fixed by
+  forwarding `...props` onto the wrapper. **Third instance of this exact bug in
+  this codebase** — `ArcGlyph` before Phase 5, `RegMark` in the hero floaters,
+  now this. Check prop forwarding before assuming a passed style "didn't work".
+- ⚠️ **The rings need `z-index: -1`, and it CANNOT be a Tailwind class.**
+  `.arc-rings` is unlayered CSS in theme.css setting `z-index: 0`, so it beats
+  `@layer utilities` and `z-[-1]` silently loses — measured `zIndex: "0"` with
+  the class applied. It has to be an inline style. Same specificity trap as
+  `.field-bare`'s focus ring. At z-0 the layer would paint at step 6 of the
+  painting order while in-flow text paints at step 5, i.e. the rings would sit
+  ON TOP of the finder's copy. The section already carries `isolate` (Section
+  adds it whenever a texture is set), so the negative index stays contained.
+- ⚠️ **`elementFromPoint` CANNOT detect this stacking error.** `.arc-rings` is
+  `pointer-events: none`, so a hit test passes straight through the overlay and
+  reports the heading as hittable whether the rings are above it or below.
+  **Read the computed `zIndex`, or look at a screenshot.** The first pass here
+  reported "heading hittable: true" while the z-index was still wrong.
+
+### Resources: driver-first, with a token row in the hero
+Clinton: "in the resouces focus on token driver. add download link in hero
+also." The hero now carries a four-button token row (`DriverPicker`), and the
+page's copy leads on drivers rather than on being a general reference shelf.
+`PageHero`'s optional `children` prop — added in Phase 7 for exactly this on
+the old T5 driver pages — is what it hangs off, so no primitive changed.
+
+⛔ **EVERY `url` IN drivers.js IS STILL NULL, AND THE HERO MUST NOT PRETEND
+OTHERWISE.** The vendor files were never sourced, and the reason is a business
+decision rather than an oversight: HYP2003 and Watchdata Proxkey each have one
+unambiguous official page, but ePass 2003 (FEITIAN) and mToken are distributed
+under different names by dozens of competing Indian DSC resellers — several of
+them direct competitors of ThinkOrange's own DSC business — so linking any one
+of them would be an undisclosed endorsement. Same discipline as `fees: null`.
+So **no button says "Download" while doing something else**: each is a link to
+that token's own row, where the install steps and troubleshooting actually are,
+under one line saying where the file itself comes from.
+- ⚠️ **`DriverPicker` UPGRADES ITSELF.** The moment a real `url` lands on a
+  driver's entry, `hasFile` flips and that button becomes a genuine
+  `<a download>` with no change to the component; the caveat line disappears
+  once every driver has one. Whoever sources the files edits `drivers.js` and
+  nothing else. Verified today: **0 elements carry a `download` attribute**,
+  which is the correct state while every url is null.
+
+- **`Disclosure` is now optionally CONTROLLED** (`openKey` + `onOpenChange`);
+  it keeps its own state when they are omitted, so /dsc is unaffected. Items
+  also take an `anchorId`, applied to the `<li>` with `scroll-mt-32` to clear
+  the fixed header and the sticky sub-nav.
+- **The hero buttons are ordinary `#driver-<slug>` anchors**, so they work
+  before hydration and with no JS at all — the row is in the prerendered DOM
+  and the browser simply scrolls to it. A `hashchange` effect additionally
+  opens that driver's panel once JS is running.
+  ⚠️ **The hash is read in an EFFECT, never during render.** `location` does
+  not exist during Phase 9's Node prerender pass, and a server/client
+  disagreement about which row is open would be a hydration mismatch. Initial
+  state is `null` on both sides.
+- **Found while wiring this: `DscResources` still had its OWN copy of
+  `Disclosure`.** The extraction to `components/ui/Disclosure.jsx` had only
+  been wired into `DscHub`, so the two pages were running different code behind
+  the same name — which is exactly the drift the extraction existed to prevent,
+  and it would have silently ignored the new controlled props. Duplicate
+  deleted.
+
+Verified: hero row renders 4 links, every target resolves, clicking one opens
+that driver (panel 0 → 910px with its real troubleshooting text) and
+single-open still holds when switching; **contrast 0 failures** (81 samples at
+1440px, 72 at 375px, tightest 4.64:1); `scrollWidth === innerWidth` at 375px
+with all 4 buttons present; reduced motion 0 running / 0 stuck; lint,
+`content:check`, build + prerender all clean.
+
+### Finder texture removed — and the trap in removing it
+Clinton: "remove the circle effect [at] top right of finder section." That was
+`texture="certificate"` on the finder — the guilloché, whose concentric
+crescents sit in the top-right corner. Removed; the bottom-left `<ArcRings>`
+composition is now that section's only backdrop.
+
+⚠️ **`isolate` HAD TO BE ADDED BACK BY HAND, and this is the whole risk of the
+change.** `Section` applies `isolate` ONLY when a texture is set, so deleting
+the texture silently deleted the stacking context too — and the ring
+composition sits at `zIndex: -1`, which without one escapes the section and
+paints BEHIND its own background. **Removing one decorative layer would have
+quietly removed the other**, with nothing failing and nothing logging. The
+section now carries `isolate` explicitly in `className`.
+
+Anything else that drops a `texture` from a Section carrying a negative-z child
+needs the same fix. Verified after the change: `isolation: "isolate"`, rings
+`zIndex: -1` with both paths rendering bottom-left, 0 textures in the finder
+(2 left on the page: the hero's seal and the documents band), contrast 0
+failures at 1440 and 375, cadence unchanged on both pages, rings still present
+at 375px, reduced motion 0 running / 0 stuck.
+
+### Resources became Buy Token — 02-09-2026
+Clinton supplied https://emudhradigital.com/purchase-token and asked to "add[]
+buy token feature… actually change resou[rce] page to buy token… add[] the
+buying functionality and token det[ai]ls. also remove the data from epass,
+watchdata, mtoken."
+
+**Route renamed `/dsc/resources` → `/dsc/buy-token`, nav tab "Resources" →
+"Buy Token".** `/dsc/resources` never shipped (created earlier the same day),
+so there is no old URL to redirect from. **`/dsc/buy-tokens` — the genuinely
+retired one — now points here** instead of at `/dsc`; it briefly went to `/dsc`
+while the token offer was deleted, which is why `dscRetiredRoutes` carries an
+explicit `to` override.
+
+⚠️ **This partly REVERSES the earlier "remove the pan-drive and content"
+instruction from the same day.** The token offer was deleted, then a token page
+was asked for again a few hours later. `content/dsc/products.js` stays deleted;
+the new `content/dsc/token.js` is written for a page that sells one token
+rather than describing four.
+
+**What the reference gave, and the two things not reproduced:**
+- Structure: explainer (what kind / why required / why not to share) → product
+  → quantity → price → order. Kept, with **the order panel pulled ABOVE the
+  explainers** — someone arriving from a tab labelled "Buy Token" should not
+  scroll past an explanation to reach the thing they came for.
+- ⛔ **NO PRICE.** eMudhra's "Rs. 600" is eMudhra's number. Publishing another
+  firm's price as ThinkOrange's is inventing a fee, so `tokenProduct.price` is
+  `null` — the `fees: null` discipline. Clinton confirmed "On request"
+  (02-09-2026). ⚠️ **`TokenOrder` already handles a real price**: set `price`
+  and the per-unit line, the live `quantity × price` total and the tax note all
+  render with no code change.
+- ⛔ **NO CHECKOUT, NO ADDRESS FIELDS.** The reference ends in "Proceed to Pay"
+  behind billing and shipping forms. There is no backend and no payment
+  provider here, so that would collect postal addresses and do nothing with
+  them — and **all five legal pages, privacy policy included, are still
+  `sections: null`**. Ordering opens WhatsApp with the selection pre-filled
+  (the established EnquiryCard / DscEnquiryStrip pattern) and the address is
+  taken in that conversation. A real gateway needs a backend, a provider
+  account and keys; it was scoped, not built.
+- ⚠️ **One reference claim deliberately dropped:** "only FIPS-compliant,
+  Version 3 Tokens are accepted as per CCA guidelines". The FIPS half we
+  already assert; "Version 3… per CCA guidelines" is a dated regulatory
+  requirement and this repo does not publish those without a source in
+  statutory.js. Logged in MISSING-PAGES.md.
+
+**`TokenOrder.jsx`**: platform (derived from the token's OWN `supportedOs`, so
+Linux is not hidden just because the reference offers only Windows/Mac),
+quantity stepper + chips mirroring the reference's 1–25/"Above 25" ladder, and
+a price panel. **The WhatsApp message is built from the same state the panel
+renders**, so what a customer sees selected and what we receive cannot
+disagree — the reason quantity and platform are state rather than uncontrolled
+inputs read at submit. `aria-pressed` on the option buttons and `aria-live` on
+the quantity, or a screen reader has no way to know what is selected.
+
+⛔ **Three drivers deleted.** ePass 2003, Watchdata Proxkey and mToken are gone
+from `drivers.js`; HYP2003 remains — the token actually stocked, which is what
+`buy-tokens`' own copy always said. Recoverable from git history. Every
+consumer maps over `drivers`, so adding one back is a content edit.
+
+### ⛔ A LIVE BROKEN LINK THIS SURFACED — `/dsc#undefined`
+The homepage driver row linked to ``/dsc#${dscSectionIds.drivers}``, but
+`drivers` moved out of `dscSectionIds` when the DSC tree split in two. The key
+was `undefined`, so every card pointed at the literal URL **`/dsc#undefined`**.
+Nothing errors, nothing logs, and **the link-integrity scan passes it, because
+the PATH is real and only the fragment is nonsense.**
+- Fixed, and a **new build-time check** now scans every emitted page for
+  fragments that are literally `undefined`/`null`/`NaN`: **543 fragment links,
+  0 bad.** Worth re-running after any section-id change.
+- ⚠️ A missing key on a section-id object fails silently. Derive a href from
+  the page object plus its own id map, and re-scan.
+
+### Also fixed in passing
+- The homepage driver grid is **count-aware**: a four-column track holding one
+  card reads as three that failed to load.
+- ⚠️ **Inserting the order and about-token sections shifted every surface below
+  them by two and produced a `light-alt`/`light-alt` pair.** Caught by the
+  cadence probe, not by eye. **Re-run it after adding or reordering ANY
+  section.**
+- ⚠️ **Moving the drivers band from `light` to `dark` left its contents on
+  light-surface colours** — body copy measured **1.43–2.84:1** on ink. The
+  surface system covers headings and `var(--surface-*)` accents, NOT the plain
+  `text-ink-*` utilities `DriverPanel` is built from, so it now takes a `dark`
+  prop like `SectionHeading` and `Disclosure`. Third time this exact trap has
+  been recorded (GroupHeading, Breadcrumbs, now this).
+
+**Verified:** cadence `deep → light → light-alt → dark → light-alt → light →
+light-alt → light → ember`, zero repeats and zero adjacent dark pairs;
+**contrast 0 failures** (117 samples at 1440px, 102 at 375px, tightest 4.64:1,
+and /dsc unchanged at 133/108); order flow drives a correct pre-filled message
+for both a numeric quantity and the bulk case; 5 sub-nav tabs all resolve; one
+`<h1>`; `scrollWidth === innerWidth` at 375px on /dsc, /dsc/buy-token and the
+homepage; reduced motion 0 running / 0 stuck; lint, `content:check`, build +
+prerender (54 routes + 13 redirects) all clean.
+
+### Partner page rewritten: partners ISSUE, they do not REFER — 02-09-2026
+Clinton: "CA, CS, Tax practitioner[s] don't refer their clients. They
+themselves onboard with us to process the DSC for their clients. right now it
+is writ[ten] in [a] different interpretation." Plus a second reference file
+(`thinkorange-dsc-usecase-pages.html`) and the SignX partner registration form
+(`signx.club/create-partner`).
+
+⛔ **`src/content/partner-with-us.js` WAS REWRITTEN ENTIRELY.** Every previous
+sentence described a referral programme — "Refer your clients' DSC needs to
+us", "Commission on referrals", "You refer the requirement to us with your
+client's details; we handle verification, issuance, the token and dispatch".
+That is the opposite of the product. A partner enrols under SignX through
+ThinkOrange and issues certificates **themselves**: own login, own video
+verification, own client relationship, own margin.
+
+⚠️ **THE TELL IS THE VERB.** Partners ISSUE; they do not REFER. If a sentence
+could be read as "send your client to ThinkOrange", it has reverted. Two other
+places carried the old framing and were fixed with it: `dscPartnerPromo`
+(nav.js — "We handle issuance, verification, dispatch and support" was exactly
+the wrong sentence) and `PARTNER_POINTS` on /dsc.
+
+**Structure follows the reference**: hero with six tick claims → why enrol
+through us → switching (dark band, because an existing reseller is the readiest
+partner) → who it suits → onboarding StepFlow → what you take on → earnings
+table → apply → FAQ → CTA.
+
+⛔ **THE REFERENCE MARKS ITS OWN UNCONFIRMED FIGURES**, with a `.tbc` class and
+two explicit "Note to ThinkOrange" blocks. None of them is published:
+- commission percentage (`[X]%`), login activation time (`[X hrs]`)
+- every retail range and margin in the earnings table (`₹[X] – ₹[X]`,
+  `Up to [X]%`) — `retail`/`margin` are `null` per row and render "On request"
+  / "Quoted on application". Set them and the cells fill in, no code change.
+- "we reply within one working day" → `t("enquiryResponseTime")`.
+What the reference asserts WITHOUT a tbc mark is Clinton's own claim and is
+carried over: no joining fee, no minimum volume, own login, clients stay yours,
+free onboarding, partner-rate tokens, English and Tamil support.
+⚠️ The reference's own dev note argues that "on request" loses against
+competitors publishing a commission figure, and suggests publishing a floor.
+That is a commercial call for Clinton — logged in MISSING-PAGES.md, not decided
+here.
+
+### ⛔ The registration form, and why PAN and Aadhaar are NOT fields
+SignX asks for five things: PAN, Aadhaar, MSME or latest bank statement, the
+Aadhaar-linked phone number, and a mail ID that becomes the login username.
+
+**Only the last two are collected on this site.** Three of the five are
+DOCUMENTS handed over during SignX onboarding, and two of those are PAN and
+Aadhaar. Putting identity numbers into a public web form that relays them
+through a third-party email service is not something to do casually anywhere,
+and certainly not while **all five legal pages, the privacy policy included,
+are still `sections: null`** — Aadhaar additionally carries its own statutory
+restrictions on collection and storage. So the form takes the phone number and
+the mail ID, and a `.panel-dark` checklist beside it tells an applicant what to
+have ready.
+⚠️ **If this is ever changed to collect PAN or Aadhaar numbers directly, the
+privacy policy has to be written first and the transport has to be better than
+a client-side email relay.**
+
+- **EmailJS is untouched and stays the placeholder Clinton asked for.** The
+  existing `lib/emailjs.js` already rejects honestly when unconfigured, and no
+  `.env` exists — verified live: an immediate submit is blocked by the spam
+  time-gate ("That was fast"), and after the gate it reports "email sending
+  isn't set up yet" rather than pretending to succeed.
+- Form fields now: name, firm, **phone linked with Aadhaar**, **mail ID —
+  becomes your login**, city, practice type (10 options), do-you-issue-today,
+  expected monthly volume, notes. Honeypot, time-gate and rate-limit are
+  unchanged.
+- ⚠️ The phone label says "linked with Aadhaar" on purpose: verification OTPs
+  go to whichever number UIDAI holds, and giving another one is the commonest
+  reason onboarding stalls.
+
+**Verified:** cadence `deep → light → dark → light → light-alt → light →
+light-alt → light → light-alt → ember`, zero repeats and zero adjacent
+dark-family pairs; **contrast 0 failures** (148 samples at 1440px, 118 at
+375px, tightest 4.64:1); one `<h1>`; 6 hero ticks; 5 registration documents; 6
+earnings rows; 9 FAQs; **no referral language and no `[X]` placeholder anywhere
+in the rendered text** (both asserted by regex over `document.body.innerText`);
+`scrollWidth === innerWidth` at 375px; reduced motion 0 running / 0 stuck; the
+submit path exercised end to end; lint, `content:check`, build + prerender all
+clean.
+
+### ⛔ No certifying authority is named on the site — 02-09-2026
+Clinton: "do not use signx it is for the other company name", then, asked what
+should replace "our eMudhra and SignX partnership": **"remove eMudhra also"**.
+
+**Both names are off the site entirely.** 45 SignX mentions across 11 files and
+19 eMudhra mentions across 11 were removed; the claim everywhere is now
+**"a licensed Certifying Authority"**. Verified: **0 files in `dist/` contain
+either string**, and a regex over `document.body.innerText` on `/`, `/dsc`,
+`/dsc/buy-token` and `/partner-with-us` returns false on every one.
+
+⚠️ **THIS DEVIATES FROM CONTENT-PLAN.md §9's STANDING AUTHORITY NOTE**, which
+says to lead every DSC page with the eMudhra/SignX partnership because it is
+"the strongest verifiable credential" and answers the buyer's real question,
+"is this certificate genuine?". That instruction is now superseded — the pages
+still answer the question, just without a name: "issued through a licensed
+Certifying Authority, not a reseller of unknown standing." **Do not
+reintroduce either name from §9, from git history, or from any of the supplied
+reference documents** (all three name them) without Clinton saying so.
+
+What changed, beyond string swaps:
+- **Partner programme is no longer SignX-branded**: "SignX Partner Programme"
+  → "DSC Partner Programme", "Enrol under SignX through ThinkOrange" →
+  "Partner with ThinkOrange", "Your own SignX login" → "Your own issuing
+  login", "SignX issues the certificate" → "The certifying authority issues
+  it", "as SignX requires" → "as the certifying authority requires". The
+  reference document Clinton supplied is SignX-branded throughout, so **it is
+  no longer a copy source for names** — only for structure.
+- **The `/dsc` hero spec tile** "Issued through: eMudhra · SignX" → "Licensed
+  CA".
+- **`TrustStrip`'s marks list** dropped from seven to five (`GeM, MCA, GSTN,
+  Tally, Zoho Books`) — it named both authorities.
+- Comments that cited the reference SITE as a source of structure keep the URL
+  (provenance is worth recording); comments that asserted a partnership were
+  rewritten.
+
+### ⚠️ The TrustStrip change nearly broke a documented invariant
+That component carries an explicit warning: the marquee's `-50%` loop travels
+exactly one group, so **one group must be at least as wide as the widest window
+it can render in**, and "if `marks` ever shrinks… re-check". Shrinking 7 → 5
+did exactly that, so it was re-measured by rendering the real spans in the real
+font — the method reproduced the documented **831px** for the old seven marks
+exactly, which is what makes the new numbers trustworthy:
+- one pass **831px → 582px**; a three-pass group **2493px → 1745px**
+- window at the 1800px cap is **1656px**, so the invariant **still holds — but
+  with 89px of headroom, not 837px.** ⚠️ **Drop or shorten one more mark and it
+  breaks**; go to `GROUP_PASSES = 4` (2327px) at that point.
+- **The animation duration is tied to group width and had silently drifted.**
+  `-50%` over 120s was ~21px/s at 2493px; at 1745px it would have been
+  ~15px/s. Now 84s. Recompute as `groupWidth / 21` on any change.
+
+⚠️ **`TrustStrip` is currently COMMENTED OUT** on the homepage (replaced by
+`WhenToCallUs`, 18-08-2026), so none of this renders today — which is also why
+the marquee could not be measured in place and the widths were derived from
+real spans instead. The component is left correct for whenever it returns.
+
+**Verified after the removal:** contrast **0 failures** on `/partner-with-us`,
+`/dsc` and `/dsc/buy-token` at both 1440px and 375px (tightest 4.64:1); one
+`<h1>` and no horizontal overflow on each; **0 console errors per route** once
+settled before clearing the buffer; lint, `content:check`, build + prerender
+(54 routes + 13 redirects) all clean.
+
+### Plan docs brought in line with the site — 02-09-2026
+Clinton: "update CONTENT-PLAN.md §9 to match." §9 was stale in two independent
+ways, and the same staleness had spread to four other sections plus
+IMAGE-PLAN.md, so all of it was corrected rather than leaving instructions that
+contradict the built site.
+
+**§9 rewritten.** It specified *T4 — DSC Product (4 pages)* and *T5 — Utility
+(6 pages)*, i.e. ten DSC routes, and carried the authority note telling every
+writer to lead with the named certifying-authority partnership. Both are gone.
+It now describes the real architecture (`/dsc` + `/dsc/buy-token`, T4 retired,
+T5 serving one route) and records the superseded authority note explicitly —
+quoting the old text and Clinton's instruction — rather than deleting it, so
+the next reader understands it was countermanded rather than forgotten.
+
+**Four other sections corrected, because each would have re-seeded the names or
+the wrong model:**
+- **§1's confirmed-facts table** listed the partnership under "the only things
+  we may state as true" — the single most dangerous place for it to survive.
+- **§6's homepage rows** — the hero trust line, the trust strip's mark list and
+  the DSC band's "lead with the partnership" instruction.
+- **§10's `/partner-with-us` spec** described the REFERRAL model ("order per
+  client → we handle issuance and dispatch", "What we handle"), which is what
+  produced the wrong page in the first place. Rewritten to the issue-it-
+  yourself model, with the form's field list and the ⛔ note on why PAN and
+  Aadhaar are not fields.
+- **§15's source bullets** are a VERBATIM quote from Clinton's profile PDF, so
+  the text is left untouched as a record of what that document said — with an
+  annotation that it is not a licence to use the names.
+
+**IMAGE-PLAN.md** had the worse instruction of the two: asset #1 was
+"photograph or scan the partnership certificate", which would have put both
+names on the site as an image. Struck, along with the trust-mark list and the
+§7.4 note about requesting an approved partner logo.
+
+**§5's template inventory was wrong beyond the CA question** — T2 said 21
+(it is 31 since the 17-08-2026 restructure), T4 said 4, T5 said 6. Corrected,
+with a warning that it and §4's "49 routes" are the two places most likely to
+drift: the count has been 49 → 68 → 54, and **`nav.js` / `sitemapPaths()` is
+the only authority**. T10 was never added to that table either.
+
+⚠️ **Four mentions remain in CONTENT-PLAN.md and one in IMAGE-PLAN.md, all
+deliberate**: the ⛔ annotations themselves, §9's quotation of the superseded
+note, and the verbatim PDF quote. Nothing instructs using a name.

@@ -173,3 +173,60 @@ is a review task and not a writing task: CA sign-off on the whole
 `INCOME TAX ACT, 2025` block in `statutory.js`, plus a decision on the two facts
 deliberately left unpublished (reassessment limitation periods, and the
 first-appeal form number).
+
+## DSC — research items (02-09-2026)
+Not blockers; both are facts deliberately withheld rather than guessed.
+
+- **Class 2 discontinuation.** `ThinkOrange_DSC_Hub_V7.html` states "Class 2
+  certificates were discontinued by the Controller of Certifying Authorities in
+  January 2021." That is a dated regulatory fact and needs a `statutory.js` key
+  with a source before it can be asserted. The Class 2 FAQ on `/dsc/resources`
+  currently states only the practical position ("Class 3 is the only class
+  still issued"), which needs no citation.
+- **DSC issuance turnaround.** `turnaround.dscIssuanceTurnaround` is still
+  `value: null`, so the hero spec row and every finder result render "Confirm
+  with us". V7 shows "[X hrs]" — its own placeholder. Confirm a real figure
+  with Clinton and it appears in both places at once.
+
+## DSC token — research + confirmation items (02-09-2026)
+- **Token price.** `tokenProduct.price` is `null`, so the Buy Token page reads
+  "On request" and the order form quotes on reply. Set a real number (and say
+  whether it includes GST) and the per-unit cost, the live total and the tax
+  note all turn on with no code change.
+- **"Version 3 tokens, per CCA guidelines."** eMudhra's purchase-token page
+  states this; it is a dated regulatory requirement and needs a `statutory.js`
+  key with a source before we assert it. The page currently says only that the
+  token must be a compliant crypto token and that ours is FIPS-compliant, which
+  the DSC tree already asserts elsewhere.
+- **Payment.** Ordering routes to WhatsApp. A real "Proceed to Pay" needs a
+  backend, a payment provider account and API keys — none of which exist — plus
+  a written privacy policy, since a checkout would collect billing and shipping
+  addresses. All five legal pages are still `sections: null`.
+
+## Partner programme — confirmation items (02-09-2026)
+From `thinkorange-dsc-usecase-pages.html`, which flags these itself:
+- **Commission percentage.** The reference's own note argues that "on request"
+  loses against competing SignX partner pages that publish a figure, and
+  suggests publishing a floor ("Up to X%") rather than a full slab table. A
+  commercial call, not a content one. `earnings.rows[].margin` is `null` until
+  then.
+- **Retail price ranges** per certificate in the earnings table
+  (`earnings.rows[].retail`, all `null`).
+- **Login activation time** once KYC is complete.
+- **Whether an opening balance or advance applies** to a partner account, and
+  whether any resubmission charge applies on a rejected application. The FAQs
+  currently say both are confirmed in writing during onboarding.
+- **"We issue for government and PSU work ourselves"** — carried over from the
+  reference as Clinton's own claim; worth confirming it is safe to state
+  publicly before launch.
+
+## Certifying authority name (02-09-2026)
+No CA is named anywhere on the site — Clinton removed SignX ("it is for the
+other company name") and then eMudhra with it. Every DSC and partner surface
+now says "a licensed Certifying Authority".
+- CONTENT-PLAN.md §9 still instructs the opposite (lead with the partnership as
+  the strongest verifiable credential). That section is superseded and should
+  be amended, or it will send the next writer back to the old wording.
+- If a CA is ever to be named again, it needs Clinton's explicit go-ahead — all
+  three supplied reference documents name one, so a future copy-paste from them
+  will reintroduce it silently.

@@ -5,14 +5,19 @@ import { Container } from "@/components/layout/Container";
 // marquee". Light surface, full-bleed.
 //
 // TEXT WORDMARKS, NOT LOGO SVGS. IMAGE-PLAN.md §7.4: "ask them for the
-// approved partner logo" (eMudhra, SignX) and "word the strip so it reads
+// approved partner logo" and "word the strip so it reads
 // 'we work with', never as endorsement." No partner has supplied an approved
-// mark yet, and drawing an eMudhra/SignX/GSTN wordmark from memory would be
+// mark yet, and drawing a GSTN wordmark from memory would be
 // exactly the kind of unapproved mark §7.4 warns against — a plain-type name
 // carries no visual claim to being the real logo, where a hand-built SVG
 // imitation would. Swap to real marks the moment they're supplied; nothing
 // else about this component needs to change.
-const marks = ["eMudhra", "SignX", "GeM", "MCA", "GSTN", "Tally", "Zoho Books"];
+// ⛔ 02-09-2026 (Clinton): "do not use signx it is for the other company
+// name", and then eMudhra too. Both certifying-authority names are OFF the
+// site entirely — this strip named them, and no longer does. What is left is
+// the portals and tools we actually work on, which is a claim about our own
+// work rather than about someone else's brand.
+const marks = ["GeM", "MCA", "GSTN", "Tally", "Zoho Books"];
 
 // Spacing is each item's own `mr-16`, NOT the parent's flex `gap`, and that is
 // load-bearing. The seamless-loop trick (translateX(-50%) on an infinite
@@ -72,10 +77,13 @@ export function TrustStrip() {
                   single list below instead of two scrolling copies. */}
               <div
                 aria-hidden="true"
-                // 120s, not the original 40s: -50% now travels one 2493px group
-              // rather than one 831px pass, so holding 40s would triple the
-              // scroll speed. 120s keeps the original ~21px/s.
-              className="flex w-max animate-[marquee_120s_linear_infinite] hover:[animation-play-state:paused]"
+                // ⚠️ DURATION IS TIED TO GROUP WIDTH, so it has to move whenever
+              // the group does. -50% travels exactly one group: that was
+              // 2493px at 120s (~21px/s). With five marks the group is 1745px,
+              // and holding 120s would have quietly slowed the strip to
+              // ~15px/s. 84s restores ~21px/s. Recompute as
+              // `groupWidth / 21` on any change to `marks` or GROUP_PASSES.
+              className="flex w-max animate-[marquee_84s_linear_infinite] hover:[animation-play-state:paused]"
               >
                 {track.map((mark, index) => (
                   <Mark key={`${mark}-${index}`} label={mark} />

@@ -80,7 +80,18 @@ const CORNER_RINGS = [
 
 const RING_GRADIENT_ID = "cta-arc-fade";
 
-export function CtaBand() {
+/**
+ * ⛔ 02-09-2026: `heading` / `lede` are ADDITIVE and optional (Clinton: "change
+ * the bottom cta also according to dsc like 'still not sure which one'").
+ * Omit them and the output is byte-identical to what the homepage and every
+ * other page has always rendered — `site.ctaLine` split on sentences, with
+ * `t("enquiryResponseTime")` beneath. Pass them and the band speaks to the
+ * page it is on instead of repeating the sitewide line.
+ *
+ * The heading still splits on ". " so a two-sentence override keeps the
+ * one-sentence-per-line rhythm §11.11 gives this band.
+ */
+export function CtaBand({ heading, lede }) {
   return (
     <section
       data-surface="ember"
@@ -215,8 +226,8 @@ export function CtaBand() {
 
       <Container className="relative text-center">
         <Reveal className="mx-auto">
-          <h2 className="text-display-lg text-ink-950">
-            {site.ctaLine
+          <h2 className="text-display-lg text-ink-950 max-w-3xl mx-auto">
+            {(heading ?? site.ctaLine)
               .split(". ")
               .filter(Boolean)
               .map((line, i, arr) => (
@@ -226,7 +237,9 @@ export function CtaBand() {
                 </span>
               ))}
           </h2>
-          <p className="mt-4 lg:mt-6 text-body-lg md:text-xl lg:text-2xl text-ink-900">{t("enquiryResponseTime")}.</p>
+          <p className="mt-4 lg:mt-6 text-body-lg md:text-xl lg:text-2xl text-ink-900 max-w-6xl mx-auto">
+            {lede ?? `${t("enquiryResponseTime")}.`}
+          </p>
         </Reveal>
 
         <Reveal delay={0.12} className="mt-8 flex flex-wrap items-center justify-center gap-4">
