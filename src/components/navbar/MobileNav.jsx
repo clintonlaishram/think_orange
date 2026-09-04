@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, ChevronRight, Phone } from "lucide-react";
 import {
+  dscPanelColumns,
+  dscPartnerPromo,
   serviceCategories,
   standalonePages,
   site,
@@ -32,12 +34,26 @@ const SECTIONS = [
       items: category.children,
     })),
   },
-  // ⛔ 02-09-2026: the DSC accordion group is GONE (Clinton: "keep dsc and
-  // resources as a single tab like home… it will only have /dsc route only").
-  // Digital Signatures is now a flat link in the list below, alongside Home
-  // and About Us — matching the desktop nav, which drops its DSC panel for the
-  // same reason. The two navbars do NOT derive from one array (see the
-  // Partner With Us note below), so both had to change.
+  // ⛔ 03-09-2026: the DSC accordion group is BACK (Clinton: "in digital
+  // signature it will be show and dropdown option like previous"). The two
+  // navbars still do NOT derive from one array — `primaryNav` drives desktop,
+  // this drives mobile — so both had to change. What they DO share is
+  // `dscPanelColumns`, which is where the four-slot structure and every
+  // destination lives; nothing about the DSC menu is typed twice.
+  //
+  // ⚠️ `groups` entries carry no `path`, so the renderer below prints each
+  // group label as a plain <span> rather than a <Link> — the mobile half of
+  // "do not make the main option clickable, only the sub option".
+  {
+    key: "dsc",
+    // ⛔ No hubPath/hubLabel — "in dropdown remove vie[w] all d[s]c services
+    // button" (Clinton, 03-09-2026). Dropped on mobile too, or the two navbars
+    // would disagree about whether that link exists. Nothing is unreachable:
+    // the "Digital Signature Certificate" sub-option already goes to /dsc.
+    label: "Digital Signatures",
+    groups: dscPanelColumns,
+    promo: dscPartnerPromo,
+  },
 ];
 
 export function MobileNav({ className }) {
@@ -256,14 +272,17 @@ export function MobileNav({ className }) {
                     >
                       <div className="overflow-hidden">
                         <div className="pb-4">
-                          <Link
-                            to={section.hubPath}
-                            className="mb-2 inline-flex items-center gap-1.5 text-body-sm font-medium text-ember-200 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
-                            tabIndex={isExpanded ? undefined : -1}
-                          >
-                            {section.hubLabel}
-                            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
-                          </Link>
+                          {/* Optional — see the DSC entry in SECTIONS. */}
+                          {section.hubPath && section.hubLabel && (
+                            <Link
+                              to={section.hubPath}
+                              className="mb-2 inline-flex items-center gap-1.5 text-body-sm font-medium text-ember-200 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300"
+                              tabIndex={isExpanded ? undefined : -1}
+                            >
+                              {section.hubLabel}
+                              <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
+                            </Link>
+                          )}
 
                           {section.groups.map((group) => (
                             <div key={group.label} className="mt-3">
@@ -311,16 +330,11 @@ export function MobileNav({ className }) {
                 );
               })}
 
-              {/* ⛔ 02-09-2026: Digital Signatures is a flat Row now, not an
-                  accordion group — one page, one link, exactly like Home. It
-                  sits directly after the Services accordion so the nav order
-                  still matches the desktop `primaryNav`. */}
-              <Row
-                to="/dsc"
-                label="Digital Signatures"
-                index={SECTIONS.length + 1}
-              />
-
+              {/* ⛔ 03-09-2026: the flat "Digital Signatures" Row is gone — it
+                  is the second accordion in SECTIONS above again. "Buy Token"
+                  never had a Row here at all (a pre-existing gap: it was a
+                  desktop-only tab), and is now reachable on mobile for the
+                  first time, inside that accordion's "Token & Driver" group. */}
               {standalonePages
                 .filter((page) => page.slug !== "partner-with-us")
                 .map((page, i) => (
@@ -328,7 +342,7 @@ export function MobileNav({ className }) {
                     key={page.path}
                     to={page.path}
                     label={page.label}
-                    index={SECTIONS.length + 2 + i}
+                    index={SECTIONS.length + 1 + i}
                   />
                 ))}
             </nav>

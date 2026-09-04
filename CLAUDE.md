@@ -2387,6 +2387,26 @@ treatment generalised. **HowWeWork itself is untouched and stays the reference.*
   step list is a 62ch measure, so heading-above-list left the right half of the
   container empty. StepFlow owns its `Container` and heading (`eyebrow`,
   `heading`, `intro` props) so call sites are one element.
+  - ⛔ **THE RAIL'S STICKY OFFSET IS FIXED BY INSTRUCTION AND MUST NOT BE
+    CHANGED: `lg:sticky lg:top-[calc(var(--header-h)+52px)]`.** Clinton,
+    04-09-2026: "StepFlow in this component, keep 'lg:sticky
+    lg:top-[calc(var(--header-h)+52px)]' do not change in next update." It was
+    +32px and he set it to +52px himself; the value is locked and the same note
+    is at the call site in `StepFlow.jsx`.
+  - **`FaqSection` was then moved to match it** (same day: "apply the same
+    +52px to FaqSection rail"), so **all three sticky rails — `StepFlow`,
+    `FaqSection` and `DscFinder` — now carry the identical value.** A future
+    difference between them is drift, not a decision. Grep
+    `lg:top-\[calc(var(--header-h)` to see the set.
+  - The clearance exists because a rail sits under the fixed header AND, on
+    T2/T4 pages, under that page's own sticky sub-nav — at +32px the eyebrow
+    parked beneath that bar.
+  - ⚠️ It must stay a `calc()` off `--header-h`, never a literal `lg:top-*`
+    step: the header height is a token, and a hard number here drifts the
+    moment it changes. (The other rails on the site — `ServiceLeaf`'s enquiry
+    card, `Article`, `/contact`, `CategoryHub`, `LegalPage` — are still on
+    literal `lg:top-28`/`lg:top-32` steps. Those were not in scope; move one
+    onto the token the next time its file is open.)
 - **Duration is a hairline rule plus mono, NOT a bordered pill.** The first pass
   used a `rounded-full` bordered pill; beside body copy that reads as a button,
   and several steps render `turnaround.js`'s "Confirm with us" fallback — a pill
@@ -6099,3 +6119,1493 @@ the only authority**. T10 was never added to that table either.
 ⚠️ **Four mentions remain in CONTENT-PLAN.md and one in IMAGE-PLAN.md, all
 deliberate**: the ⛔ annotations themselves, §9's quotation of the superseded
 note, and the verbatim PDF quote. Nothing instructs using a name.
+
+## Digital Signatures is a mega panel again — 03-09-2026
+NOT a phase. Clinton: "in digital signature it will be show and dropdown option
+like previous… 4 category: DSC — (Digital Signature Certificate, DSC Faqs),
+Token & Driver — (buy token, driver download), eSign — keep as previous,
+partner with us card… do not make the main option clik[able] only the sub
+option is clik[able]." This reverses the 02-09-2026 decision to make DSC a flat
+tab, one day later.
+
+- **It is NOT the old panel restored.** The DSC tree is still two routes, so
+  every panel item is a DEEP LINK into a section of `/dsc` or `/dsc/buy-token`,
+  never a page of its own. That is also why the column headings are groupings
+  rather than routes — there is no page for "Token & Driver" to point at — which
+  satisfies "only the sub option is clickable" through the mechanism
+  `PanelColumn` already had: it renders a heading as a `<Link>` only when the
+  column carries a `path`, and **none of these do. Adding a `path` to any of
+  them silently makes the heading clickable again.**
+- **`dscPanelColumns` (nav.js) is back and is the ONE definition**, consumed by
+  both `Header.jsx`'s `PANELS.dsc` and `MobileNav.jsx`'s `SECTIONS`. The two
+  navbars still do not derive from one array (`primaryNav` drives desktop,
+  `SECTIONS` drives mobile), so both needed an edit — but nothing about the DSC
+  menu's structure or destinations is typed twice.
+- ⚠️ **"Buy Token" is no longer a top-level tab.** It became a sub-option of
+  "Token & Driver" on the same instruction, and leaving it in both places would
+  put one destination in the navbar twice. The page is unchanged and still
+  reachable from the panel, the footer's DSC column and `/dsc`'s own links.
+  Side effect worth knowing: it never had a mobile row at all (a pre-existing
+  desktop-only gap) and **is now reachable on a phone for the first time.**
+- ⛔ **eSign stays PAUSED — "keep as previous" means commented out.** Both of
+  its sub-options (`aadhaar-esign`, `esign-or-dsc`) came off the route table on
+  21-08-2026, so nothing is prerendered for either and rendering that column
+  would put two guaranteed 404s in the main navigation. So the panel ships three
+  slots, not four. Uncomment the column and the two `allRoutes` entries
+  together, never separately.
+
+### ⛔ Two real bugs this surfaced, both pre-existing and both invisible to the link audit
+1. **`dscSectionIds.certificates` named a section that no longer exists.** The
+   "certificates we issue" section was deleted from `/dsc` on 02-09-2026 ("i do
+   not need certificate we issue also") but the id survived it — so **five
+   redirect stubs and the homepage DSC band were all pointing at
+   `/dsc#certificates`**, a fragment naming nothing. Everything that named it
+   now names `finder`, which is what actually answers "which certificate do I
+   need". **Deleting a section from a template means deleting its id here too,
+   and grepping for the key; the two cannot be done separately.**
+2. **`RootLayout` scrolled to the top UNCONDITIONALLY on navigation**, so every
+   CROSS-PAGE fragment link on the site was dead — the footer's DSC column, the
+   retired-DSC redirect stubs, and (as of today) the entire DSC panel. React
+   Router changes the URL without a document load, so the browser never performs
+   its own fragment scroll, and this effect then pulled the reader back to the
+   top of a page they had asked to enter halfway down. A same-page anchor was
+   unaffected, which is why it went unnoticed for months.
+   - ⚠️ **The retry loop is not defensive padding.** Every template is
+     `React.lazy`-loaded (Phase 7), so on a cross-page navigation the target
+     section is not in the DOM on the frame the effect first runs — a single
+     `getElementById` would miss on exactly the case it exists for. ~30 frames,
+     then the top of the page as the honest fallback.
+   - `scroll-mt-*` on the targets supplies the fixed header's clearance, so
+     `scrollIntoView` needs no offset of its own.
+
+### `assertNoDanglingFragments` — new, and it fails the build
+`scripts/prerender.mjs` now scans the emitted HTML for any `/page#id` link whose
+target page has no element with that id. **A link-integrity scan CANNOT catch
+this class** — the path is real and only the fragment is dead, so the reader
+just lands at the top of a long page and nothing errors or logs. This is the
+third instance in this repo (`/dsc#undefined`, then `/dsc#certificates`), which
+is why it is a build gate rather than a note.
+- It runs over the RENDERED output because that is the only place the question
+  can be answered: nav.js knows what it links to, and only the page knows what
+  ids exist.
+- ⚠️ **Consequence: `node scripts/prerender.mjs` on its own now fails.** That is
+  correct, not a regression — run standalone it uses the already-spliced
+  `dist/index.html` as its template and emits corrupt pages. It has always had
+  to run straight after `vite build` (it is wired as `postbuild`); the check
+  simply makes the corruption loud instead of silent.
+
+### Verified
+`npm run lint` (0 problems), `content:check` (clean apart from the three
+standing unconfirmed-content warnings), `build` + prerender (54 routes + 13
+redirects, unchanged) with the new fragment gate passing sitewide. Then a real
+Chrome over CDP against `npx serve dist`, asserting
+`innerWidth`/`visibilityState`/`pathname` first:
+- Desktop 1440px: panel opens, **3 columns + promo, every heading
+  `headingIsLink: false`**, all four sub-options linked to the right
+  destinations, "Become a DSC Partner" CTA present, "Buy Token" absent from the
+  top-level nav.
+- **A deep link actually lands**: clicking "Driver Downloads" navigates to
+  `/dsc/buy-token`, hash `#drivers`, `scrollY 2413` with the target's
+  `getBoundingClientRect().top` at 0 — i.e. the retry survives the lazy chunk.
+- Mobile 375px: two accordions (Services, Digital Signatures), both group
+  labels rendered as non-link `<span>`s, four sub-options, promo card present,
+  `scrollWidth === 375`.
+- Console: exactly **1** error, the long-standing sitewide React #418
+  (`args[]=HTML`) that reproduces byte-identically on untouched routes.
+
+### eSign unpaused + the hub rail link dropped — 03-09-2026
+Clinton, same day: "now unpause the esign routes and add that column and in
+dropdown remove vie[w] all d[s]c services button." Reverses the "keep as
+previous / stays paused" decision from a few hours earlier.
+
+- ⛔ **ONE eSign route came back, not two, and the second one CANNOT come back
+  by uncommenting.** `/dsc/esign-or-dsc` is live — its content file
+  (`content/dsc/esign-or-dsc.js`) was written in full before the 21-08-2026
+  pause and was never deleted, so nothing was invented to restore it. Its
+  sibling `/dsc/aadhaar-esign` is a different case entirely: that page's content
+  went with `content/dsc/products.js` and its template went with
+  `DscProduct.jsx` when the **whole T4 family was deleted on 02-09-2026**.
+  Restoring it is a content-writing job plus a template decision. Logged in
+  MISSING-PAGES.md. So the eSign column ships ONE item, and `DscEsign.jsx`'s
+  decision section routes eSign enquiries to WhatsApp rather than to a route
+  that does not exist.
+- ⛔ **It is T11, not T5, and this was the trap worth catching.** T5 resolves
+  **unconditionally** to `DscBuyToken` (`routeComponents.js`) now that the DSC
+  tree is two pages — so marking the eSign route T5, which is what the paused
+  definition said, would have served the **Buy Token page under the eSign URL**,
+  in the client bundle AND the prerendered HTML, with nothing failing and
+  nothing logging. New branch in `routeComponents.js`, both routers, and
+  `lib/seo.js` (falling through to T5 there would have given the page Buy
+  Token's title and description).
+- **`src/modules/dsc/DscEsign.jsx` (new)** is the old `UtilityPage.jsx`
+  `EsignOrDsc` renderer restored, with three forced changes recorded at the top
+  of the file. The one that matters: **the old "Aadhaar eSign" button is gone
+  and must stay gone** — it pointed at the deleted T4 route, i.e. a 404 in the
+  middle of the one section whose entire job is to send a reader somewhere. The
+  Class 3 button now points at `/dsc#finder`.
+  - `dscGroupForSlug` is gone with `content/dsc/groups.js`, so the hero names
+    its texture directly: `signature`, which is the one motif that means "a
+    signature applied" — right on its own merits, not just because it is what
+    the deleted eSign group used to resolve to.
+  - No `Reveal` on the comparison table. Tables never animate, and this one is
+    the page's reference content.
+- **The mega panel's hub rail link is now OPTIONAL** (`hubPath && hubLabel`),
+  and the DSC panel omits it. Safe **here and only here**: that panel's
+  "Digital Signature Certificate" item already goes to `/dsc`, so the rail link
+  was one destination twice in one panel.
+  ⚠️ **Services still passes it and still NEEDS it** — its trigger is a
+  `<button>` for disclosure semantics, so that rail is the navbar's ONLY route
+  to `/services` (DESIGN.md §10.2). Verified after the change: DSC rail has one
+  link ("Tell us your situation"), Services rail still has two.
+  Dropped on mobile too, or the two navbars would disagree about whether that
+  link exists.
+- `/dsc/esign-or-dsc` added to the footer's Digital Signatures column.
+
+**Verified** — lint 0 problems, `content:check` clean, `build` + prerender **55
+routes** (up from 54) with the new dangling-fragment gate passing sitewide.
+Real Chrome over CDP against `npx serve dist`, asserting
+`innerWidth`/`visibilityState`/`pathname` first:
+- Panel: **3 link columns + promo, every heading `isLink: false`**, eSign column
+  present with its one item, DSC rail link gone, Services rail link intact.
+- Page: correct `<title>` and one `<h1>`, cadence `deep → light → light-alt →
+  light → ember` (zero consecutive repeats, no adjacent dark pair), 6 comparison
+  rows, 4 decision points, 4 FAQs, JSON-LD `Organization + LocalBusiness +
+  BreadcrumbList + FAQPage`, all 3 sub-nav targets resolve, no `undefined` /
+  `[object Object]` / `NaN` in any rendered string.
+- **Pixel-sampled contrast: 0 real failures**, 45 samples, tightest pass 4.64:1.
+  ⚠️ The one reported failure was the documented **rounded-pill artifact** —
+  `CtaBand`'s "Talk to an Expert" is `rounded-full`, so p95/p05 over its rect
+  samples the ember band through its corners. Its real pair is canvas on ink-950
+  (~17:1), read statically. Score any element with an opaque background against
+  that colour instead of sampling its box.
+- Mobile 375px: eSign group present in the DSC accordion, group labels non-link,
+  `scrollWidth === 375`.
+- Console: exactly 1 error, the long-standing sitewide React #418.
+
+## DSC finder rebuilt on the reference wizard — 03-09-2026
+NOT a phase. Clinton supplied `dsc-finder-preview.html` and asked for the /dsc
+finder rebuilt on it — "take word and steps also. but make the design according
+to my theme and make it look premium step document showing section." Its data
+model, step labels and copy were taken; none of its styling was.
+
+### What the reference changes, in order of how much it matters
+1. ⛔ **Question one asks WHAT FOR, not WHICH PORTAL.** Ten portal cards became
+   three purposes (Statutory filings / Tenders and procurement / Import and
+   export) plus the foreign-national route under its own divider. That is the
+   reference's actual finding rather than a tidy-up: the statutory portals all
+   take the same certificate, so asking which one you were on was a question
+   whose answer never changed anything.
+2. **Question two asks WHO SIGNS, with three answers** (proprietor / company or
+   LLP / partnership or trust), up from two — a partnership's answer differs
+   from a company's in whose name goes on the certificate.
+3. **A verification-route toggle on the checklist**, which is the real addition
+   and the reason `certificates.js` had to change (below).
+4. A live document COUNT, per-route document notes (the foreign route's scan and
+   translation rules, which had nowhere else to live), and escape hatches under
+   question one for a reader who is renewing, chasing a driver, or recognises
+   none of the three purposes.
+
+### ⛔ Every checklist on this site was wrong in both directions, and this fixed it
+`certificates.js` listed "Aadhaar card" AND "Passport-sized photograph" side by
+side on one list. On the **Aadhaar route** the record supplies the photograph and
+the address, so neither is sent separately; on the **PAN route** there is no
+Aadhaar record at all, so both must be. One list could not be right for either.
+- **`kycRoutes` + `documentsFor(core, routeKey)` (certificates.js) are now the
+  ONE definition.** Each variant holds a route-independent `documentCore`, and
+  **`documents` is DERIVED** — `documentsFor(core, "aadhaar")` — so the /dsc
+  documents section and its counts keep reading a plain array and there is still
+  exactly one checklist per certificate. Nothing forked.
+- ⚠️ **Route extras are inserted BEFORE the last line of a `documentCore`**,
+  because that line is always the video-verification contact detail and it reads
+  as the last thing you do. Keep it last in every core list.
+- Measured live: an individual is **3 documents on Aadhaar, 4 on PAN**, with the
+  count and the note both changing with the toggle.
+
+### The document panel — the "premium step document showing section"
+Its own nested surface inside the dark result panel rather than a bare list,
+because it is the part a reader acts on: header with a live count, the route
+control, a two-column checklist, the route note, any per-route notes, the
+certificate's verification note, and a footer link to the full checklists.
+- ⚠️ **The segmented control uses `aria-pressed`, NOT `role="radio"`.** Radios
+  carry a keyboard contract — arrow keys under a roving tabindex — that these do
+  not implement, and a `radiogroup` whose members only answer Tab is a worse lie
+  to a screen-reader user than two honest toggle buttons in a labelled group.
+  Same pattern `TokenOrder` already uses. (The first cut shipped `role="radio"`.)
+- The count is `tabular-nums`: it changes with the route, and proportional digits
+  make the header shift under the reader's eye when it does.
+- The toggle's active state is **ink-950 on ember-400, never white** — CLAUDE.md's
+  first non-negotiable. Measured 6.18:1.
+
+### Three real defects caught by looking rather than by reading the diff
+1. ⛔ **`bg-ember-950` DOES NOT EXIST** — the ember ramp stops at 700 (theme.css).
+   Tailwind emits nothing for an undefined token, so the "worth knowing" callout
+   had no surface at all and nothing failed. Now an ink wash with the ember rule
+   on the left edge. **Check the ramp before reaching for a -950 or -800 ember.**
+2. ⛔ **Five spec cells in a 2-column grid left TWO EMPTY CELLS**, rendering as
+   blank navy blocks beside Validity and Issued in — it reads as content that
+   failed to load. Now a **6-track grid**: the two long values at half width, the
+   three short ones at a third, so both rows fill exactly. Any cell added or
+   removed here has to keep the spans summing to a multiple of 6.
+3. **`react-hooks/static-components` rejects `const Icon = finderIcon(...)` in a
+   component body** — a fresh component identity per render remounts the subtree.
+   Resolved at the call site inside the map, and at module scope for the one card
+   that is not in a map.
+
+### ⛔⛔ AN UNRESOLVED CONTENT CONFLICT IS NOW LIVE ON /dsc — read before writing more DSC copy
+The reference's `filings` answer says one Class 3 Individual certificate covers
+GST, income tax, MCA/ROC, EPFO/ESIC and trademark "whether you are a proprietor,
+a company or an LLP", with no organisation documents needed. **`portalGuide`,
+rendered further down the same page, says the opposite in two rows** — GST needs
+an Organisation certificate for companies and LLPs, and for EPFO "a personal
+certificate will not work". Both cannot be true and the page asserts both.
+
+The reference is newer and is Clinton's own, so it is what is implemented;
+`portalGuide` was left untouched because reconciling them is a factual call, not
+a formatting one. Full write-up, including how to fix whichever side loses, is
+in MISSING-PAGES.md. **Do not write more DSC copy on top of this until it is
+settled.**
+
+### Verified
+`npm run lint` 0 problems, `content:check` clean, `build` + prerender 55 routes
+with the dangling-fragment gate passing. Real Chrome over CDP against
+`npx serve dist`, asserting `innerWidth`/`visibilityState`/`pathname` first:
+- **All three paths driven end to end.** `filings` skips question two and the
+  rail correctly shows 2 steps; `tender → Company or LLP` shows 3 steps and the
+  context line reads "Tenders and procurement · Company or LLP"; `foreign` shows
+  2 steps, **hides the route toggle**, and renders its own 5-document checklist
+  plus its 4 notes.
+- Toggling Aadhaar → PAN rewrites the list and the count (3 → 4) with the route
+  note changing under it.
+- Alt links resolve to `/dsc/buy-token#renewal`, `#drivers` and `/contact`.
+- Focus moves to the panel on every answer; 7 tabbables in the result.
+- **Pixel-sampled contrast: 0 real failures** — 106 samples at 1440px across five
+  states, 53 at 375px, tightest pass 4.70:1. The three reported are the documented
+  **rounded-pill artifact** on the toggle (its real pair is ink-950 on ember-400,
+  6.18:1, computed statically).
+- `scrollWidth === innerWidth` at 375px. Reduced motion: 0 running animations;
+  the 2 mid-opacity elements are the finder's own `ArcRings` paths at their
+  designed 0.11/0.07 resting weight, not stuck reveals.
+- Console: 1 error, the long-standing sitewide React #418.
+
+⚠️ **Probe timing:** `AnimatePresence mode="wait"` plus the result's own beat
+cascade means the document panel is not in the DOM until ~1.5s after a click.
+A 900ms settle reported `sections: 0` and looked exactly like the panel failing
+to render. Settle ~1.8s before asserting on result content.
+
+### Follow-up: the foreign-national card joins the list — 03-09-2026
+Clinton: "remove this show as 4 card no need to sperate." The reference sets
+the foreign-national route below a labelled rule ("Or, if the applicant is a
+foreign national") and it was built that way; it is the fourth peer card now.
+
+- **One `finderUses` array, one map** — `finderForeignUse` is gone as a separate
+  export and the second render path with it, so there is no longer a card that
+  can drift from the other three. `finderUse()` simplifies to a plain lookup.
+- Nothing else about the route changed: it still skips question two, still hides
+  the verification toggle (there is no Aadhaar route for a passport applicant),
+  and still carries its own 5-document checklist and 4 notes.
+- ⚠️ **Do not reinstate the divider.** It was the reference's layout, not
+  something the data requires.
+- Verified: **4 cards in one list**, the divider string absent from the rendered
+  page, all four paths still driven end to end (filings 2-step, tender → Company
+  or LLP 3-step, foreign 2-step with the toggle hidden), Aadhaar → PAN still
+  rewriting the list and count, `scrollWidth === 375`, 1 console error (the
+  standing sitewide React #418). Lint 0 problems, build + prerender 55 routes.
+
+## /dsc trimmed to the finder + the partner section — 03-09-2026
+NOT a phase. Clinton: "remove: Portal guide / Documents required / After you
+get it — no need for that now." `/dsc` is now hero → finder → partner → CTA.
+
+- **Ids were deleted WITH their sections, in the same commit.** `portals`,
+  `documents` and `process` are gone from `dscSectionIds`. Deleting a section
+  and leaving its id behind is how `/dsc#certificates` shipped as a dead
+  fragment twice — the path stays real, only the fragment names nothing, and a
+  link-integrity scan passes it. Everything that pointed at `documents` now
+  points at `finder`: the footer's "Documents Required" row (removed — the
+  column already carries "Which DSC do I need?", which is now the same
+  destination), the `/dsc/documents-required` redirect stub (retargeted), and
+  the finder's own "Full checklist and notes" link (deleted outright — that
+  panel IS the checklist now, and there is nothing fuller to point at).
+- ⚠️ **The CONTENT is not deleted.** `portalGuide`, `certificateCapabilities`
+  and `afterIssue` are still exported from `content/dsc/certificates.js`,
+  unreferenced. Restoring any of these sections is a render-only change.
+  **Do not prune them as dead content on a later tidy-up pass.**
+- **`DocumentPanel` went with the documents section**; `Disclosure` and
+  `dscIcon` are no longer imported by `DscHub`. `certificateVariants` still is —
+  the hero spec row counts them.
+- **The sub-nav is down to two tabs** (Which DSC? / Partner). `SubNav`'s own
+  `< 2` guard means one more removal would correctly render nothing at all.
+
+### ⛔ Two things this broke that the instruction did not mention
+1. **The cross-page pointer at the foot of the page was asserting content that
+   is not there.** It promised "document checklists, the portal-by-portal
+   guide, token drivers, renewal and the full FAQ set" on the Buy Token page —
+   but the checklists and the portal guide were sections of THIS page, never
+   that one, so two of the five were already wrong, and after today the portal
+   guide is nowhere on the site. Now names only the three Buy Token actually
+   holds. **A pointer has to name what the destination really has**; this one
+   had drifted silently since the two pages split.
+2. ⚠️ **THE DOCUMENT CHECKLISTS ARE NOW REACHABLE ONLY THROUGH THE FINDER,
+   WHICH RENDERS ON DEMAND IN JS.** Both this file and `DscHub.jsx` recorded
+   that on-demand finder results were safe *precisely because* /dsc carried
+   every checklist as ordinary visible content. That is no longer true: a
+   crawler, or a reader with no JS, now sees no checklist anywhere on /dsc.
+   Flagged rather than worked around — restoring a static checklist would be
+   re-adding the section that was just removed. If it matters, the cheapest fix
+   is a checklist block on `/dsc/buy-token`, not a section back here.
+
+### Verified
+`npm run lint` 0 problems, `content:check` clean, `build` + prerender 55 routes
+**with the dangling-fragment gate passing sitewide** — which is the check that
+matters most here, since three ids were deleted. Real Chrome over CDP against
+`npx serve dist`, asserting `innerWidth`/`visibilityState`/`pathname` first:
+- Sections are `["finder", "partner"]`; all six removed headings absent from the
+  rendered text; one `<h1>`.
+- **Cadence `deep → light → light-alt → ember`** — zero consecutive repeats and
+  no adjacent dark-family pair.
+- Sub-nav: 2 tabs, both targets resolve. The only `/dsc#` fragment anywhere in
+  `dist/` is `#finder`, and `/dsc/documents-required`'s stub redirects to it.
+- **Pixel-sampled contrast: 0 real failures**, 105 samples, tightest pass 4.71:1
+  (the 3 reported are the documented rounded-pill artifact on the KYC toggle —
+  its real pair is ink-950 on ember-400, 6.18:1).
+- `scrollWidth === 375` at mobile. Reduced motion: 0 running animations and **0
+  real stuck reveals** — all 14 mid-opacity elements are decorative SVG paths
+  (hero seal texture, ArcRings) at their designed 0.045–0.26 resting weight.
+- Console: 1 error, the long-standing sitewide React #418.
+
+### The finder's last step is light and has no card — 03-09-2026
+Clinton: "in finder make the last step light and do not confine in card. make
+it look primeum." The answer used to be a `.panel-dark` card dropped on this
+light section, which is where all of its weight came from. There is no card and
+no surface now, so the weight comes from the light idiom this site already uses
+on `WhoWeWorkWith` and `WhyThinkOrange`: hairlines, the type scale, mono labels,
+whitespace, and ONE ember element per block.
+
+- ⚠️ **EVERY COLOUR HAD TO BE RE-TONED, not just the wrapper.** The surface
+  system covers headings and `var(--surface-*)` accents — it does NOT cover the
+  plain `text-ink-*` / `text-canvas` utilities this panel was built from, so
+  deleting `data-surface="dark"` alone would have left canvas text on canvas.
+  Fourth recorded instance of that trap (`GroupHeading`, `Breadcrumbs`,
+  `DriverPanel`, now this). `BackButton` and `PanelLink` are shared with the
+  dark steps and take a tone rather than assuming one.
+- **The KYC toggle's inactive half is ink-500, not ink-400** — it sits on ink-50
+  now, where ink-400 is under the floor. Active stays **ink-950 on ember-400**,
+  never white.
+- **The warn callout is the only filled area left**, which is what makes it read
+  as a caution rather than one more paragraph. On dark it had to use an ink wash
+  because `bg-ember-950` does not exist (the ramp stops at 700); on light the
+  warm end IS available, so it is ember-50 with the ember rule on the left edge.
+- `Button variant="secondary"` drops `tone="dark"` — the light default is
+  correct here, and passing dark would put ink-100 on canvas.
+- **The document checklist is hairline rows, not bullets.** With no card around
+  them the rules are what hold it together as one object and stop two columns
+  reading as one paragraph that happens to wrap. Its heading dropped from
+  `text-h4` to a mono label: with no box, an h4 competes with the answer's own
+  h3 a few hundred pixels above.
+
+### ⛔ The spec grid: why it has NO vertical rules
+The first cut drew a full hairline mesh (`gap-px` over `bg-ink-100`). That needs
+horizontal padding on every cell so text does not touch a vertical rule — and
+**a grid item cannot know which row it is in**, so `first:pl-0` clears the first
+cell of the GRID only, row two's leading cell keeps its inset, and the two rows
+disagree with each other and with the h3 above. Measured: row 1 at x=520 while
+row 2 started at 540.
+
+Dropping the vertical rules removes the reason for the padding, so every cell is
+`pl-0` unconditionally and both columns line up with the heading **by
+construction**. Each cell draws its own `border-b`, which reads as one
+continuous rule per row because a row's cells tile the width. Measured after:
+both rows start at **x=520** at 1440px and **x=24** at 375px.
+
+⚠️ This is the same family as the `first:` traps that broke the /about dark band
+and the /contact channel row. **Any first/last-of-row exception in a grid is
+wrong unless the grid is one row.**
+
+### Verified
+`npm run lint` 0 problems, `content:check` clean, `build` + prerender 55 routes
+with the fragment gate passing. Real Chrome over CDP against `npx serve dist`:
+- **0 dark panels** anywhere in the finder (`.panel-dark`, `[data-surface=dark]`
+  and `.card-dark` all count 0); heading renders ink-600.
+- **Pixel-sampled contrast: 0 failures** — 104 samples at 1440px across five
+  states, 56 at 375px, tightest pass 4.85 / 4.79:1. Note the rounded-pill
+  artifact that dogged the dark toggle is gone: on a light track the corners no
+  longer expose a contrasting surface.
+- Spec rows aligned at both widths (above); toggle still rewrites the list and
+  count; all three actions present; `scrollWidth === 375`.
+- Reduced motion: 0 running animations and 0 real stuck reveals — all 14
+  mid-opacity elements are decorative SVG paths at their designed weight.
+
+### Warn callout and "Buy the token" removed from the result — 03-09-2026
+Clinton: "remove warning note and buy token." The ember-tinted caution callout
+and the secondary CTA are gone; the answer is now entirely hairlines and type
+with no filled area at all.
+
+- ⚠️ **`answer.warn` IS STILL WRITTEN ON EVERY ANSWER in finder.js**, just no
+  longer rendered — same discipline as `portalGuide` / `afterIssue` after the
+  /dsc section removal. **Do not prune those strings on a later tidy-up.** They
+  are the one thing that goes wrong per route (encryption cannot be added to a
+  signing-only certificate; the DGFT name must match the PAN database exactly),
+  and restoring the callout is a render-only change.
+- ⚠️ **SIDE EFFECT WORTH KNOWING:** the `filings` warn was the half of the
+  unresolved `portalGuide` contradiction that /dsc actually rendered. With it
+  unrendered the page no longer asserts both sides — **but the conflict itself
+  is NOT settled** (MISSING-PAGES.md still carries it), and restoring this
+  callout brings it straight back.
+- `/dsc/buy-token` stays reachable from the nav panel, the footer's DSC column
+  and step one's own "Token drivers and downloads" alt link — nothing became
+  unreachable.
+- The actions row moved from `beat(5)` to `beat(4)`. Leaving the hole where the
+  callout sat would idle the cascade one extra 70ms step before the only
+  remaining action appears.
+
+**Verified:** warn absent, "Buy the token" absent, one filled area left in the
+whole answer (the KYC toggle's own track); contrast **0 failures** — 104 samples
+at 1440px across five states and 56 at 375px, tightest 4.85 / 4.79:1; all three
+paths still driven end to end with the toggle rewriting the list and count;
+`scrollWidth === 375`; lint 0 problems, `content:check` clean, build + prerender
+55 routes.
+
+### Finder result: typography, note structure, and a green WhatsApp CTA — 03-09-2026
+Clinton: "fixed the heading do not use font mono and fixed the font weight
+also. show details properly right now it look confusion to read. keep apply on
+whatsapp button right and green color. for the white color i have use in tab
+keep as it is."
+
+- **No mono, and the emphasis was inverted.** The five spec labels were mono
+  UPPERCASE with letter-spacing — a lot of shouting stacked above the values a
+  reader is actually there for. Now plain sans, sentence case, regular weight,
+  ink-400; the VALUE carries the weight (medium, ink-600). It was the other way
+  round. "What to have ready" went from a mono label back to a real `text-h4`.
+  ⚠️ **The context eyebrow above the h3 is still mono, deliberately** — it is
+  the site's Eyebrow idiom and matches this section's own "FIND YOUR
+  CERTIFICATE" a few hundred pixels to its left. Say the word if that should go
+  sans too.
+- **`NoteBlock` (new, local) is the readability fix.** Three grey paragraphs ran
+  together under the checklist answering three different questions. Each is now
+  a labelled 3/9 row on its own hairline — "On this route" / "How to send them"
+  / "Before you apply" — so a reader can skip the two that are not theirs.
+- **The WhatsApp CTA is `variant="tertiary"`, the site's existing WhatsApp
+  button**, not a hand-rolled green — same one `ServiceLeaf`'s quote CTA and
+  `DscEsign` already use, plus tabler's `IconBrandWhatsapp`. `ml-auto` puts it
+  right, which also holds when there is no related-service link beside it
+  (`justify-between` alone would leave it on the left).
+
+### ⛔ The shared `tertiary` variant had three defects, all live on two other pages
+Found by computing the pairs rather than looking at them:
+1. It set **`text-canvas` AND `text-ink-800`**. `cn()` is twMerge, so the second
+   silently won — the first was dead the day it was written.
+2. Its **hover state measured 3.34:1** (ink-100 on `success`), under the floor.
+   Both foregrounds fail on that token — ink-950 on `success` is only 4.49:1 —
+   so the background swap is gone entirely. Feedback is the lift plus the green
+   shadow, which is what `.whatsapp-fab` already does.
+3. ⚠️ **Text on WhatsApp green must be DARK.** White on it is **1.98:1**;
+   ink-950 is **9.82:1**. CLAUDE.md's FAB note claims the opposite ("ink-950
+   would fail contrast on this hue") and is **wrong** — that claim is about a
+   24px glyph, and white fails the 3:1 non-text floor there too. Worth a look
+   when `FloatingWhatsApp` is next open; not touched here.
+Verified after the fix: both other call sites render `rgb(37,211,102)` with
+`rgb(7,12,28)` text.
+
+### ⛔ The KYC toggle's white text is KEPT ON INSTRUCTION, and it fails AA
+Clinton set the active pill to `text-white shadow-sm` himself and said to keep
+it. Measured statically it is **3.15:1** on ember-400 — under the 4.5:1 floor,
+and the exact pairing CLAUDE.md's first non-negotiable forbids. It stays, with
+the instruction recorded at the call site, the same standing exception
+`Chip.jsx`'s active variant already carries. ⚠️ **Do not "fix" it back to
+ink-950 — it has been asked for by name.** The pixel sweep reports it as a
+failure (1.47:1, inflated by the rounded-pill artifact); that one entry is
+expected and accepted, not a regression.
+
+**Verified:** 0 mono elements in the result except the eyebrow; all five spec
+labels Satoshi w400 sentence-case with w500 values; doc heading Satoshi w500
+18px; both note labels rendering; WhatsApp button `rgb(37,211,102)` with
+`rgb(7,12,28)` text, right-aligned, icon present; toggle untouched
+(`rgb(240,242,247)` track, ember active). Contrast **0 failures at 375px** and
+**3 at 1440px — all the accepted toggle exception above**, tightest pass
+4.85 / 4.79:1. `scrollWidth === 375`. Reduced motion 0 running animations and 0
+real stuck reveals. Lint 0 problems, `content:check` clean, build + prerender
+55 routes.
+
+### Finder: deliberate scroll on every step change — 03-09-2026
+Clinton: "in the phone or tab view optimise the focus and auto scroll smooth to
+area where need to focus."
+
+- ⛔ **THE BUG WAS IN WHAT `focus()` DOES, not in the absence of a scroll.** The
+  effect was a bare `panelRef.current.focus()`, and browser focus scrolling
+  moves the MINIMUM amount to bring an element into view — so for a tall element
+  it aligns the BOTTOM edge. On a phone the result panel is several screens
+  high, so answering a question landed the reader at the FOOT of their own
+  answer, past the heading, the spec row and the checklist. It only looked
+  acceptable on a wide screen, where the panel is a short column beside a sticky
+  rail. Now `focus({ preventScroll: true })` takes the browser out of it and the
+  panel's TOP is placed under the fixed header and the sticky sub-nav.
+- ⚠️ **The clearance is READ OFF the element's own `scroll-margin-top`, never
+  typed in JS.** `scroll-mt-32` is already on that div for anchor navigation, so
+  reading it back means the two paths cannot drift and the header/sub-nav
+  heights stay a one-place edit.
+- ⚠️ **It runs on STEP change, not on `useKey`/`signer`** — so "Start over"
+  scrolls back to the choices, which it never used to (on a phone that left the
+  reader stranded where the old answer's foot had been). `stepRef` is seeded
+  with the current step and **must be declared after `step` is computed**;
+  `useRef(null)` would not match on the first run and the finder would scroll on
+  mount, moving a reader who has not touched it.
+  Toggling the verification route does NOT change `step`, so it correctly does
+  not scroll — measured, scrollY unchanged at 1108 either way.
+
+### ⛔ One `scrollTo` is not enough — `mode="wait"` makes the first target wrong
+`AnimatePresence mode="wait"` keeps the OUTGOING step mounted while this runs,
+so the document is still as tall as the old step — and the steps differ
+enormously (the result is several screens on a phone; question two is a few
+hundred pixels). A target computed against the old height gets **CLAMPED** by
+the browser the moment the content shrinks. Measured at 390px: the panel landed
+at top **671 instead of 128** — the reader left short of their own answer, the
+exact failure the effect exists to fix, and invisible unless you drive it.
+
+Fixed by re-asserting the position from a `ResizeObserver` on the panel until it
+settles. The first pass still runs immediately, so the scroll starts on the tap
+rather than after the transition.
+- ⚠️ **The observer is CAPPED at 700ms.** Uncapped it would re-centre the panel
+  for as long as anything resized it — including something the reader opened
+  themselves — which is a page that fights you. 700ms covers the 280ms exit plus
+  the enter and one layout pass.
+
+### Verified
+Real Chrome over CDP against `npx serve dist`, asserting
+`innerWidth`/`visibilityState`/`pathname` first, on **390×844, 768×1024 and
+1440×900**:
+- **Every step change lands the panel at exactly top 128 = the measured
+  clearance**, on all three viewports: use → signer (from scrollY 1400),
+  signer → result, result → "Start over", and the one-hop `filings`
+  uses → result (the largest height change). The result's `<h3>` is in view
+  every time; after Start over the first choice card is.
+- **scrollY is 0 after mount** — nothing fires on first render.
+- Focus lands on the panel (the `aria-live` container), so the change is
+  announced without the browser scrolling.
+- **Reduced motion**: the panel is at 128 within 250ms of the tap (instant, not
+  animated) and `document.getAnimations()` reports 0 running.
+- Regression: contrast unchanged (0 failures at 375px, tightest 4.79:1), all
+  four paths still driven end to end, no horizontal overflow at any width.
+- Lint 0 problems, `content:check` clean, build + prerender 55 routes.
+
+## Buy Token split into three pages; DSC FAQs gets its own — 03-09-2026
+Clinton: "remove the most dsc faq fron by token page and create a new page only
+for dsc faq and keep all the dsc faq there. buy token and driver download will
+be two seperate page. in buy token only order token section. in the field remove
+operating system. added name, address, phone, email and Practice type."
+
+Buy Token was carrying five sections doing three different jobs. Now:
+
+    /dsc/buy-token   order the token, and nothing else            (T5)
+    /dsc/drivers     the driver, its install steps and its fixes  (T12, new)
+    /dsc/faqs        every DSC FAQ, plus the reference around them (T13, new)
+
+57 routes (was 55), 12 redirect stubs (was 13).
+
+- **The FAQ set is the SAME union Buy Token was rendering** — `certificateFaqs`
+  plus `dscValidityRenewalContent.faqs`, in that order, resolved at render time.
+  Nothing rewritten, reordered or dropped, neither array restated. **19 FAQs
+  measured on the new page**, the same 19 as before.
+- ⚠️ **TWO EXTRA SECTIONS WENT TO /dsc/faqs, deliberately.** Trimming Buy Token
+  to its order panel left the issuance steps and the validity/renewal guidance
+  with no page at all — and the retired `/dsc/validity-renewal-faqs` URL plus
+  the finder's "Renewing or replacing" alt link both need a real section to land
+  on. They are reference material that answers questions, which is what that
+  page is; the alternative was deleting written content to satisfy a layout
+  instruction. **Both `HowTo` schemas moved with their steps** — schema on a page
+  that does not render what it describes is a lie to a crawler.
+- ⚠️ **"About the token" was NOT moved.** `tokenProduct.explainers` is still
+  written and exported and simply no longer renders, because "only order token
+  section" is explicit. **Do not prune those strings on a later tidy-up** —
+  restoring the block is render-only, the same discipline `portalGuide` and
+  `afterIssue` already carry.
+- ⛔ **`/dsc/drivers` WAS A REDIRECT STUB and is now a real route.** Its entry
+  had to come OUT of `dscRetiredRoutes` in the same edit: `writeRedirects()`
+  runs after the route pass, so it would have overwritten the real page's own
+  `index.html` with a stub redirecting to itself — last write wins, and the page
+  would 302 to itself with nothing failing. The four per-token URLs
+  (`/dsc/drivers/hyp2003` and friends) stay retired and now land on the page.
+- **T12 / T13 get their own template branches** in `routeComponents.js`, both
+  routers and `lib/seo.js`. Same trap T11 already documents: T5 resolves
+  **unconditionally** to `DscBuyToken`, so reusing it would have served the order
+  page under all three URLs — in the bundle AND the prerendered HTML, silently —
+  and falling through in `seo.js` would have given all three the order page's
+  title.
+
+### The order form
+- **Operating system is GONE.** It was only ever asked to pick a driver, and
+  drivers have their own page now — it was a support question sitting inside a
+  purchase. Name / phone / email / delivery address / practice type replace it.
+- ⚠️ **`content/practice-types.js` (new) is the ONE list**, extracted out of
+  `PartnerEnquiryForm.jsx`, which had it privately. Two copies of a list of
+  professions is exactly the drift this repo extracts things to avoid. It is
+  deliberately the same list for both, trade entries included — a token buyer
+  can be a reseller.
+- ⚠️ **THIS FORM POSTS NOWHERE, and that is what makes the address field
+  acceptable.** `TokenOrder.jsx`'s own header said "NO ADDRESS FIELDS" on
+  02-09-2026 for a real reason, so the reason is restated rather than deleted:
+  every value is composed into a `wa.me` deep link and handed to the reader's
+  OWN WhatsApp app — no server, no EmailJS, no storage. **If this is ever
+  switched to a real submit, the privacy policy has to be written first**: all
+  five legal pages are still `sections: null`, and a postal address plus a phone
+  number is exactly the payload that needs one. The panel's closing line now
+  says so to the reader.
+- Optional lines are dropped rather than sent empty — a message reading "Email:"
+  with nothing after it looks like the form lost the value.
+
+### ⛔ A real defect on the first cut: two adjacent dark surfaces on /dsc/drivers
+The drivers band was lifted across as `surface="dark"`, straight under the
+`deep` hero — **two adjacent dark-family surfaces**, which read as one
+continuous slab with no fold, and which **a cadence check comparing adjacent
+TOKENS passes**, because `deep` and `dark` are different strings. Exactly the
+bug Clinton reported on /dsc on 02-09-2026. The hero cannot change (layout
+contract). The band went `light`, and **every `dark` prop came off with it** —
+`SectionHeading`, `Disclosure` and `DriverPanel` all take a tone, and the
+surface system does not touch the plain `text-ink-*` utilities they are built
+from. Measured after: `darkPair: 0`.
+
+### Verified
+Real Chrome over CDP against `npx serve dist`, asserting
+`innerWidth`/`visibilityState`/`pathname` first:
+- All three pages 200 with their own `<title>` and exactly one `<h1>`. Cadence
+  `deep → light → ember` / `deep → light → light-alt → ember` /
+  `deep → light → light-alt → light → light-alt → ember` — **zero consecutive
+  repeats and zero adjacent dark-family pairs on all three**, at 1440 and 375.
+- JSON-LD: Buy Token `CollectionPage` (no stray HowTo), drivers adds `HowTo`,
+  FAQs adds `HowTo + FAQPage`. FAQ page's 3 sub-nav tabs all resolve; the other
+  two correctly render no bar (one section each).
+- **The order form driven end to end**: 5 fields with the right labels, "operating
+  system" absent from the page, and the composed message carries quantity, name,
+  phone, email, delivery address and practice type in order.
+- Redirects land: `/dsc/drivers/hyp2003 → /dsc/drivers`,
+  `/dsc/validity-renewal-faqs → /dsc/faqs#renewal`, and `dist/dsc/drivers/index.html`
+  is the real page (0 meta-refresh tags), not a stub.
+- Nav panel, footer column and the finder's alt links all retargeted and
+  resolving. **Link integrity over `dist/`: 2,692 internal refs, 0 broken**, and
+  the build's dangling-fragment gate passes.
+- **Pixel-sampled contrast: 0 real failures** — 119 samples at 1440px, 111 at
+  375px, tightest pass 4.64:1. The 5 and 4 reported are all the documented
+  rounded-pill artifact on `rounded-full` buttons (quantity chip, "Order on
+  WhatsApp", CtaBand's "Talk to an Expert"), whose real pairs are 6.18:1 and
+  ~17:1 computed statically.
+- `scrollWidth === innerWidth` at 375px on all three. Console: 1 error, the
+  long-standing sitewide React #418.
+- Lint 0 problems, `content:check` clean, build + prerender 57 routes.
+
+### Buy Token's order card: light, textured, one price row — 03-09-2026
+Clinton: "in buy token make the card light theme but make the card look premium
+added texture. keep order on whatsapp button green and right side. show only
+total cost thats al on request."
+
+- **`.panel-dark` → `.card-premium`**, the light-surface card wash the DSC and
+  services cards already use, plus the page's own `blueprint` texture behind it.
+  ⚠️ **Every field, label, legend and control had to be re-toned, not just the
+  wrapper.** The form primitives take `tone`, and the surface system covers
+  headings and `var(--surface-*)` accents but NOT the plain `text-ink-*` /
+  `text-canvas` utilities the legends, stepper, chips and price block are built
+  from. Dropping the wrapper alone would have left canvas text on canvas —
+  **fifth recorded instance of that trap.** The two mono uppercase legends also
+  became real `text-h4` headings, matching the finder result's own de-mono pass.
+- ⚠️ **THE TEXTURE NEEDS `relative isolate overflow-hidden` ON THE CARD, all
+  three or none.** `SurfaceTexture` paints at `z-index: -1` so it can never sit
+  on top of the form; without a stacking context it escapes and paints behind
+  the section instead, and without `overflow-hidden` it squares off the card's
+  radius. Verified live: `isolation: isolate`, `overflow: hidden`, 1 texture at
+  `z-index: -1`, 0 dark panels left on the page.
+- ⛔ **One price row.** The per-unit "Token cost" line is gone — with `price`
+  null it read "On request" directly above a total reading "On request", the
+  same non-answer twice. ⚠️ `hasPrice`/`total` still drive the row, so setting
+  `tokenProduct.price` shows a real `quantity × price` figure with no code
+  change; that is why the arithmetic stayed. The qualifier under the total is
+  kept: "On request" with nothing saying what the eventual number includes is
+  worse than the row that went.
+- **The WhatsApp button is `variant="tertiary"`** — the site's WhatsApp button,
+  the same one the finder result and ServiceLeaf use, carrying the contrast
+  fixes in Button.jsx (its text is ink-950; white on that green is 1.98:1).
+
+### ⛔ `ml-auto` on the button did nothing, and it measured as nothing
+The first cut right-aligned with `sm:ml-auto` on the Button itself. `Button` is
+`inline-flex` and its parent was a plain block, so **`ml-auto` had nothing to
+push against** — measured `rightAligned: false` with the class applied and no
+error anywhere. A flex parent with `justify-end` is what actually moves it, and
+only from `sm` up: below that the button is full width and has no side to sit
+on. Measured after: `rightAligned: true` at 1440, `fullWidth: true` at 375.
+
+**Verified:** card white with the texture correctly contained; exactly one price
+row reading "Total = On request"; button `rgb(37,211,102)` with `rgb(7,12,28)`
+text, right-aligned at 1440 and full width at 375; the form still composes the
+full order message (quantity, name, phone, email, address, practice type);
+"operating system" still absent. **Contrast 0 real failures — 117 samples at
+1440px and 108 at 375px, tightest 4.64:1**; the 3 reported on each are the
+documented rounded-pill artifact on CtaBand's "Talk to an Expert" (canvas on
+ink-950, ~17:1 statically), and the quantity chip and order button now pass the
+sampler outright since they sit on a light card. `scrollWidth === 375`. Reduced
+motion on all three pages: 0 running animations, **0 real stuck reveals**, and
+the texture's parallax transform correctly `none`. Lint 0 problems,
+`content:check` clean, build + prerender 57 routes.
+
+### "FIPS-compliant" → "FIPS 140-3 compliant", sitewide — 03-09-2026
+Clinton: "FIPS-compliant has to be FIPS 140-3 Compliant." 14 occurrences across
+5 files — every certificate's `tokenNote`, the DSC process step, the token
+product's meta/lede/explainer, the homepage DSC band's trust card, the partner
+earnings table and `DscShowcase`'s header comment. Verified in `dist/`: **0
+"FIPS-compliant" left, 20 rendered "FIPS 140-3 compliant"**.
+
+- ⚠️ **ONE OCCURRENCE WAS DELIBERATELY NOT CHANGED**, in `content/dsc/token.js`:
+  it is inside a **verbatim quotation of the reference site** ("only
+  FIPS-compliant, Version 3 Tokens are accepted as per CCA guidelines"), kept as
+  the record of what that source actually said. Editing quoted words to match
+  our own wording misreports the source. The skip is now noted at that line so a
+  future find-and-replace does not silently "finish the job".
+- **Sentence case in prose, not "Compliant".** The instruction capitalised it,
+  but every occurrence is mid-sentence ("Issued on a FIPS 140-3 compliant USB
+  crypto token"), where a capital C reads as a typo. The two that are titles —
+  the homepage trust card and the partner table's product cell — follow their
+  neighbours' sentence case for the same reason. Say the word if the capital is
+  wanted anyway.
+- ⚠️ **This is now a more specific and more falsifiable claim than before.**
+  "FIPS-compliant" was vague; **FIPS 140-3 names a particular NIST standard
+  version** (it superseded 140-2), so the site is asserting the HYP2003 token
+  validates against that revision. It is Clinton's own claim about his own
+  stocked hardware, given directly, so it is published as given — but it is the
+  kind of assertion worth having the vendor's certificate number on file for.
+  Logged in MISSING-PAGES.md.
+
+### Initialisation & Reset Tool added to /dsc/drivers — 03-09-2026
+Clinton: "in the driver download i want to added a new driver that is maily use
+for reset token, name it call Initization Tool or Reset Tools."
+
+- ⚠️ **IT IS NOT A DRIVER, and the entry says so.** A driver lets a machine talk
+  to the token; this WIPES it. It sits in the same list because that is where a
+  reader looks for it, and `kind: "utility"` is what lets the page treat it
+  differently.
+- ⛔ **NOTHING ABOUT THE FILE IS INVENTED — no version, no file size, no OS
+  matrix, no install steps.** Note `drivers.js`'s own header permits stating OS
+  support because those lists came from the client's prior draft copy for those
+  exact products; **there is no prior copy for this one**, so `supportedOs` is
+  EMPTY rather than guessed. Most vendor initialisation utilities are
+  Windows-only, but "most" is not a fact about this one.
+- ⚠️ **THE WARNING IS NOT A PRODUCT SPEC**, which is why it can be published:
+  initialising a crypto token erases its contents including the certificate, and
+  that is true of the *operation*, not of any particular build. It renders FIRST
+  in the panel, on the only filled surface there, because a reader who scrolls
+  to a procedure without reading it has already lost something unrecoverable.
+- **`useCases` instead of `installSteps`** — situations a reader arrives with,
+  not a procedure for a build we have not documented.
+- **What Clinton still owes**, logged in MISSING-PAGES.md: the exact vendor tool
+  name, the operating systems it runs on, and the file. Fill `supportedOs`,
+  `installSteps` and a `downloads[].url` and the page picks all three up with no
+  code change — the same self-upgrading path HYP2003 already has.
+
+### ⛔ Every block in `DriverPanel` was unconditional, and one new entry exposed it
+`Compatibility`, `Installation` and `If something goes wrong` all rendered their
+heading and then mapped an array. That was invisible while HYP2003 was the only
+entry and every array was populated; the utility has none of them, so an
+unguarded map renders **a heading over an empty list — which reads as content
+that failed to load rather than as content that does not exist.** All three are
+guarded now, plus a new `sourceNote` block that renders only when an entry's
+files are unpublished. Measured: the utility's panel shows exactly one heading
+("When it is used") and **0 headings followed by nothing**.
+- The disclosure meta falls back to "Utility · sent on request" for the same
+  reason — a blank subtitle reads as a failure, not as an absence.
+- `howToJsonLd` is now filtered to entries that actually render steps. It
+  returns null on an empty array anyway, but emitting a HowTo here would assert
+  a procedure the page deliberately does not publish. Measured: still exactly
+  one HowTo on the page.
+
+### ⚠️ A latent bug this surfaced in `home/sections/DriverDownloads.jsx`
+That section links each card to `` `${dscResourcesPage.path}#driver-${slug}` `` —
+i.e. `/dsc/buy-token#driver-hyp2003`, which stopped existing when Buy Token
+split into three pages. **The build's dangling-fragment gate did not catch it,
+because the section is commented out of the homepage and renders nowhere**, so
+there was no emitted HTML to scan. Retargeted to `dscDriversPage.path`, and its
+OS line given the same empty-array fallback. Latent, not live — but it would
+have shipped broken the moment that section was re-enabled.
+
+**Verified:** both rows render with correct metas ("Windows · macOS · Linux" /
+"Utility · sent on request"); both hero buttons resolve to their `#driver-*`
+anchors; opening the tool shows the warning, 3 use cases and the source note,
+with no empty headings; JSON-LD unchanged at one HowTo; no `undefined` /
+`[object Object]` / `NaN` anywhere. **Contrast 0 real failures with every
+disclosure panel forced open — 126 samples at 1440px, 118 at 375px, tightest
+4.64:1** (the 3 reported on each are the documented rounded-pill artifact on
+CtaBand's "Talk to an Expert"). `scrollWidth === 375`. Lint 0 problems,
+`content:check` clean, build + prerender 57 routes.
+
+### Main nav options bumped to 16px — 03-09-2026
+Clinton: "increase the font size of navbar text means main option, not the
+dropdown." `text-body-sm` (14px) → `text-body` (16px) on both the mega-panel
+triggers and the plain nav links.
+
+- ⚠️ **THE TWO HAVE TO MOVE TOGETHER.** `Home`/`About Us` render through
+  `NavLinkItem` and `Services`/`Digital Signatures` through the panel-trigger
+  branch — two separate class strings for one row. Change one and a dropdown
+  option sits at a different size from a plain option beside it.
+- **"Not the dropdown" was taken literally**: the panel's own column headings
+  and items are untouched, and so are the phone link and the CTA, which are
+  utilities rather than nav options. Verified live: trigger **16px**, panel
+  items still **14px**, panel headings 16/18px, mobile sheet rows unchanged.
+- ⚠️ **This spent width headroom.** At `lg` the bar holds the logo, four
+  options, the CTA and (from `xl`) the phone number. **Re-measure at 1024px
+  before adding a fifth option or lengthening a label.**
+
+**Verified** in real Chrome at **1024 / 1280 / 1440 / 1920**, asserting
+`innerWidth`/`visibilityState`/`pathname` first: all four options at 16px, **all
+four on ONE row at every width**, no overlap with the CTA, header height
+unchanged at 84px, and `documentElement.scrollWidth` never exceeding the
+viewport. Contrast of the nav text over the animated hero veil and the scrolled
+glass header, pixel-sampled at three scroll positions: **0 failures, minimum
+7.92:1** — the colours did not change and 16px is still normal-size text, so the
+4.5:1 floor is unchanged and comfortably met. Lint 0 problems, build + prerender
+57 routes.
+
+### Partner page: three sections removed — 04-09-2026
+Clinton: remove "Already issuing DSCs?" (the switching band), "Before you
+apply" (what the programme asks of you) and "Earning potential" (the
+certificate/margin table). `/partner-with-us` is now hero → why through us →
+who this suits → onboarding → apply → FAQ → CTA.
+
+- ⚠️ **The CONTENT is not deleted.** `partnerContent.switching`,
+  `.responsibilities`, `.responsibilitiesNote` and `.earnings` are all still
+  written and exported from `content/partner-with-us.js`, unreferenced — the
+  same discipline `portalGuide` and `afterIssue` already carry in the DSC tree.
+  Restoring any of the three is a render-only change. **Do not prune them as
+  dead content on a later tidy-up pass.**
+- ⛔ **The switching band was the page's ONLY dark surface**, so removing it
+  left "Why through us" (light) directly above "Who this suits" (light) — a
+  consecutive-surface repeat. "Who this suits" took the dark role instead, and
+  every colour in it moved with the surface: `SectionHeading dark`, `text-canvas`
+  headings, `text-ink-100` body, `border-ink-700` hairlines. **Sixth recorded
+  instance of that trap** — the surface system covers headings and
+  `var(--surface-*)` accents, NOT the plain `text-ink-*` utilities that grid is
+  built from. Those pairs are a like-for-like transplant of what the removed
+  switching band already used on the same surface, which is why they are not
+  a new contrast question.
+- `CheckCircle2` became an unused import with the responsibilities list and was
+  removed; `Check` is still used by the hero ticks.
+- Verified: `npm run lint` 0 problems, `build` + prerender **57 routes + 12
+  redirects** with the dangling-fragment gate passing sitewide, all six removed
+  headings absent from the prerendered HTML, and section-level cadence
+  `deep → light → dark → light-alt → light → light-alt → ember` — zero
+  consecutive repeats and no adjacent dark-family pair. (The extra
+  `data-surface="dark"` in the raw HTML is the apply section's nested
+  registration-documents panel, which is load-bearing, not a section — measure
+  cadence on `section[data-surface]`.)
+
+### Partner "Why enrol through ThinkOrange" rebuilt as a bento — 04-09-2026
+Clinton supplied the four benefit claims verbatim (zero upfront investment /
+own partner login / instant in-house issuance / direct commissions) and a
+reference image: one tall card beside two small tiles and one wide one.
+
+- **`partnerContent.whyUs` is now a SHAPED object** (`lead` + `tiles`), not a
+  flat list, because the composition is asymmetric. ⚠️ **`tiles` order is
+  load-bearing** — small, small, WIDE (`wide` is read off the entry, not the
+  index, so reordering cannot silently move the wide slot away from the copy
+  written for it). A fourth entry breaks the composition rather than wrapping.
+- ⚠️ **The old `whyUs` array is RETAINED as `whyUsCredibility`, exported and
+  unreferenced.** It is the page's only differentiation copy (practising
+  compliance firm rather than a token dealer, Tamil support, PSU issuance);
+  restoring it anywhere is render-only. Do not prune it as dead content.
+- ⛔ **THE REFERENCE'S PALETTE IS NOT REPRODUCED.** It runs a vivid green stat
+  card and a full-bleed purple CTA card — both off-palette (§16 tell 1), and a
+  purple-sized ember block would push this fold at the ~12% orange ceiling on
+  its own. The composition is copied, the colour re-cast: exactly ONE ember
+  tile as the pop the green card supplies, two in ink, the tall card light.
+- ⚠️ **MEASURED EMBER SHARE OF THIS FOLD: 9.3%.** Under the ~12% ceiling, but
+  far above this site's usual **0.6–1.9%** for a non-CTA fold — it is now the
+  loudest orange on the site outside CtaBand, which is meant to be the one loud
+  band. Flagged for Clinton rather than quietly redesigned, since he asked for
+  this layout by name. **The lever is one word:** set the `commissions` tile's
+  `surface` to `"dark"` in the content file and the fold drops to ~1% with no
+  code change.
+- ⛔ **`data-surface="ember"` on that tile is load-bearing, not decoration.**
+  theme.css owns `[data-surface="ember"] h3 { color: ink-950 }` UNLAYERED, and
+  unlayered CSS beats Tailwind's `@layer utilities` — so a plain
+  `text-ink-950` class silently LOST and the heading rendered **ink-600 on
+  orange**. Measured before the fix; now `rgb(7,12,28)`. Body and label are
+  ink-900, the pair CtaBand already measures at 4.69:1 on this background.
+  White on ember stays forbidden (first non-negotiable).
+- ⛔ **`text-display-sm` DOES NOT EXIST** in theme.css's scale (it goes
+  display-xl → display-lg → h1…). Tailwind emits nothing for an undefined
+  token and nothing fails — the tall card's heading was rendering at body size.
+  Same silent-failure family as the `bg-ember-950` trap. It is `text-display-lg`
+  (measured 64px/700 at 1440, 40px at 375).
+- **The two ink tiles are vertically adjacent and that is fine** — one is
+  portrait with a stacked icon, one landscape with the icon inline. Tiles,
+  unlike sections, read as a set rather than a repeat when shape and
+  orientation differ.
+- Icons resolve through **`whyIcon(key)` with a fallback**, never by indexing
+  the map: an unmapped key gives `<undefined />`, a hard React crash. Same
+  discipline every slug-keyed icon map here already carries.
+- **Copy notes:** "Authorised", not Clinton's "Authorized" — this site is -ise
+  throughout (specialised, organisation). ⚠️ **"Instant in-house issuance" is a
+  SPEED claim**, published as given because it describes a mechanism (no vendor
+  step to queue behind) and the body deliberately names no duration. Do not let
+  a future edit turn it into "issued in X hours" — that is `turnaround.js`'s
+  territory and the value there is still null. No commission percentage
+  anywhere; the reference's own `[X]%` is still unconfirmed.
+- **Verified** in real Chrome over CDP against `npx serve dist` — ⚠️ **without
+  `-s`**: `npx serve dist -s` turns on the SPA rewrite and serves
+  `dist/index.html` for every nested route, which is the same trap CLAUDE.md
+  already records for `vite preview`. The first run read the HOME page's
+  `<title>` on `/partner-with-us` and was measuring a client-rendered page, not
+  the prerendered one. Re-run without the flag.
+  - Layout matches the reference at 1440: lead card 528×490, tiles 364×290,
+    364×290 and 748×180. Stacks to one column at 375 with
+    `scrollWidth === innerWidth`.
+  - **Pixel-sampled contrast: 0 failures**, 13 samples at each of 1440 and 375,
+    tightest pass 5.85:1.
+  - Arc rings all `z-index: -1` inside `isolate`d tiles, grain on both ink
+    tiles, only duplicate gradient id sitewide is the pre-existing
+    `cta-arc-fade`, 0 stuck reveals, no `undefined`/`[object Object]`/`NaN`.
+  - Reduced motion: 0 running animations, 0 elements stuck mid-opacity.
+  - Cadence unchanged at `deep → light → dark → light-alt → light → light-alt →
+    ember`. Lint 0 problems, `content:check` clean, build + prerender 57 routes
+    + 12 redirects with the dangling-fragment gate passing.
+
+### Why-us bento: per-tile rings + `.tile-ember` gradient — 04-09-2026
+Clinton, same day: "here all ring effect is same so fixed this", and "Direct
+commissions card orange background so much dark keep the previous color but
+make gradiant of it".
+
+- **Ring compositions are now one per tile, all four different** (`WHY_RINGS`).
+  The first cut gave every tile the same two-ring ladder and only moved the
+  corner, so four cards read as one card printed four times: 3 faint ink rings
+  bottom-left (lead) / 1 broad canvas band top-right (ember) / 2 tight rings
+  bottom-right (login) / 4 equal hairlines bled off the right (issuance).
+  ⚠️ **WHAT VARIES IS THE COMPOSITION, NEVER THE SHAPE** — every ring is still
+  the same `lib/arc.js` crescent at a different radius. §3.1's "repetition of
+  one specific shape" only holds while that is literally true: vary count,
+  radius, stroke width, anchor and weight; never hand-author a curve and never
+  mirror one. Verified: 4 distinct path sets out of 4.
+- ⛔ **`.tile-ember` (theme.css) IS A CONTRAST MECHANISM, NOT A DECORATION.**
+  Clinton wanted light text on this tile AND the bright orange back. Both at
+  once is the pairing CLAUDE.md's first non-negotiable bars — canvas on flat
+  ember-400 is 3.00:1, white 3.15:1. The gradient resolves it honestly instead
+  of overriding the rule: it opens on ember-400 at the top-left (the colour
+  that reads as the tile's identity) and reaches ember-700 by 52%, and the
+  tile's text block is bottom-aligned, so every word lands on the deep end.
+  ⚠️ **The stop positions are load-bearing.** Flatten the fill, move the
+  deepening later, change the padding, or stop bottom-aligning the text, and
+  the copy slides onto the bright end — failing AA **silently**, since nothing
+  errors and a static pair check still reports the token you nominally set.
+- ⛔ **THE LESSON THAT COST THREE ITERATIONS: a static colour pair is not the
+  measurement when anything translucent sits over the fill.** Flat ember-600
+  pairs with canvas at 4.97:1 and was shipped on that basis — the pixel sweep
+  then measured **4.03:1**, because the tile's own canvas ring at 14% lightens
+  the background it crosses. Ring dropped to 10% and moved clear of the copy.
+  Same class of failure for the label: ember-200 pairs at 3.29:1, ember-100
+  sampled 4.13:1 and then 4.39:1 after the ramp was deepened; only **ember-50**
+  clears the 4.5 floor at 11px. It sits highest in the text block, i.e. on the
+  lightest part of the gradient any copy touches — so it is the tile's
+  worst-case, not its heading.
+- ⚠️ **Found and reverted: the lead card's badge had been changed to
+  `text-ink-50` on ember-400 — 2.82:1**, the exact pairing the first
+  non-negotiable names. Not from this session's edits; restored to `ink-950`
+  (6.18:1). If a light-text badge is wanted, the fix is a darker pill
+  (ember-700 + canvas = 6.89:1), not light text on ember-400.
+- **Verified** in real Chrome over CDP against `npx serve dist` (no `-s` — the
+  SPA rewrite serves home's HTML for every nested route): **pixel-sampled
+  contrast 0 failures**, 13 samples at each of 1440 and 375, tightest pass
+  5.20:1. Gradient resolving to all four stops, heading/body canvas, label
+  ember-50, badge ink-950. Fold ember census **9.26%** (unchanged — a darker
+  orange is still orange to a hue census; the lever remains setting the
+  `commissions` tile's `surface` to `"dark"`). One `<h1>`, cadence unchanged,
+  `scrollWidth === innerWidth` at both widths, 0 stuck reveals, reduced motion
+  0 running / 0 stuck, only duplicate gradient id sitewide is the pre-existing
+  `cta-arc-fade`. Lint 0 problems, `content:check` clean, build + prerender 57
+  routes + 12 redirects with the dangling-fragment gate passing.
+
+### "Who this suits" → icon-and-label grid — 04-09-2026
+Clinton, with a reference image: "i want show like given image icon and then
+heading, no subline." The dark band's three-column hairline text grid is now a
+six-cell icon grid — glyph, then label, nothing else.
+
+- ⚠️ **Each entry's `body` is STILL WRITTEN and simply not rendered**, the same
+  discipline `switching` / `responsibilities` / `earnings` / `whyUsCredibility`
+  already carry in that file. Each is the one sentence explaining WHY that
+  audience is a fit; putting them back is render-only. Do not prune them.
+- `whoItsFor` entries gained a `key`, resolved through **`whoIcon()` with a
+  fallback** — never a bare index, or an unmapped key gives `<undefined />`,
+  a hard React crash.
+- **No disc behind the glyph**, unlike the DSC group cards and the why-us tiles
+  directly above. The reference has none, and §16's tell 6 is
+  "icon-in-a-circle everywhere" — a page already using discs in one section
+  should not reach for them again in the next.
+- ⚠️ **The CELLS are centred; the section heading is NOT, and that distinction
+  is what keeps §16's tell 8 intact.** That tell audits centre-aligned
+  SECTIONS — a centred heading block is the generic-landing-page signal — and a
+  centred cell inside a left-aligned section is an icon grid, a different
+  thing. Verified: `h2` computes `text-align: start`, cells `center`. Re-run the
+  tell-8 detector if that heading ever centres.
+- Glyphs are **48px at a 1.25 stroke**, not the 16–20px this codebase uses in
+  buttons and list rows: here the glyph IS the cell, and at row-icon size the
+  band measured as underfilled by eye. ember-300 on the ambient ink band is
+  7.79:1, well over the 3:1 non-text floor.
+- **Verified** in real Chrome over CDP against `npx serve dist`: 6 cells, one
+  svg each, exactly 1 `<p>` left in the section (the heading's own lede — no
+  sublines), 1 row × 6 columns at 1440 and 3 × 2 at 375, `scrollWidth ===
+  innerWidth` at both. **Pixel-sampled contrast 0 failures** — 8 samples per
+  width, tightest pass 10.11:1 / 9.95:1 — and the why-us bento re-checked
+  alongside at 0 failures, tightest 5.20:1. Cadence unchanged
+  (`deep → light → dark → light-alt → light → light-alt → ember`), one `<h1>`,
+  0 stuck reveals, reduced motion 0 running / 0 stuck. Lint 0 problems,
+  `content:check` clean, build + prerender 57 routes + 12 redirects with the
+  dangling-fragment gate passing.
+
+### Apply section: form in a card, columns bottom-aligned — 04-09-2026
+Clinton: "fixed Apply section propotion is also not align properly and keep the
+form in a card."
+
+- ⚠️ **THE FORM IS IN A CARD HERE AND BORDERLESS ON /contact, and that is
+  deliberate, not drift.** `PartnerEnquiryForm` takes a `tone`: /contact passes
+  `"bare"` because there the form IS the page, so a card outline would box the
+  whole content; here it is one column beside prose and a dark panel, so the
+  card is what marks it as the distinct object you act on. Same call the
+  services enquiry card already makes. `.card-premium` + `border-ink-100` +
+  `bg-white` + `shadow-sm`, `p-6 / md:p-8 / lg:p-10`.
+- ⛔ **TWO SEPARATE STRETCH BUGS caused the "not aligned" look, and neither is
+  visible in the source.**
+  1. The card was shrink-to-fit, so its bottom edge landed wherever the last
+     field happened to end. `h-full` on the card fixes it: **both columns now
+     measure 817px with `bottomDelta: 0`** at 1440.
+  2. The left column is a grid item and STRETCHES to the row height, but its
+     CONTENTS do not — so the dark "What to have ready" panel stopped **15px
+     short** of the card's bottom edge for no reason a reader could see.
+     `flex flex-col` on the column + `flex-1` on the panel: panel and card
+     bottoms now both measure 3992, delta 0. The extra height lands as padding
+     inside the panel, which is invisible.
+  Nice consequence of the `lg:p-10`: the card's first field label lands at the
+  same y as the section heading beside it (3216 vs 3217).
+- **Verified** in real Chrome over CDP against `npx serve dist`: 9 real fields
+  (honeypot correctly excluded by `:not([tabindex="-1"])`), card white with an
+  ink-100 border, both columns 817px with delta 0, panel/card bottoms equal,
+  `scrollWidth === innerWidth` at 1440 and 375 (where it stacks and the card
+  drops to 24px padding), 0 stuck reveals. **Pixel-sampled contrast 0 failures
+  — 26 samples per width in the apply section, tightest pass 6.18:1** (fields
+  moved from canvas onto white, so every ratio shifted and was re-measured
+  rather than assumed), with the why-us bento (5.20:1) and who-this-suits
+  (10.11:1) re-checked alongside. Reduced motion 0 running / 0 stuck. Lint 0
+  problems, `content:check` clean, build + prerender 57 routes.
+
+### ⚠️ Two verification-harness traps from this session, both cost real time
+1. **`npx serve` started as `(npx serve … &)` inside a Bash tool call DIES when
+   that call's process group ends.** Every probe after it then measures the
+   connection-refused page — which reports `path: "/"`, `title: "127.0.0.1"`
+   and `querySelector` returning null, i.e. it looks exactly like the component
+   having disappeared from the page. Start it with `nohup … & disown`, and
+   assert `env.path` (not just `innerWidth`/`visibilityState`) before believing
+   any "element is missing" result.
+2. ⛔ **Selecting a section by `textContent.includes(...)` matched the WRONG
+   section.** The onboarding StepFlow's step body contains the string "Tell us
+   about your practice", so a probe aimed at the apply section silently
+   measured the StepFlow band instead — and reported a 1.47:1 "failure" that
+   was StepFlow's own `aria-hidden` rounded numeral (real pair: ember-600 on
+   white, 5.23:1, inflated by the documented rounded-pill artifact). **Prefer
+   `getElementById` where the section has an id**, and when matching on text,
+   check the match is unique.
+   Also: the default probe selector `h2,h3,p,span,li,a,button` **misses
+   `<label>`**, so a form section reports a fraction of its real text — 7
+   samples instead of 26 here. Add `label,dt,dd,option` for any section
+   carrying a form or a description list.
+
+## GA4 analytics: gtag in index.html, page_view on navigation, trackEvent — 04-09-2026
+NOT a phase. Clinton supplied the Google tag for property **G-ZRG07MX0NC** and
+asked for it in `index.html`, then for the SPA `page_view` fix and the
+`trackEvent` helper from his reference screenshots.
+
+- ⛔ **THE TAG SITS OUTSIDE THE `SEO:START` / `SEO:END` MARKERS.**
+  `scripts/prerender.mjs` replaces everything between those two comments
+  wholesale for every route, so anything placed inside them is silently
+  overwritten in the built output. Installed **once** per Google's own "don't
+  add more than one Google tag to each page" — the supplied snippet was pasted
+  twice.
+  Verified: **58 of 70 emitted HTML files carry it, each exactly once.** The 12
+  retired-DSC **redirect stubs deliberately do not** — `writeRedirects()` writes
+  them from its own template, and they are `noindex` 0s meta-refresh pages
+  nobody stays on, so a page_view there would only add phantom landing pages.
+
+### ⛔ The bug that made the tag nearly useless on its own
+`gtag('config', …)` sends a page_view on **document load** only. This is a
+client-routed SPA, so a visitor who lands on `/` and reads three service pages
+was reported as **one view of `/`** — every in-app navigation invisible, and
+per-page traffic data across all 57 routes worthless. Fixed by sending a
+`page_view` on each `pathname` change.
+
+- ⛔ **IT IS FIRED FROM INSIDE ROOTLAYOUT'S EXISTING SEO EFFECT, AFTER
+  `document.title` IS SET, AND BOTH HALVES MATTER.** `resolveSeo` arrives
+  through a **dynamic** import (load-bearing — a static one drags the whole
+  content graph into the main chunk, measured 500KB → 690KB), so a page_view
+  sent from its own effect would carry the **PREVIOUS** page's `document.title`
+  — every report row labelled one page behind.
+- ⛔ **`isInitialRender` IS CAPTURED ABOVE THE `wasPrerendered` EARLY RETURN,
+  and it cannot share `isFirstPass`'s gate.** The two answer different
+  questions. Gating the page_view on `skip` would **lose the first real
+  navigation** on a prerendered page (the effect's first time reaching that
+  line); reusing the flag under `npm run dev`, where nothing is prerendered,
+  would let the mount through and **double-count** the landing page instead.
+  Verified both ways: cold load sends zero page_views from our code, and the
+  first navigation sends exactly one.
+
+### `src/lib/analytics.js`
+- ⚠️ **`src/lib/`, NOT the `src/utils/` every GA4 how-to (and the reference
+  screenshots) names.** There is no `src/utils/` in this repo; every shared
+  helper — cn, whatsapp, emailjs, spamGuard, seo, jsonld, formatDate — is in
+  `src/lib/`. A second helper directory for one file is how you end up with two
+  places to look for the same kind of thing.
+- **Dependency-free on purpose.** It is imported by `RootLayout`, the one
+  always-eager module on every route, so anything pulled in here lands in the
+  main chunk for all 57. Measured cost of the whole change: **+936 bytes**.
+- **`gtagReady()` checks `window.gtag`, NOT the GA script having loaded.**
+  index.html declares `function gtag(){ dataLayer.push(arguments) }` inline,
+  before the async script resolves — that is the whole point of the vendor
+  snippet's shape. Early calls queue on `dataLayer` and replay; a blocked or
+  ad-filtered GA script degrades to a harmless array push rather than a
+  TypeError.
+- ⛔ **DEV DOES NOT SEND (`SEND = import.meta.env.PROD`).** A localhost session
+  firing real events pollutes the same property the live site reports into, and
+  unlike a bad deploy **those hits cannot be removed**. GA4's internal-traffic
+  filter is an IP allowlist, which does not help on a laptop. Dev
+  `console.debug`s what it would have sent. **Consequence: verify against the
+  production build (`npm run build` then `npx serve dist`), never `npm run dev`.**
+- ⛔ **EMPTY / null / undefined PARAMETERS ARE DROPPED.** GA4 registers a
+  parameter the first time it sees one and keeps it in the property schema
+  **permanently** — an accidental `service: undefined` becomes an undeletable
+  blank dimension. The real-world case is `FloatingWhatsApp`'s icon-only FAB,
+  whose `textContent` is empty (its name is an `aria-label`); verified it fires
+  with **no `link_text` key at all**, against a control proving raw gtag would
+  have passed the empty string straight through.
+- ⛔ **`normalisePath()` — WITHOUT IT ONE PAGE SPLITS INTO TWO REPORT ROWS.**
+  Phase 9 prerenders to `dist/about/index.html`, so a static host serves the
+  directory form and `location.pathname` is **`/about/`** on a hard load, while
+  an in-app navigation takes its pathname from the link's href and nav.js emits
+  those **slash-free**. So the same page reported as `/about/` when someone
+  landed on it and `/about` when they navigated to it, and no report ever added
+  the two together. Same trailing-slash trap `hasLightTop()` already had to
+  solve — **both URL forms reach real users.** Applied to `page_path` in every
+  event, not just page_view, or the two event families still would not group.
+
+### `src/hooks/useContactLinkTracking.js` — one listener, not twenty onClicks
+Twenty files render a `wa.me` link (ComingSoon, FaqSection, FloatingWhatsApp,
+MobileNav, MegaPanel, Footer, Article, CtaBand, DscBand, Testimonial,
+LegalPage, EnquiryCard, ServiceLeaf, DscEsign, DscFinder, DscFaqs, DscDrivers,
+TokenOrder, contact, not-found), most with a `tel:` link beside it. One
+delegated `click` listener on `document` covers every existing link, every
+future one, and the **two local copies of the href builder in MegaPanel /
+MobileNav that `lib/whatsapp.js` never absorbed** — where twenty onClick edits
+are twenty chances for a twenty-first call site to silently opt out.
+- Bubble phase, so React's own handlers run first and this cannot interfere
+  with a call site's behaviour. GA4's default transport is
+  `navigator.sendBeacon`, so an event fired as the page unloads (a WhatsApp
+  link without `target="_blank"`) still gets out.
+- ⛔ **THE `href` IS NEVER SENT, AND THAT IS NOT FASTIDIOUSNESS.** A `wa.me`
+  link's `?text=` carries the pre-filled message, and several are composed from
+  what the visitor just typed — **TokenOrder puts their name, phone, email and
+  DELIVERY ADDRESS in it**, EnquiryCard their name, phone and email. Logging
+  the URL would ship all of that to GA4, a third party, with no consent prompt
+  and **no privacy policy behind it (all five legal pages are still
+  `sections: null`)**. Only the link's own visible label and the normalised path
+  go out — both authored by us, neither derived from user input. Asserted in the
+  probe: clicking every WhatsApp link on a page produces **no `wa.me`, no URL,
+  no `?text=` payload in any parameter.**
+
+### Form / conversion events — one name, one dimension
+`lead_submitted` and `lead_failed`, both with a `form_name`, so every form
+compares in one GA4 report (following the reference screenshots' own
+`form_name` shape rather than four bespoke event names).
+
+| call site | mechanism | event |
+|---|---|---|
+| `ContactForm` | EmailJS | `lead_submitted{contact_form, service}` / `lead_failed` |
+| `PartnerEnquiryForm` | EmailJS | `lead_submitted{partner_application, practice_type, monthly_volume}` / `lead_failed` |
+| `EnquiryCard` | `window.open` | `lead_submitted{service_enquiry_card, service, channel}` |
+| `TokenOrder` | `<a href>` | `lead_submitted{token_order, quantity}` |
+
+- ⛔ **`EnquiryCard`'s CALL IS NOT OPTIONAL COVERAGE.** Every other WhatsApp CTA
+  is an `<a href>` and the delegated listener records it; this one hands the URL
+  to **`window.open`, which fires no click on any anchor**. Without the explicit
+  event, the enquiry surface that sits on **all 31 service leaves** would be the
+  only conversion path GA4 never sees.
+- ⛔ **`lead_failed` EXISTS BECAUSE IT IS CURRENTLY THE *ONLY* LIVE PATH.** No
+  `.env` exists in this repo, so `emailjs.js` rejects every real submission —
+  tracking success alone would report **zero leads on forms people are actually
+  filling in**. `reason` separates `not_configured` from a genuine
+  `send_error` once EmailJS is set up. Verified live: both forms emit
+  `lead_failed{reason:"not_configured"}`.
+- **`TokenOrder` fires its named event ALONGSIDE the delegated
+  `whatsapp_click`. Two event names, not a double count** — one answers "how
+  many people reach out on WhatsApp", the other "how many token orders were
+  started, and for how many tokens".
+- ⛔ **THE HONEYPOT STILL WINS.** `honeypotTripped()` returns before any
+  tracking call, so a filled honeypot produces **zero** analytics events —
+  verified, or spam would arrive in GA4 as a lead.
+
+### Verified
+`npm run lint` **0 problems**, `npm run build` + prerender **57 routes + 12
+redirects**, dangling-fragment gate passing. Then a real Chrome over CDP
+against `npx serve dist` (never `vite preview`, never `-s`, never the in-app
+pane), asserting `innerWidth` / `visibilityState` / `pathname` first:
+- ⛔ **`Network.setBlockedURLs(['*googletagmanager.com*'])` throughout.**
+  Verification must not push real hits into Clinton's live property — there is
+  no way to delete them. With the vendor script blocked, index.html's **inline
+  gtag stub stays a pure `dataLayer` pusher**, so every call is still fully
+  observable. **Read `window.dataLayer`; do not let GA load.**
+- Cold load: `config` present, **zero page_view from our code**. Nav `/` →
+  `/about` and → a deep service leaf: exactly one page_view each, correct
+  `page_path`, and `page_title` matching the **new** page.
+- `whatsapp_click` and `phone_click` from delegation with `link_text` +
+  `page_path`; icon-only FAB drops the empty key; no PII in any parameter.
+- All four form/order events, plus the honeypot producing none.
+- **Exactly 1 console exception per route across 8 routes**, all the
+  long-standing sitewide **React #418** (`args[]=HTML`) that reproduces on
+  untouched routes — **none added**. No analytics artefact in the prerendered
+  HTML (the module is `typeof window` guarded; it runs in the `renderToString`
+  pass and does nothing).
+
+### Four verification traps, each cost a false failure
+1. ⚠️ **`requestSubmit()` runs CONSTRAINT VALIDATION and fails silently.**
+   Filling a `type="email"` field with `"probe"` blocks the submit with no
+   error, reporting the tracking as broken. **Fill by input `type`, and assert
+   `form.checkValidity()` before submitting.**
+2. ⚠️ **A probe that fills every input FILLS THE HONEYPOT** (`name="website"`,
+   off-screen with `tabIndex -1`), and the handler then returns silently **by
+   design**. Skip `name === "website"` / `tabIndex === -1`. Traps 1 and 2
+   together produced two phantom failures on the first run.
+3. ⚠️ **A capture-phase `preventDefault` installed to stop WhatsApp links
+   navigating ALSO blocks in-app `<Link>` clicks**, so the next page_view test
+   reports nothing. Reload the page before testing navigation.
+4. ⚠️ **Clear the CDP event buffer BEFORE each measurement window, not after.**
+   Counting then clearing leaked the previous navigation's exception into the
+   next route and reported `/=2` — which looked exactly like a new error on the
+   one page most likely to have one. (This is the same "settle before clearing"
+   trap already recorded twice in this file.)
+- ⚠️ Also, twice: **the background `npx serve` died mid-run.** Symptom is
+  `document.title === "localhost"` and every selector returning null — reads
+  exactly like the component having disappeared. **`curl` the URL before
+  believing any "wrong page" result.** Cause the second time was
+  `pkill -f 'serve dist'` matching the invoking shell's own command line and
+  killing itself; prefer killing by port or by resolved PID.
+
+### Left undone, deliberately
+- **`DscFinder` is not instrumented.** It is arguably the highest-value funnel
+  on the site (the /dsc tool that answers "which certificate do I need"), and a
+  `dsc_finder_result{use, signer, certificate}` event would show which routes
+  people actually take. Out of the agreed scope — one `trackEvent` call in its
+  result branch.
+- **No consent gate.** The tag fires for every visitor on load. There are no EEA
+  visitors in the stated audience (Salem, pan-India), and Google's own EEA
+  consent-mode notice is the prompt to revisit if that changes. ⚠️ **Related and
+  more pressing: all five legal pages are still `sections: null`, so the site
+  now ships a third-party analytics tag with no privacy policy disclosing it.**
+  The real policy must name GA4 alongside the EmailJS disclosure
+  `privacy-policy.js`'s header comment already records.
+- **GA4 dashboard work cannot be done from code**: marking `lead_submitted` as a
+  key event/conversion, and (if wanted) an internal-traffic IP filter.
+
+### Notice board (/dsc) + moving notice bar (home) — 04-09-2026
+Clinton: "added a notice board section in dsc page just after hero section, and
+small infinite moving notice bar in home page also." Both read from one source:
+**`src/content/notices.js`**.
+
+- ⛔ **A NOTICE BOARD IS THE EASIEST PLACE ON THIS SITE TO PUBLISH SOMETHING
+  UNSOURCED**, because the format invites short, confident, dated statements —
+  which is exactly what the non-negotiables and CONTENT-PLAN.md §1.1's hold list
+  exist to stop. So `notices.js` carries the rules at the top and **every seed
+  RESTATES something this site already publishes and has already had reviewed**,
+  with a `basis` line naming where. Not one is a new claim, and that is the only
+  reason they could ship without Clinton writing them. The statutory date in the
+  Income Tax notice is `s("incomeTaxAct2025Commencement")`, never a literal.
+- ⚠️ **WHAT IS DELIBERATELY MISSING: dated announcements** ("new rates from…",
+  "office closed on…", "offer valid until…"). Those are the notices a real board
+  carries and they are Clinton's to write. The shape supports them (`date`,
+  rendered only when present) and adding one is a one-line content edit; nothing
+  fakes one meanwhile. `confirmed: false` hides a notice from both surfaces —
+  that is the mechanism, so drafts can sit in the file safely.
+- `scope` routes an entry: `"site"` → homepage bar, `"dsc"` → board, `"both"`.
+  Both surfaces render **null** when their filtered list is empty, so emptying
+  the file removes them cleanly (`Testimonial`/`Insights` precedent). The /dsc
+  sub-nav tab is rendered on the **same count**, or it would point at a section
+  that does not exist — the failure this repo has already shipped twice.
+- **Both surfaces are `light-alt`, and that is a cadence constraint, not a
+  look.** Each sits directly under a `deep` hero; anything dark there is two
+  adjacent dark-family surfaces reading as one slab with no fold — the fault
+  Clinton reported on /dsc on 02-09-2026, and one a cadence check comparing
+  adjacent TOKENS passes, because the tokens differ. Measured after:
+  `/dsc` = `deep → light-alt → light → light-alt → ember`, home =
+  `deep → light-alt → light → dark …`. Zero repeats, zero adjacent dark pairs.
+
+**Board** (`components/ui/NoticeBoard.jsx`) is ONE panel of hairline-divided
+rows, not a grid of cards — a board is a single object with things pinned to it,
+and four identical cards is the archetype §16's tell 7 is about. Rules sit on
+the TOP of each row but the first; a bottom rule dangles under the last row
+inside the panel's own border.
+
+**Bar** (`components/ui/NoticeTicker.jsx`), and three things in it are
+load-bearing:
+- ⛔ **NO LINKS IN THE MOVING TRACK**, though `notices.js` carries `href`. A
+  link that is physically sliding away is a hostile target, and the track is
+  DUPLICATED for the loop, so any focusable in it exists twice in the tab order
+  pointing at the same place — `aria-hidden` fixes the screen reader and does
+  **not** remove it from the tab order. The board is the surface that renders
+  `href`. Verified: **0 focusables in the track**, one `sr-only` real list.
+- ⚠️ **DURATION IS MEASURED, NOT HAND-COMPUTED** — the element reads its own
+  `scrollWidth / 2` in an effect and writes `--marquee-duration`. This is a
+  deliberate improvement on TrustStrip, whose hand-tuned 120s was tied to a
+  group width that later changed and quietly slowed it to ~15px/s. Written
+  straight to the DOM in an effect, never through state, so SSR and the client's
+  first pass agree. Verified 108.227s over a 5,953px group = **55.0px/s**.
+- The `mr-14`-on-the-item / never-a-parent-`gap` rule and the
+  "one group must be at least as wide as the widest window" rule are both
+  inherited from TrustStrip's comments — this bar is FULL-BLEED, so the window
+  is the viewport, not the container. Verified `groupWidth >= innerWidth` at
+  1440, 375 **and 2560**.
+- ⛔ **`.marquee-fade` BELONGS ON THE WINDOW, NOT THE TRACK.** First cut put it
+  on the sliding `w-max` track, so the soft edges slid with the content instead
+  of staying pinned to the viewport edges. Caught by screenshot, not by reading
+  the diff.
+- ⚠️ **ember-50 fill costs NOTHING against the ~12% ceiling**: at 0.09
+  saturation it is below the 0.35 threshold the hue census counts as ember at
+  all. Measured fold ember **1.31%**. On `canvas-alt` the bar was near-invisible
+  against the section below it, and a notice nobody notices is not a notice.
+
+**Verified** in real Chrome over CDP against `npx serve dist`: board renders 4
+rows / 4 links, 3 sub-nav tabs all resolving, one `<h1>`, no
+`undefined`/`[object Object]`/`NaN`; bar 52px tall, animation genuinely running
+(**6 distinct transforms in 6 samples**, not a frozen end state);
+`scrollWidth === innerWidth` at 375, 1440 and 2560; **reduced motion 0 running
+animations on both routes**, with the bar falling back to a static wrapped row
+of 3 notices rather than a marquee parked at -50%; 0 console errors on `/`,
+`/dsc` and `/about`. Contrast: board **0 failures**, 10 samples at 1440 and 9 at
+375, tightest 5.05 / 4.89:1.
+⚠️ **The bar cannot be pixel-sampled meaningfully** — its spans are wider than
+the viewport and the edge mask lowers the GLYPH's alpha rather than its computed
+colour, so a sampler reports a pass it did not measure. Its background is a flat
+token with nothing translucent over it, so a static pair IS valid here: body
+ink-500 **9.41:1**, label ember-600 **4.79:1**. Prerendered HTML carries every
+notice as real text on both routes. Lint 0 problems, `content:check` clean,
+build + prerender 57 routes with the dangling-fragment gate passing.
+
+### Notice icon: megaphone, not the arc crescent — 04-09-2026
+Clinton: "in notice strip change the icon to notice icon, instead of circile
+icon." Both the ticker and the board now use lucide's `Megaphone` in ember-600.
+
+- ⛔ **THE CRESCENT WAS THE WRONG MARK AT THIS SIZE, and this repo had already
+  learned it once.** At 14–16px a hairline arc with a gap in it is the
+  loading-spinner silhouette exactly — `HeroFloaters.jsx` records the identical
+  rejection ("every one read as a loading spinner… the crescent is right at
+  140px as a backdrop and wrong at 18px in a chip"). A notice strip that opens
+  each item with what looks like a spinner reads as content still loading.
+  §3.1's "repeat one specific shape" is about the arc as a BACKDROP composition,
+  not as an all-purpose bullet glyph.
+- **The board was changed too, though only the strip was named.** Same glyph,
+  same size class, same defect — and one content type carrying two different
+  marks across the two surfaces of one feature is worse than either choice.
+  Board glyph is 20px, strip 16px.
+- Re-verified: ticker duration re-measured itself to **108.445s over a 5,965px
+  group = 55.0px/s** (the icon swap moved the group width, and the measured
+  duration tracked it — which is the whole point of measuring rather than
+  hand-tuning). Board contrast **0 failures**, 10 samples at 1440 and 9 at 375,
+  tightest 5.05 / 4.89:1; icon is ember-600 on white (5.23:1) and on ember-50
+  (4.79:1), both over the 3:1 non-text floor. Cadence, `scrollWidth`, 6-of-6
+  distinct transforms, reduced motion 0 running on both routes, 0 console
+  errors on `/`, `/dsc`, `/about`, fold ember 1.31% — all unchanged. Lint 0
+  problems, `content:check` clean, build + prerender 57 routes.
+
+### HYP2003 initialisation tool wired as a real download — 04-09-2026
+Clinton supplied `public/software/HYP2003_Initialization_Tool.exe` and asked for
+it integrated. **This is the first real binary this site hosts** — every `url`
+in `drivers.js` had been null since Phase 7.
+
+- **Every value set on the entry was READ OFF THE FILE, not guessed**: platform
+  Windows and "32-bit" from `file` ("PE32 executable (GUI) Intel 80386, for MS
+  Windows"), `fileSizeApprox: "229 KB"` from 234,128 bytes, and the SHA-256 from
+  `shasum -a 256`. **`version` and `releaseDate` stay `null`** — the filename
+  carries neither, and a plausible "v1.2" is exactly the invented fact that file
+  exists to prevent.
+- ⚠️ **The url is `/software/…`, NOT `public/software/…`.** `public/` is Vite's
+  build root, not a URL segment; written the other way it resolves relative to
+  the route and 404s — the bug that shipped once on the DSC hub's token image.
+  Verified: the file is emitted to `dist/software/` and served 200 with
+  `Content-Length: 234128`.
+- **A checksum is rendered beside the button**, because CONTENT-PLAN.md §9 says
+  to show one if you host the binary. ⚠️ **Recompute it whenever the file is
+  replaced** — a checksum that does not match its file is worse than none, since
+  it tells a careful reader the download was tampered with.
+- ⛔ **The other half of that §9 rule — "do not host vendor binaries without
+  checking redistribution terms" — is NOT settled.** Clinton supplied the file
+  so it is his call, and it is logged in MISSING-PAGES.md rather than treated as
+  answered.
+
+**The safety design, which is the part worth keeping:**
+- ⛔ **A `warning`-carrying entry NEVER downloads straight from the hero, even
+  once its file exists.** This tool erases the certificate on a token with no
+  undo; a one-click pill in a hero row hands someone that binary without their
+  having seen a word of caution. Its hero pill links to its own panel instead.
+  **Keyed off the presence of `warning`, not off a slug**, so anything
+  destructive added later gets the same treatment for free.
+- **The download block lives BELOW the warning inside the panel** — which is the
+  whole reason it is in the panel rather than only in the hero. Verified by
+  measuring document offsets, not by reading the JSX:
+  `warningBeforeDownload: true`, and exactly **one `a[download]` on the page**.
+- Link text is "Download for Windows", not "Download" — the vague-link-text
+  finding Phase 10's axe pass already fixed once elsewhere.
+- The 64-char hash carries `break-all`: without it a hash has no break
+  opportunity and forces the panel wider than a phone viewport. Verified
+  `scrollWidth === innerWidth` at 375.
+- `sourceNote` renders only while every url is null, so it auto-hid — but it was
+  **rewritten anyway**, because its old text ("rather than publishing a file
+  that destroys certificates…") is now the opposite of what the page does, and a
+  stale contradiction left in a content file is how the wrong sentence comes
+  back. Same for the DRIVERS entry in `notices.js`, whose notice asserted we do
+  not publish this file.
+- Verified: hero pills both link to their rows (0 direct downloads there),
+  compatibility renders "Windows / 32-bit build; runs on 64-bit Windows",
+  checksum present, no `undefined` anywhere, no overflow at 1440 or 375.
+  Contrast on the new block computed on its real pairs — button ink-950 on
+  ember-400 **6.18:1**, meta ink-500 **9.77:1**, checksum ink-400 **6.48:1**.
+  ⚠️ The pixel sweep reported two failures on this page and BOTH are artifacts
+  already documented: CtaBand's `rounded-full` pill (corner bleed), and an
+  `<li>` whose box spans both the ember button and the text beneath it — the
+  probe's "skip a container whose child has identical text" guard does not catch
+  a container with SEVERAL children. Widen that guard before trusting a
+  container-level result. Lint 0 problems, `content:check` clean, build +
+  prerender 57 routes.
+
+### Correction: the hosted binary is HYP2003's, not the reset tool's — 04-09-2026
+Clinton, immediately after the entry above: remove HYP2003's `sourceNote`
+("Download links, version numbers and file sizes are added once the vendor
+files are sourced and hosted…") and "link the file i have keep in public",
+then "software link is for this" pointing at the HYP2003 row.
+
+- **The file MOVED, it was not copied.** `public/software/HYP2003_Initialization_
+  Tool.exe` is now HYP2003's Windows download, and the Initialisation & Reset
+  Tool entry is back to `downloads: []` / `supportedOs: []` with its "ask us"
+  `sourceNote` rendering again. ⛔ **One binary, published once.** The same
+  executable listed twice under two different names is how someone downloads the
+  wrong thing — and this particular executable erases certificates.
+- HYP2003's old `sourceNote` was **deleted**, not left to auto-hide. It
+  described a state that no longer exists, and a stale sentence in a content
+  file is how the wrong claim comes back.
+- ⛔ **macOS and Linux STAY NULL.** Pointing them at a PE32 executable would
+  hand a Mac user a file that cannot run. A new per-panel line names them
+  ("macOS and Linux builds are not hosted here — ask us…"), derived from the
+  rows themselves so it disappears when they are filled.
+- ⚠️ **THE NAME/CONTENT MISMATCH IS REAL AND IS SURFACED, NOT SMOOTHED OVER.**
+  The file is called "Initialization Tool" and initialising a token erases the
+  certificate on it; it is now the download behind a button labelled for a
+  DRIVER. So the row carries a `note` — rendered in the caution treatment,
+  above the checksum — saying exactly that. **It is a per-file `note` and NOT
+  the entry-level `warning` field on purpose**: `warning` is what stops a hero
+  pill from being a direct download, and Clinton asked for this one to BE the
+  download. Verified `noteBeforeSha: true`.
+- `DriverPicker`'s caveat line said "Installer files are not hosted here yet",
+  which became false under a working download button — now "Not every build is
+  hosted here", and it still disappears entirely once every entry has a file.
+  The DRIVERS notice in `notices.js` was reworded for the same reason.
+- **Verified**: HYP2003's hero pill is now a genuine `<a download>` (the
+  self-upgrading path working as written), the panel button resolves to
+  `/software/…`, the utility entry has **0** download links and shows its
+  source note, old `sourceNote` text absent, `scrollWidth === innerWidth` at
+  1440 and 375. Contrast on the page: the single reported failure is CtaBand's
+  `rounded-full` pill, the documented corner-bleed artifact; the new block's
+  real pairs are button ink-950 on ember-400 **6.18:1**, meta ink-500
+  **9.77:1**, checksum ink-400 **6.48:1**. Lint 0 problems, `content:check`
+  clean, build + prerender 57 routes.

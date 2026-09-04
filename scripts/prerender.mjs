@@ -151,6 +151,58 @@ function writeRedirects() {
   }
 }
 
+/**
+ * Fail the build on a DANGLING INTERNAL FRAGMENT — a link to `/some/page#id`
+ * whose target page has no element with that id.
+ *
+ * ⛔ Added 03-09-2026 after the second instance of this exact bug. Nothing
+ * errors, nothing logs, and a link-integrity scan PASSES it, because the path
+ * is real and only the fragment is dead: the reader simply lands at the top of
+ * a long page. Twice now a section was deleted from a template while the ids
+ * naming it survived in nav.js — first as `/dsc#undefined` (a missing key),
+ * then as `/dsc#certificates` (a key naming a deleted section, pointed at by
+ * five redirect stubs, the homepage DSC band and the mega panel).
+ *
+ * Runs over the emitted HTML, which is the only place the question can
+ * actually be answered — nav.js knows what it links to, and only the rendered
+ * page knows what ids exist.
+ */
+function assertNoDanglingFragments(paths) {
+  const idsFor = new Map();
+  const idsIn = (file) => {
+    if (!idsFor.has(file)) {
+      const html = readFileSync(file, "utf-8");
+      idsFor.set(file, new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1])));
+    }
+    return idsFor.get(file);
+  };
+
+  const bad = [];
+  for (const routePath of paths) {
+    const file = outputFileFor(routePath);
+    const html = readFileSync(file, "utf-8");
+    for (const match of html.matchAll(/href="(\/[^"#]*)#([^"]+)"/g)) {
+      const [, target, fragment] = match;
+      // Only same-site page fragments are checkable here. A fragment on a page
+      // that is not itself prerendered (a redirect stub, say) has no rendered
+      // HTML to look in.
+      const targetFile = outputFileFor(target === "" ? "/" : target);
+      if (!existsSync(targetFile)) continue;
+      if (!idsIn(targetFile).has(fragment)) {
+        bad.push(`${routePath} -> ${target}#${fragment}`);
+      }
+    }
+  }
+
+  if (bad.length) {
+    throw new Error(
+      `dangling fragment link(s) — the path exists but the target id does not:\n  ${[
+        ...new Set(bad),
+      ].join("\n  ")}`
+    );
+  }
+}
+
 async function main() {
   if (!existsSync(path.join(DIST, "index.html"))) {
     throw new Error("dist/index.html not found — run `vite build` before prerendering.");
@@ -179,6 +231,8 @@ async function main() {
   const notFoundBody = await render(NOT_FOUND_PROBE_PATH);
   const notFoundHtml = renderHtmlFor(template, notFoundBody, resolveSeo("*"));
   writeFileSync(outputFileFor("*"), notFoundHtml, "utf-8");
+
+  assertNoDanglingFragments(paths);
 
   writeRedirects();
   writeSitemap(paths);

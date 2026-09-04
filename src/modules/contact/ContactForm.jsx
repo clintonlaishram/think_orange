@@ -6,6 +6,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { sendEnquiry, emailjsConfigured } from "@/lib/emailjs";
+import { trackEvent } from "@/lib/analytics";
 import { honeypotTripped, isRateLimited, recordSubmission, submittedTooFast, useMountedAt } from "@/lib/spamGuard";
 import { serviceSelectOptions, site } from "@/content/nav";
 import { cn } from "@/lib/cn";
@@ -83,11 +84,22 @@ export function ContactForm({ tone = "light" }) {
         message: form.message,
       });
       recordSubmission(FORM_KEY);
+      trackEvent("lead_submitted", { form_name: "contact_form", service: serviceLabel });
       setForm(initialForm);
       toast.success("Message sent", {
         description: "We've received your enquiry and will get back to you shortly.",
       });
     } catch (error) {
+      // ⚠️ Tracking the FAILURE, not only the success, is the point of this
+      // pair while EmailJS is unconfigured: no `.env` exists in this repo, so
+      // every real submission currently lands here and `lead_submitted` would
+      // report zero leads on a form people are actually filling in. The
+      // `reason` separates "we never set the service up" from a genuine
+      // transport error once it is set up.
+      trackEvent("lead_failed", {
+        form_name: "contact_form",
+        reason: emailjsConfigured ? "send_error" : "not_configured",
+      });
       toast.error("Couldn't send that", {
         description: emailjsConfigured
           ? "Something went wrong — please try again, or reach us on WhatsApp."

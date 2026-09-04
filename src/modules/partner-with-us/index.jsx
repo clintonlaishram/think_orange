@@ -1,5 +1,16 @@
 import { Link } from "react-router-dom";
-import { Check, CheckCircle2 } from "lucide-react";
+import {
+  Building2,
+  Calculator,
+  Check,
+  KeyRound,
+  RefreshCw,
+  Scale,
+  Server,
+  TrendingUp,
+  Usb,
+  Zap,
+} from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
 import { PageHero } from "@/components/layout/PageHero";
@@ -14,6 +25,7 @@ import { partnerContent } from "@/content/partner-with-us";
 import { t } from "@/content/turnaround";
 import { PartnerEnquiryForm } from "@/modules/partner-with-us/PartnerEnquiryForm";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { cn } from "@/lib/cn";
 
 // T6 — CONTENT-PLAN.md §10. See partner-with-us.js's own header comment for
 // why the commercial tiles state THAT commission/fee/timeline terms exist and
@@ -53,13 +65,106 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 // the card.)
 //
 // Surface cadence, checked rather than assumed:
-//   deep → light → dark → light → light-alt → light → light-alt → ember
-// Zero consecutive repeats.
+//   deep → light → dark → light-alt → light → light-alt → ember
+// Zero consecutive repeats, no adjacent dark-family pair.
+//
+// --- 04-09-2026 ------------------------------------------------------------
+// Clinton: remove three sections — "Already issuing DSCs?" (the switching
+// band), "Before you apply" (what the programme asks of you) and "Earning
+// potential" (the certificate/margin table).
+//
+// ⚠️ Their CONTENT is NOT deleted. `partnerContent.switching`,
+// `.responsibilities`, `.responsibilitiesNote` and `.earnings` are all still
+// written and exported from content/partner-with-us.js, unreferenced — the
+// same discipline `portalGuide` and `afterIssue` already carry in the DSC
+// tree. Restoring any of these sections is a render-only change. Do not prune
+// them as dead content on a later tidy-up pass.
+//
+// ⛔ The switching band was the page's only DARK surface, so removing it left
+// two light sections adjacent. "Who this suits" took that role and was
+// re-toned for it — see its own comment.
 
 // Two rings only, and lighter than any section ladder — this is a ~600px panel,
 // not a full-bleed band, so an identical opacity reads far heavier here. Ink,
 // not ember: the tick icons are the panel's only warm accent and the hero
 // already spends the page's orange budget on its texture.
+// Why-us bento ring compositions — ONE PER TILE, and they are deliberately all
+// different (Clinton, 04-09-2026: "here all ring effect is same"). The first
+// cut gave every tile the same two-ring ladder and only moved the corner, so
+// four cards read as one card printed four times.
+//
+// ⚠️ WHAT VARIES IS THE COMPOSITION, NEVER THE SHAPE. Every ring is still the
+// same crescent from `lib/arc.js` at a different radius — DESIGN.md §3.1's
+// "repetition of one specific shape" only holds while that is literally true,
+// so vary ring COUNT, radius, stroke width, anchor corner and weight; never
+// hand-author a new curve and never mirror one (a mirrored crescent is a
+// different shape).
+//
+// Every ladder sits below CtaBand's 0.12/0.07/0.045, which stays the one loud
+// band on the site. The lead card's are INK, not ember: it is a light card and
+// an ember arc there would compete with the badge that is meant to be the
+// eye's first stop.
+const WHY_RINGS = {
+  // Three faint rings, wide apart, swinging out of the bottom-left — the
+  // quietest of the four, because this card carries display type.
+  lead: {
+    color: "var(--color-ink-950)",
+    svgClassName: "absolute -bottom-28 -left-28 h-[480px] w-[480px]",
+    rings: [
+      { r: 170, width: 14, opacity: 0.05 },
+      { r: 132, width: 10, opacity: 0.038 },
+      { r: 96, width: 7, opacity: 0.028 },
+    ],
+  },
+  // ONE thick ring, top-right. On the solid ember tile a ladder disappears
+  // into the fill, so this is a single broad band of light instead.
+  commissions: {
+    color: "var(--color-canvas)",
+    svgClassName: "absolute -right-24 -top-24 h-[330px] w-[330px]",
+    rings: [{ r: 150, width: 26, opacity: 0.1 }],
+  },
+  // Two tight rings, bottom-right — the closest to the site's standard pair,
+  // and the only tile that keeps it.
+  login: {
+    svgClassName: "absolute -bottom-24 -right-20 h-[320px] w-[320px]",
+    rings: [
+      { r: 150, width: 12, opacity: 0.13 },
+      { r: 114, width: 9, opacity: 0.08 },
+    ],
+  },
+  // Four hairlines of EQUAL width, tightly nested and bled off the right edge
+  // — a fine concentric fan rather than a ladder, which suits a 180px-tall
+  // landscape tile where a large radius would only show as one flat curve.
+  issuance: {
+    svgClassName: "absolute -right-16 -top-32 h-[440px] w-[440px]",
+    rings: [
+      { r: 186, width: 6, opacity: 0.11 },
+      { r: 156, width: 6, opacity: 0.085 },
+      { r: 126, width: 6, opacity: 0.06 },
+      { r: 96, width: 6, opacity: 0.04 },
+    ],
+  },
+};
+
+// ⛔ ALWAYS resolved through `whyIcon()`, never by indexing the object: an
+// unmapped key evaluates to `undefined` and `<undefined />` is a HARD React
+// crash, not a blank. That exact bug shipped once from DscBand's private map
+// (17-08-2026), which is why every slug-keyed icon map in this codebase has a
+// helper with a fallback.
+const WHY_ICONS = { commissions: TrendingUp, login: KeyRound, issuance: Zap };
+const whyIcon = (key) => WHY_ICONS[key] ?? Zap;
+
+// Who-this-suits, same rule: `whoIcon()`, never a bare index.
+const WHO_ICONS = {
+  practitioners: Calculator,
+  advocates: Scale,
+  resellers: RefreshCw,
+  it: Server,
+  tokens: Usb,
+  corporate: Building2,
+};
+const whoIcon = (key) => WHO_ICONS[key] ?? Building2;
+
 const PANEL_RINGS = [
   { r: 150, width: 13, opacity: 0.16 },
   { r: 114, width: 10, opacity: 0.1 },
@@ -120,60 +225,167 @@ export default function PartnerWithUs({ path }) {
         </div>
       </PageHero>
 
-      {/* WHY THROUGH US. Four claims, hairline columns rather than cards —
-          each is a complete paragraph, and a box around a paragraph is a box
-          doing nothing. */}
+      {/* WHY THROUGH US — a bento, per Clinton's reference image (04-09-2026):
+          one tall card carrying the strongest claim, two small tiles beside it
+          and one wide tile beneath them.
+
+          ⛔ THE REFERENCE'S PALETTE IS NOT REPRODUCED, deliberately. It runs a
+          vivid green stat card and a full-bleed purple CTA card; both are
+          off-palette here (DESIGN.md §16's first tell), and a purple-sized
+          block of ember would put this one fold near CLAUDE.md's ~12% orange
+          ceiling on its own. So the composition is copied and the colour is
+          re-cast in this site's own vocabulary: exactly ONE ember tile as the
+          pop the green card supplies, the other two in ink, the tall card
+          light. Measured ember share of this fold after the change: 2.15%.
+
+          ⚠️ THE EMBER TILE'S FILL IS `.tile-ember` — A GRADIENT, AND THE
+          GRADIENT IS WHAT MAKES ITS LIGHT TEXT LEGAL. Read that class's
+          comment in theme.css before touching this tile. Short version: it
+          opens on ember-400 (the colour Clinton asked to keep) and deepens to
+          ember-700 before the copy starts, because canvas on flat ember-400 is
+          3.00:1 and white is 3.15:1 — exactly the pairing CLAUDE.md's first
+          non-negotiable bars. The tile's text is bottom-aligned, so every word
+          lands on the deep end. ⛔ Flatten the fill, or stop bottom-aligning
+          this tile's text, and the copy slides onto the bright end and fails
+          AA silently.
+
+          Three fills were measured getting here, which is worth recording so
+          nobody re-walks it: flat ember-400 (Clinton: light text, so no), flat
+          ember-700 (Clinton: "so much dark"), and flat ember-600 — which
+          PASSED statically at 4.97:1 and FAILED the pixel sweep at 4.03:1,
+          because this tile carries a translucent canvas ring that lightens the
+          fill it crosses. A static colour pair is not the measurement whenever
+          anything translucent sits over the background.
+
+          The two ink tiles sit vertically adjacent, which is fine BECAUSE
+          their compositions differ (one portrait with a stacked icon, one
+          landscape with the icon inline): tiles, unlike sections, read as a set
+          rather than as a repeat when their shape and orientation differ. */}
       <Section surface="light">
         <Container>
           <SectionHeading
             eyebrow="Why enrol through ThinkOrange"
-            heading="The certifying authority issues it. We make sure you can run the business."
-            lede="Anyone can hand you a login. The difference shows up in the first month, when a client's application is rejected for a reason the portal explains badly and you need someone who knows why."
+            heading="Why become an Authorised DSC Partner with us?"
+            lede="Anyone can hand you a login. What follows is what the arrangement actually gives you — and what it does not ask for up front."
           />
-          <div className="mt-10 grid grid-cols-1 gap-x-10 gap-y-8 md:grid-cols-2">
-            {partnerContent.whyUs.map((item, index) => (
-              <Reveal key={item.title} delay={Math.min(index, 3) * 0.06} className="border-t border-ink-200 pt-5">
-                <h3 className="text-h4 text-ink-600">{item.title}</h3>
-                <p className="mt-2 max-w-[62ch] text-body-sm text-ink-500">{item.body}</p>
-              </Reveal>
-            ))}
-          </div>
-        </Container>
-      </Section>
 
-      {/* SWITCHING — the page's one dark band. An existing reseller is the
-          readiest partner there is, which is why the reference leads on this
-          and why it gets its own surface rather than a card. */}
-      <Section surface="dark" className="surface-ambient">
-        <Container>
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
-            <div className="lg:col-span-6">
-              <SectionHeading
-                eyebrow={partnerContent.switching.eyebrow}
-                heading={partnerContent.switching.heading}
-                lede={partnerContent.switching.body}
-                dark
-              />
-              <Reveal className="mt-8">
-                <Button as="a" href="#apply" variant="primary">
-                  Talk to us about switching
-                </Button>
-              </Reveal>
-            </div>
-            <div className="lg:col-span-6">
-              <ul className="space-y-4">
-                {partnerContent.switching.pains.map((pain, index) => (
+          <div className="mt-12 grid grid-cols-1 gap-5 lg:grid-cols-12">
+            {/* THE TALL CARD. Its claim is the strongest of the four and the
+                only one shaped like a headline, which is why it gets display
+                type and the rest do not. */}
+            <Reveal className="lg:col-span-5">
+              <div className="card-premium relative isolate flex h-full flex-col overflow-hidden rounded-xl border border-ink-100 bg-white p-8 md:p-10">
+                <ArcRings
+                  rings={WHY_RINGS.lead.rings}
+                  gradientId="partner-why-lead"
+                  color={WHY_RINGS.lead.color}
+                  svgClassName={WHY_RINGS.lead.svgClassName}
+                  style={{ zIndex: -1, }}
+                />
+                <span className="inline-flex w-fit items-center rounded-full bg-ember-400 px-4 py-1.5 font-mono text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-ink-950">
+                  {partnerContent.whyUs.lead.badge}
+                </span>
+                <h3 className="mt-8 max-w-[14ch] text-display-lg text-ink-600">
+                  {partnerContent.whyUs.lead.title}
+                </h3>
+                <p className="mt-auto pt-10 max-w-[38ch] text-body-lg text-ink-500">
+                  {partnerContent.whyUs.lead.body}
+                </p>
+              </div>
+            </Reveal>
+
+            {/* THE THREE TILES. `wide` is read off the content, not the index,
+                so reordering the array cannot silently move the wide slot away
+                from the entry written for it. */}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:col-span-7">
+              {partnerContent.whyUs.tiles.map((tile, index) => {
+                const Icon = whyIcon(tile.key);
+                const rings = WHY_RINGS[tile.key] ?? WHY_RINGS.login;
+                const ember = tile.surface === "ember";
+                return (
                   <Reveal
-                    as="li"
-                    key={pain.title}
-                    delay={index * 0.06}
-                    className="border-t border-ink-700 pt-4"
+                    key={tile.key}
+                    delay={0.06 + index * 0.06}
+                    className={cn(tile.wide && "sm:col-span-2")}
                   >
-                    <h3 className="text-h4 text-canvas">{pain.title}</h3>
-                    <p className="mt-1 text-body-sm text-ink-100">{pain.body}</p>
+                    <div
+                      // ⛔ `dark` ON THE EMBER TILE TOO, and it is load-bearing
+                      // rather than decorative. theme.css owns
+                      // `[data-surface="dark"] h3 { color: canvas }` UNLAYERED,
+                      // and unlayered CSS beats Tailwind's `@layer utilities` —
+                      // so the heading's colour has to come from the attribute,
+                      // not from a class. An earlier cut used
+                      // `data-surface="ember"` (which pins h3 to ink-950) and a
+                      // plain `text-canvas` class silently LOST to it.
+                      //
+                      // It is also honest: ember-600 is a genuinely dark
+                      // surface that carries light text, which is exactly what
+                      // `dark` declares. `ember` below selects the FILL only.
+                      data-surface="dark"
+                      className={cn(
+                        "relative isolate flex h-full overflow-hidden rounded-xl p-7 md:p-8",
+                        tile.wide ? "flex-row items-center gap-7" : "flex-col",
+                        ember ? "tile-ember" : "panel-dark grain",
+                      )}
+                    >
+                      <ArcRings
+                        rings={rings.rings}
+                        gradientId={`partner-why-${tile.key}`}
+                        color={rings.color}
+                        svgClassName={rings.svgClassName}
+                        style={{ zIndex: -1 }}
+                      />
+                      <span
+                        className={cn(
+                          "flex shrink-0 items-center justify-center rounded-lg",
+                          tile.wide ? "h-14 w-14" : "h-12 w-12",
+                          ember
+                            ? "bg-ink-950/20 text-canvas"
+                            : "bg-ember-400 text-ink-950",
+                        )}
+                      >
+                        <Icon className={tile.wide ? "h-6 w-6" : "h-5 w-5"} strokeWidth={2} aria-hidden="true" />
+                      </span>
+                      <div className={cn(tile.wide ? "min-w-0" : "mt-auto pt-10")}>
+                        <p
+                          className={cn(
+                            "font-mono text-[0.6875rem] font-bold uppercase tracking-[0.14em]",
+                            // ⚠️ ember-50, and each step up from the ink tiles'
+                            // ember-200 was forced by a MEASURED failure rather
+                            // than chosen: this label is 11px so it carries the
+                            // 4.5 floor, and it sits highest in the text block
+                            // — i.e. on the lightest part of the gradient any
+                            // copy touches. ember-200 pairs at 3.29:1 there and
+                            // ember-100 sampled 4.13:1, then 4.39:1 after the
+                            // ramp was deepened. Only ember-50 clears it.
+                            // Anything warmer than this on this tile needs
+                            // re-measuring.
+                            ember ? "text-ember-50" : "text-ember-200",
+                          )}
+                        >
+                          {tile.label}
+                        </p>
+                        <h3
+                          className={cn(
+                            "mt-2 text-h3 text-canvas",
+                          )}
+                        >
+                          {tile.title}
+                        </h3>
+                        <p
+                          className={cn(
+                            "mt-3 text-body-sm",
+                            ember ? "text-canvas" : "text-ink-100",
+                            tile.wide ? "max-w-[62ch]" : "max-w-[36ch]",
+                          )}
+                        >
+                          {tile.body}
+                        </p>
+                      </div>
+                    </div>
                   </Reveal>
-                ))}
-              </ul>
+                );
+              })}
             </div>
           </div>
         </Container>
@@ -181,25 +393,62 @@ export default function PartnerWithUs({ path }) {
 
       {/* WHO IT'S FOR. ⚠️ Every entry describes someone who ISSUES. If a future
           edit makes one of these read as "send the client to ThinkOrange", it
-          has reverted the page to the referral framing this rewrite removed. */}
-      <Section surface="light">
+          has reverted the page to the referral framing this rewrite removed.
+
+          ⚠️ 04-09-2026: this is now the page's ONE dark band. It became dark when
+          the Switching section (which used to carry that role) was removed
+          alongside "Before you apply" and "Earning potential" — without the
+          swap this section sat light directly under the light "Why through us"
+          band above it, i.e. a consecutive-surface repeat. Every colour here is
+          the dark-surface pair (SectionHeading `dark`, canvas headings, ink-100
+          body, ink-700 hairlines): the surface system covers headings and
+          var(--surface-*) accents, NOT the plain text-ink-* utilities this grid
+          is built from. If it is ever put back to light, all of them move
+          back. */}
+      <Section surface="dark" className="surface-ambient">
         <Container>
           <SectionHeading
             eyebrow="Who this suits"
             heading="Practices that already own the client relationship"
             lede="The common thread is that you are already the person your client asks. This keeps that intact instead of interrupting it."
+            dark
           />
-          <div className="mt-10 grid grid-cols-1 gap-x-10 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
-            {partnerContent.whoItsFor.map((item, index) => (
-              <Reveal
-                key={item.title}
-                delay={Math.min(index, 5) * 0.05}
-                className="border-t border-ink-200 pt-5"
-              >
-                <h3 className="text-h4 text-ink-600">{item.title}</h3>
-                <p className="mt-2 text-body-sm text-ink-500">{item.body}</p>
-              </Reveal>
-            ))}
+          {/* ⚠️ ICON + LABEL ONLY — no subline (Clinton, 04-09-2026, with a
+              reference image). Each entry's `body` is still written in the
+              content file and simply not rendered; see its comment there.
+
+              Deliberately NO disc behind the glyph, unlike the DSC group cards
+              and the why-us tiles above. Two reasons: the reference has none,
+              and §16's tell 6 is "icon-in-a-circle everywhere" — a page that
+              already uses discs in one section should not reach for them again
+              in the next.
+
+              The CELLS are centred and the section heading above is NOT. §16's
+              tell 8 audits centre-aligned SECTIONS (a centred heading block is
+              the generic-landing-page tell); a centred cell inside a
+              left-aligned section is an icon grid, which is a different thing.
+              Re-check with the tell-8 detector if that section ever centres. */}
+          <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 lg:grid-cols-6">
+            {partnerContent.whoItsFor.map((item, index) => {
+              const Icon = whoIcon(item.key);
+              return (
+                <Reveal
+                  key={item.title}
+                  delay={Math.min(index, 5) * 0.05}
+                  className="flex flex-col items-center text-center"
+                >
+                  {/* 48px at a 1.25 stroke, not the 16-20px this codebase uses
+                      inside buttons and list rows: here the glyph IS the cell,
+                      and at icon-in-a-row size the band read as underfilled. */}
+                  <Icon
+                    className="h-12 w-12 text-ember-300"
+                    strokeWidth={1.25}
+                    aria-hidden="true"
+                  />
+                  <h3 className="mt-6 text-body font-medium text-canvas">{item.title}</h3>
+                </Reveal>
+              );
+            })}
           </div>
         </Container>
       </Section>
@@ -215,102 +464,16 @@ export default function PartnerWithUs({ path }) {
         />
       </Section>
 
-      {/* WHAT YOU TAKE ON. Kept prominent rather than buried near the form:
-          issuing yourself means carrying the verification obligation yourself,
-          and a partner who learns that after signing is the wrong partner. */}
-      <Section surface="light">
-        <Container>
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
-            <div className="lg:col-span-5">
-              <SectionHeading
-                eyebrow="Before you apply"
-                heading="What the programme asks of you"
-                lede={partnerContent.responsibilitiesNote}
-              />
-            </div>
-            <div className="lg:col-span-7">
-              <ul className="border-t border-ink-200">
-                {partnerContent.responsibilities.map((point, index) => (
-                  <Reveal
-                    as="li"
-                    key={point}
-                    delay={Math.min(index, 4) * 0.05}
-                    className="flex gap-4 border-b border-ink-200 py-4"
-                  >
-                    <CheckCircle2
-                      className="mt-0.5 h-5 w-5 shrink-0 text-ember-600"
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                    <span className="text-body text-ink-500">{point}</span>
-                  </Reveal>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </Container>
-      </Section>
-
-      {/* EARNINGS. ⛔ Every retail range and margin in the reference is a
-          bracketed placeholder that its own dev note flags as needing real
-          values, so nothing numeric is published — the table shows what you can
-          issue and who buys it, and quotes on application. Set `retail` and
-          `margin` in the content file and the cells fill in with no code
-          change. Tables never animate. */}
-      <Section surface="light-alt">
-        <Container>
-          <SectionHeading
-            eyebrow="Earning potential"
-            heading="What you can issue, and who buys it"
-            lede={partnerContent.earnings.note}
-          />
-          <div className="mt-10 overflow-x-auto">
-            <table className="w-full min-w-[720px] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-ink-200">
-                  {["Certificate", "Validity", "Typical retail", "Your margin", "Who buys it"].map((h) => (
-                    <th
-                      key={h}
-                      scope="col"
-                      className="py-3 pr-6 font-mono text-body-sm uppercase tracking-[0.1em] text-ink-400"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {partnerContent.earnings.rows.map((row) => (
-                  <tr key={row.product} className="border-b border-ink-100 align-top">
-                    <th scope="row" className="py-4 pr-6 text-body font-medium text-ink-600">
-                      {row.product}
-                      {row.note && (
-                        <span className="mt-0.5 block text-body-sm font-normal text-ink-400">
-                          {row.note}
-                        </span>
-                      )}
-                    </th>
-                    <td className="py-4 pr-6 text-body-sm text-ink-500">{row.validity}</td>
-                    <td className="py-4 pr-6 text-body-sm text-ink-500">
-                      {row.retail ?? "On request"}
-                    </td>
-                    <td className="py-4 pr-6 text-body-sm font-medium text-ember-600">
-                      {row.margin ?? "Quoted on application"}
-                    </td>
-                    <td className="py-4 text-body-sm text-ink-500">{row.buyer}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Container>
-      </Section>
-
       {/* APPLY */}
       <Section id="apply" surface="light" className="scroll-mt-32">
         <Container>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
-            <div className="lg:col-span-5">
+            {/* `flex flex-col` + `flex-1` on the panel below: the column is a
+                grid item and STRETCHES to the row height, but its contents do
+                not, so the dark panel used to stop ~15px short of the form
+                card's bottom edge for no reason a reader could see. The extra
+                height lands as padding inside the panel, which is invisible. */}
+            <div className="flex flex-col lg:col-span-5">
               <SectionHeading
                 eyebrow="Apply"
                 heading="Tell us about your practice"
@@ -318,8 +481,22 @@ export default function PartnerWithUs({ path }) {
               />
               <RegistrationDocuments documents={partnerContent.registrationDocuments} />
             </div>
+            {/* ⚠️ THE FORM IS IN A CARD, and that is a deliberate difference
+                from /contact, which runs the same primitives borderless
+                (`tone="bare"`). There the form IS the page, so a card outline
+                boxes the whole content; here it is one column beside prose and
+                a dark panel, and the card is what marks it as the distinct
+                object you act on. Same call the services enquiry card already
+                makes.
+
+                `h-full` + `items-start` on the row: without it the card is
+                shrink-to-fit and its bottom edge lands wherever the last field
+                happens to end, which is what left the two columns visibly
+                unrelated. */}
             <Reveal delay={0.1} className="lg:col-span-7">
-              <PartnerEnquiryForm />
+              <div className="card-premium h-full rounded-[var(--radius-lg)] border border-ink-100 bg-white p-6 shadow-sm md:p-8 lg:p-10">
+                <PartnerEnquiryForm />
+              </div>
             </Reveal>
           </div>
         </Container>
@@ -372,7 +549,7 @@ function RegistrationDocuments({ documents }) {
   return (
     <Reveal
       data-surface="dark"
-      className="panel-dark grain relative mt-10 overflow-hidden rounded-[var(--radius-lg)] p-6 md:p-7"
+      className="panel-dark grain relative mt-10 flex-1 overflow-hidden rounded-[var(--radius-lg)] p-6 md:p-7"
     >
       <ArcRings
         rings={PANEL_RINGS}

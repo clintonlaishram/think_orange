@@ -4,6 +4,21 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image" href="/images/logo-black.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Google tag (gtag.js) — GA4 property G-ZRG07MX0NC.
+         Deliberately OUTSIDE the SEO:START/SEO:END markers below:
+         scripts/prerender.mjs replaces everything between those two comments
+         wholesale for every route, so anything placed inside them is
+         overwritten in the built output. Google's own instruction is one tag
+         per page, immediately inside <head> — do not add a second copy. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZRG07MX0NC"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-ZRG07MX0NC");
+    </script>
     <!-- Phase 9 (BUILD-PLAN.md): everything between the two markers below is
          the fallback for `npm run dev` AND the exact block
          scripts/prerender.mjs replaces wholesale for each of the 49 routes

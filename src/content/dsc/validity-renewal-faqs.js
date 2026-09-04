@@ -30,6 +30,42 @@ export const dscValidityRenewalContent = {
     "A lost, stolen or damaged token is a different situation from an expiring certificate, and needs revocation, not renewal. Revoking adds the certificate to the certifying authority's Certificate Revocation List, so it can no longer be used to sign anything — even by someone holding the physical token. This should happen immediately, not whenever it's convenient to deal with the paperwork.",
   ],
 
+  // ⛔ RENDERED FORM — 04-09-2026 (Clinton: "in dsc faq page, Renewal &
+  // re-issue section reduce the content make as point"). `renewalGuidance`
+  // above is THREE dense paragraphs; this is the same four facts as points.
+  //
+  // ⚠️ `renewalGuidance` is DELIBERATELY KEPT and still exported, unreferenced
+  // — same discipline as `portalGuide` / `afterIssue` / `tokenProduct.explainers`
+  // elsewhere in this tree. Restoring the prose version is render-only. Do NOT
+  // prune it on a tidy-up pass.
+  //
+  // ⚠️ Nothing here is a new claim: every point is a condensation of a
+  // sentence already in `renewalGuidance`. No day count, no grace period
+  // length, no fee — "no grace period" is the absence of one, which is the
+  // fact itself, not an estimate.
+  renewalPoints: [
+    {
+      label: "Renewal is a brand-new certificate",
+      detail:
+        "No certifying authority extends an existing one. Each time, you get a fresh serial number and choose the validity term again. \"Renewal\" is only the industry's name for doing it before the current certificate expires.",
+    },
+    {
+      label: "Starting before expiry repeats less",
+      detail:
+        "Apply while the certificate is still valid and you can usually keep your existing token and move faster, because less has changed since your last verification.",
+    },
+    {
+      label: "There is no grace period",
+      detail:
+        "The moment a certificate expires it stops signing. A new one is then treated as a fresh application, with full verification again.",
+    },
+    {
+      label: "A lost or damaged token needs revocation, not renewal",
+      detail:
+        "Revoking adds the certificate to the certifying authority's Certificate Revocation List, so it cannot sign anything again — even for someone holding the physical token. This should happen immediately, not once the paperwork is convenient.",
+    },
+  ],
+
   faqs: [
     {
       q: "How long does a Digital Signature Certificate last?",

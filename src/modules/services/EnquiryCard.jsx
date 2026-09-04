@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { ArcRings } from "@/components/ui/ArcRings";
 import { site } from "@/content/nav";
 import { cn } from "@/lib/cn";
+import { trackEvent } from "@/lib/analytics";
 
 // T2's sticky enquiry card (CONTENT-PLAN.md §7 row 3) - 4 fields max: name,
 // phone, email, message. It does NOT fake a submission with no backend behind
@@ -51,6 +52,16 @@ export function EnquiryCard({ serviceLabel, className, ringsId = "enquiry-card-r
       form.email && `Email: ${form.email}`,
       form.message,
     ].filter(Boolean);
+    // ⛔ THIS CALL IS NOT OPTIONAL COVERAGE. Every other WhatsApp CTA on the
+    // site is an <a href>, so RootLayout's delegated listener records it; this
+    // one hands the URL to `window.open`, which fires no click on any anchor.
+    // Without an explicit event, the one enquiry surface that sits on all 31
+    // service leaves would be the only conversion path GA4 never sees.
+    trackEvent("lead_submitted", {
+      form_name: "service_enquiry_card",
+      service: serviceLabel,
+      channel: "whatsapp",
+    });
     const url = `${site.whatsappHref}?text=${encodeURIComponent(lines.join("\n"))}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };

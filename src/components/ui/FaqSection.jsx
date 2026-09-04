@@ -39,7 +39,21 @@ export function FaqSection({
     <Container>
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
         <Reveal className="lg:col-span-4">
-          <div className="lg:sticky lg:top-[calc(var(--header-h)+32px)]">
+          {/* ⛔ THIS OFFSET IS FIXED BY INSTRUCTION — `lg:sticky
+              lg:top-[calc(var(--header-h)+52px)]`, matching `StepFlow`'s and
+              `DscFinder`'s rails (Clinton, 04-09-2026: locked the +52px on
+              StepFlow, then "apply the same +52px to FaqSection rail"). It was
+              +32px. All three sticky rails now carry the SAME value, so a
+              future difference between them is drift, not a decision.
+
+              The clearance exists because these rails sit under the fixed
+              header AND, on T2/T4 pages, under that page's own sticky sub-nav
+              — at +32px the eyebrow parks beneath that bar.
+
+              ⚠️ It must stay a `calc()` off `--header-h`, never a literal
+              `lg:top-*` step: the header height is a token, and a hard number
+              here drifts the moment it changes. */}
+          <div className="lg:sticky lg:top-[calc(var(--header-h)+52px)]">
             {/* The sitewide LABEL / Heading / Subheading header. The tighter
                 measures are the one legitimate override: this rail is a 4-col
                 column, where the standard 32ch/68ch would run past its edge. */}

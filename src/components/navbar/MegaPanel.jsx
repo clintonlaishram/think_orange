@@ -245,14 +245,24 @@ export function MegaPanel({ id, ariaLabel, columns, promo, hubPath, hubLabel, on
           </Link>{" "}
           and we&rsquo;ll point you to the right service.
         </p>
-        <Link
-          to={hubPath}
-          onClick={onNavigate}
-          className="inline-flex items-center gap-1.5 rounded-sm text-body-sm font-medium text-canvas underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
-        >
-          {hubLabel}
-          <ArrowUpRight className="h-4 w-4" strokeWidth={1.5} />
-        </Link>
+        {/* ⛔ 03-09-2026 (Clinton: "in dropdown remove vie[w] all d[s]c
+            services button"). The hub link is now OPTIONAL, and the DSC panel
+            omits it — its "Digital Signature Certificate" item already goes to
+            /dsc, so the rail link was the same destination twice in one panel.
+            ⚠️ Services still passes it, and still NEEDS it: that trigger is a
+            <button> for disclosure semantics, so this rail is the only route to
+            /services from the navbar (DESIGN.md §10.2). Do not remove it there
+            without giving that hub another way in. */}
+        {hubPath && hubLabel && (
+          <Link
+            to={hubPath}
+            onClick={onNavigate}
+            className="inline-flex items-center gap-1.5 rounded-sm text-body-sm font-medium text-canvas underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-900"
+          >
+            {hubLabel}
+            <ArrowUpRight className="h-4 w-4" strokeWidth={1.5} />
+          </Link>
+        )}
       </div>
     </div>
   );

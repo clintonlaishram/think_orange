@@ -48,7 +48,7 @@ const ASSURANCES = [
   },
   {
     icon: Usb,
-    title: "FIPS-compliant token",
+    title: "FIPS 140-3 compliant token",
     desc: "Ships with the certificate",
   },
   {
@@ -185,7 +185,7 @@ export function DscBand() {
                     inline hover (ungated -translate-y-1 plus a static border
                     swap) is gone; .card-dark's is pointer-gated. */}
                 <Link
-                  to={`/dsc#${dscSectionIds.certificates}`}
+                  to={`/dsc#${dscSectionIds.finder}`}
                   className="card-dark group flex h-full flex-col rounded-[var(--radius-md)] lg:rounded-[var(--radius-lg)] p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950"
                 >
                   <ArcGlyph

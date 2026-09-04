@@ -1,5 +1,5 @@
 // Decorative vector illustration for the homepage DSC band — a laptop with a
-// signed certificate lifting off the screen, a FIPS USB token and a verified
+// signed certificate lifting off the screen, a FIPS 140-3 USB token and a verified
 // shield. Hand-authored SVG rather than a raster image on purpose:
 //
 //   - every fill reads a design token, so it can never drift from the palette

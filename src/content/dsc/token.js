@@ -30,8 +30,12 @@
 //     than through an unreviewed form.
 //
 // ⚠️ ONE CLAIM FROM THE REFERENCE WAS DROPPED ON PURPOSE. It states that "only
-// FIPS-compliant, Version 3 Tokens are accepted as per CCA guidelines". The
-// FIPS half we already assert across the DSC tree, but "Version 3… as per CCA
+// FIPS-compliant, Version 3 Tokens are accepted as per CCA guidelines".
+// ⚠️ THAT IS A VERBATIM QUOTATION OF THE REFERENCE SITE and stays exactly as
+// that site wrote it — the 03-09-2026 "FIPS-compliant → FIPS 140-3 compliant"
+// pass deliberately skips it. Editing someone else's quoted words to match our
+// own wording misreports what the source said.
+// The FIPS half we already assert across the DSC tree, but "Version 3… as per CCA
 // guidelines" is a specific, dated regulatory requirement and this repo does
 // not publish those without research and a source in statutory.js. The copy
 // below says what we can stand behind — that the token must be a compliant
@@ -43,10 +47,10 @@ export const tokenProduct = {
   meta: {
     title: "Buy a DSC USB Token | ThinkOrange Consulting",
     description:
-      "FIPS-compliant HYP2003 USB crypto tokens for Digital Signature Certificates — for a new certificate, a renewal, or replacing a lost or locked token. Salem, Tamil Nadu.",
+      "FIPS 140-3 compliant HYP2003 USB crypto tokens for Digital Signature Certificates — for a new certificate, a renewal, or replacing a lost or locked token. Salem, Tamil Nadu.",
   },
   lede:
-    "A Digital Signature Certificate cannot be held as a file on a computer — it lives on a secure USB crypto token. We stock FIPS-compliant HYP2003 tokens, for a new certificate, a renewal, or replacing one that is lost, damaged or locked.",
+    "A Digital Signature Certificate cannot be held as a file on a computer — it lives on a secure USB crypto token. We stock FIPS 140-3 compliant HYP2003 tokens, for a new certificate, a renewal, or replacing one that is lost, damaged or locked.",
 
   // Price is quoted, not published. See the header note.
   price: null,
@@ -65,7 +69,7 @@ export const tokenProduct = {
       title: "What kind of token do I need?",
       points: [
         "It has to be a compliant USB crypto token — a certificate cannot be stored as a file on a computer, and a plain USB pen drive will not work.",
-        "The tokens we supply are FIPS-compliant and are what we issue certificates onto as standard.",
+        "The tokens we supply are FIPS 140-3 compliant and are what we issue certificates onto as standard.",
         "Drivers are available for Windows, macOS and Linux, and we install and test yours before you rely on it.",
       ],
     },

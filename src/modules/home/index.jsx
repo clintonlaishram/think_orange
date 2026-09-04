@@ -1,4 +1,5 @@
 import { Hero } from "@/modules/home/sections/Hero";
+import { NoticeTicker } from "@/components/ui/NoticeTicker";
 import { TrustStrip } from "@/modules/home/sections/TrustStrip";
 import { WhatWeDo } from "@/modules/home/sections/WhatWeDo";
 import { WhenToCallUs } from "@/modules/home/sections/WhenToCallUs";
@@ -53,6 +54,10 @@ export default function Home() {
   return (
     <>
       <Hero />
+      {/* Small infinite notice bar (Clinton, 04-09-2026). `light-alt`, so the
+          cadence runs deep -> light-alt -> light rather than putting two
+          dark-family surfaces under the hero. */}
+      <NoticeTicker />
       <ComplianceCalendarHome />
       <WhatWeDo />
       <WhoWeWorkWith />

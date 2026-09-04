@@ -55,8 +55,67 @@ export const partnerContent = {
     "Support in English & Tamil",
   ],
 
-  // Why through ThinkOrange rather than any other channel.
-  whyUs: [
+  // --- 04-09-2026 ---------------------------------------------------------
+  // Clinton supplied this section's copy verbatim and a reference layout (a
+  // bento: one tall card beside two small tiles and one wide one), so `whyUs`
+  // below is now a SHAPED object rather than a flat list — the page renders
+  // `lead` as the tall card and `tiles` as the three beside it.
+  //
+  // ⚠️ Order is load-bearing: `tiles` renders small, small, WIDE. A fourth
+  // entry breaks that composition rather than wrapping neatly.
+  //
+  // Every claim here is Clinton's own, given directly, and none carries a
+  // number: "direct commissions" without a percentage (the reference's own
+  // `[X]%` is still unconfirmed — see this file's header), "no bulk token
+  // purchase" rather than a rupee floor.
+  //
+  // ⚠️ ONE claim is worth a second look: "Instant in-house issuance" is
+  // Clinton's own wording and is a SPEED claim. It is published as given
+  // because it describes a mechanism rather than a guarantee — a partner
+  // raises the application from their own login, so there is no vendor step to
+  // wait on — and the body deliberately says that instead of naming a
+  // turnaround. Do NOT let a future edit turn it into "issued in X hours";
+  // that is `turnaround.js`'s territory and the value there is still null.
+  whyUs: {
+    lead: {
+      badge: "No joining fee",
+      title: "Zero upfront investment.",
+      body: "No bulk token purchase, no minimum volume and no joining fee to get started. You buy a certificate when a client actually asks for one — never before.",
+    },
+    tiles: [
+      {
+        key: "commissions",
+        surface: "ember",
+        label: "Your margin",
+        title: "Direct commissions",
+        body: "Earn a direct margin on every certificate you process. Your slab is confirmed in writing before you commit to anything.",
+      },
+      {
+        key: "login",
+        surface: "dark",
+        label: "Your clients, your data",
+        title: "Your own partner login",
+        body: "Complete control over your clients' records. Nothing is routed through us and nothing is visible to another partner.",
+      },
+      {
+        key: "issuance",
+        surface: "dark",
+        wide: true,
+        label: "No vendor delays",
+        title: "Instant in-house issuance",
+        body: "Raise, verify and complete an application from your own login — there is no vendor in the middle to queue behind, and no one else's turnaround to explain to your client.",
+      },
+    ],
+  },
+
+  // ⚠️ RETAINED, NOT RENDERED. This was `whyUs` until 04-09-2026, when Clinton
+  // replaced the section's copy with the four benefit claims above. Kept
+  // exported and unreferenced — the same discipline `switching`,
+  // `responsibilities` and `earnings` already carry in this file — because it
+  // is the page's only differentiation copy (a practising compliance firm
+  // rather than a token dealer, Tamil support, PSU issuance) and restoring it
+  // anywhere is a render-only change. Do not prune it as dead content.
+  whyUsCredibility: [
     {
       title: "A practising compliance firm, not a token dealer",
       body: "We file GST returns, run internal audits and incorporate companies. When you ask which certificate a particular filing needs, the answer comes from someone who does that filing — not a sales desk reading off a product list.",
@@ -97,28 +156,43 @@ export const partnerContent = {
   },
 
   // Who this suits. Every one of these ISSUES; none of them refers.
+  // ⚠️ 04-09-2026: `body` IS NO LONGER RENDERED. Clinton asked for this section
+  // to become an icon-and-label grid with no subline, so the page shows the
+  // icon and the `title` only. The bodies are kept here — unreferenced, the
+  // same discipline `switching` / `responsibilities` / `earnings` /
+  // `whyUsCredibility` already carry in this file — because each is the one
+  // sentence explaining WHY that audience is a fit, and putting them back is a
+  // render-only change. Do not prune them as dead content.
+  //
+  // `key` is the icon lookup, resolved through `whoIcon()` in the template.
   whoItsFor: [
     {
+      key: "practitioners",
       title: "CAs, CSs & tax practitioners",
       body: "Issue certificates alongside the filings you already do, instead of sending a client elsewhere mid-engagement.",
     },
     {
+      key: "advocates",
       title: "Advocates & consultants",
       body: "Clients handling tenders, ROC work or trademark filings need certificates. Keep that revenue inside the practice.",
     },
     {
+      key: "resellers",
       title: "Existing DSC resellers",
       body: "Already issuing under another certifying authority? Switch to us for better terms and support that answers.",
     },
     {
+      key: "it",
       title: "IT & software vendors",
       body: "You already sell to the businesses that need certificates. Add DSCs and tokens to the same client relationship.",
     },
     {
+      key: "tokens",
       title: "Token dealers",
       body: "Selling the hardware but not the certificate that goes on it means half the margin on every sale.",
     },
     {
+      key: "corporate",
       title: "Corporate service firms",
       body: "Incorporation and compliance practices — director certificates are part of the job anyway.",
     },
@@ -178,7 +252,7 @@ export const partnerContent = {
       { product: "Class 3 — Organisation", note: "Signing, or Combo", validity: "2 years", retail: null, margin: null, buyer: "Companies and LLPs — ROC, EPFO, corporate tender bids" },
       { product: "Combo (Sign + Encrypt)", note: null, validity: "2 years", retail: null, margin: null, buyer: "Bidders on GeM, CPP Portal and state e-procurement" },
       { product: "DGFT (IEC)", note: null, validity: "2 years", retail: null, margin: null, buyer: "Importers and exporters on DGFT and ICEGATE" },
-      { product: "FIPS-compliant tokens", note: "HYP2003", validity: "Hardware — no expiry", retail: null, margin: null, buyer: "Every new certificate, plus replacements" },
+      { product: "FIPS 140-3 compliant tokens", note: "HYP2003", validity: "Hardware — no expiry", retail: null, margin: null, buyer: "Every new certificate, plus replacements" },
       { product: "Renewals", note: null, validity: "2 years", retail: null, margin: null, buyer: "Your existing base, every two years — no new business development" },
     ],
     note:

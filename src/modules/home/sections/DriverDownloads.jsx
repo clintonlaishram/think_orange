@@ -3,7 +3,7 @@ import { Download } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Stagger } from "@/components/motion/Stagger";
 import { cn } from "@/lib/cn";
-import { dscResourcesPage } from "@/content/nav";
+import { dscDriversPage, dscResourcesPage } from "@/content/nav";
 import { drivers } from "@/content/dsc/drivers";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
@@ -52,13 +52,26 @@ export function DriverDownloads() {
           {drivers.map((driver) => (
             <Link
               key={driver.slug}
-              to={`${dscResourcesPage.path}#driver-${driver.slug}`}
+              // ⛔ 03-09-2026: retargeted from `dscResourcesPage.path` when Buy
+              // Token split into three pages. The driver rows live on
+              // /dsc/drivers now, so this pointed at a fragment on a page that
+              // no longer has it. ⚠️ THE BUILD'S FRAGMENT GATE DID NOT CATCH IT
+              // — this section is commented out of the homepage, so it renders
+              // nowhere and nothing was there to scan. Latent, not live, and
+              // fixed while the drivers list was open.
+              to={`${dscDriversPage.path}#driver-${driver.slug}`}
               className="group flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-sm)] border border-ink-100 p-5 transition-colors hover:border-ink-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2"
             >
               <div>
                 <h3 className="text-h4 text-ink-600">{driver.label}</h3>
+                {/* ⚠️ FALLS BACK. The initialisation tool has no OS matrix —
+                    nothing is guessed for it — and an empty line here renders
+                    as a card whose subtitle failed to load. Same fallback the
+                    drivers page's disclosure meta uses. */}
                 <p className="mt-1 font-mono text-body-sm text-ink-400">
-                  {driver.supportedOs.map((entry) => entry.os).join(" · ")}
+                  {driver.supportedOs.length > 0
+                    ? driver.supportedOs.map((entry) => entry.os).join(" · ")
+                    : "Utility · sent on request"}
                 </p>
               </div>
               <span className="inline-flex items-center gap-1.5 text-body-sm font-medium text-ink-500 group-hover:text-ember-600">

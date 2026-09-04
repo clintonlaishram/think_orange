@@ -223,10 +223,29 @@ export const serviceCategories = [
 // disagree by one character scroll nowhere and light up never.
 export const dscSectionIds = {
   finder: "finder",
-  portals: "portals",
-  certificates: "certificates",
-  documents: "documents",
-  process: "process",
+  // ⛔ 03-09-2026 (Clinton): "remove: Portal guide / Documents required / After
+  // you get it — no need for that now." `portals`, `documents` and `process`
+  // are gone WITH their sections, in the same commit, because the alternative
+  // is a fragment that names nothing — which is how `/dsc#certificates` shipped
+  // dead twice. Everything that pointed at `documents` now points at `finder`,
+  // which is what actually produces a checklist today.
+  // ⛔ 03-09-2026: `certificates` is GONE. The "certificates we issue" section
+  // was deleted from /dsc on 02-09-2026 ("i do not need certificate we issue
+  // also") — but this key survived it, so five redirect stubs and the homepage
+  // DSC band were all pointing at `/dsc#certificates`, a fragment that names
+  // nothing. Nothing errors and the link-integrity scan passes it, because the
+  // PATH is real and only the FRAGMENT is dead. Exactly the `/dsc#undefined`
+  // failure mode again, one step subtler. Everything that named it now names
+  // `finder`, which is what actually answers "which certificate do I need" and
+  // renders each one's validity, documents and caveats.
+  // ⚠️ Deleting a section from a template means deleting its id here too, and
+  // grepping for the key. The two cannot be done separately.
+  // 04-09-2026: the notice board, directly under the hero. ⚠️ Its section
+  // renders NOTHING when `notices.js` has no confirmed notice scoped to /dsc,
+  // so its sub-nav tab is rendered conditionally on the same count — a tab
+  // whose target does not exist scrolls nowhere and never lights the
+  // scroll-spy, which is the failure this file already records twice.
+  notices: "notices",
   partner: "partner",
 };
 
@@ -238,10 +257,51 @@ export const dscSectionIds = {
 // and renewal." So `portals` and `documents` moved to `dscSectionIds` above,
 // and Resources is now the token/driver page: drivers, validity & renewal, and
 // the FAQ set that mostly answers questions about them.
-export const dscResourceSectionIds = {
-  drivers: "drivers",
+// ⛔ 03-09-2026 (Clinton): "remove the most dsc faq fron by token page and
+// create a new page only for dsc faq… buy token and driver download will be two
+// seperate page. in buy token only order token section."
+//
+// Buy Token was carrying five sections — order, about the token, drivers,
+// renewal, FAQs — i.e. three different jobs on one URL. It is now three pages:
+//
+//   /dsc/buy-token   order the token, and nothing else
+//   /dsc/drivers     the driver, its install steps and its fixes
+//   /dsc/faqs        every DSC FAQ, plus the reference material around them
+//
+// ⚠️ `/dsc/drivers` WAS A REDIRECT STUB and is now a real route. Its entry had
+// to come OUT of `dscRetiredRoutes` in the same edit, or the prerender would
+// write a redirect stub over the real page's own index.html — last write wins,
+// and the page would silently 302 to itself.
+export const dscDriversPage = {
+  slug: "dsc-drivers",
+  path: "/dsc/drivers",
+  label: "Driver Downloads",
+  template: "T12",
+};
+
+export const dscFaqsPage = {
+  slug: "dsc-faqs",
+  path: "/dsc/faqs",
+  label: "DSC FAQs",
+  template: "T13",
+};
+
+// The FAQ page's anchors. It is the only one of the three with more than one
+// section, so it is the only one with a sub-nav.
+// ⚠️ `renewal` lives here now, not on Buy Token. The finder's "Renewing or
+// replacing" alt link and the retired `/dsc/validity-renewal-faqs` stub both
+// resolve through this object, so moving the section moved both of them.
+export const dscFaqSectionIds = {
+  process: "process",
   renewal: "renewal",
   faqs: "faqs",
+};
+
+// The drivers page's one anchor. Kept as an object rather than a literal
+// because `DriverPicker`'s per-token `#driver-<slug>` links and the retired
+// driver-page stubs all address it.
+export const dscDriverSectionIds = {
+  drivers: "drivers",
 };
 
 // ⛔ 02-09-2026, later the same day (Clinton): "i want to keep the page
@@ -273,6 +333,92 @@ export const dscResourcesPage = {
   template: "T5",
 };
 
+// ⛔ UNPAUSED 03-09-2026 (Clinton: "unpause the esign routes and add that
+// column"). Off the route table since 21-08-2026; back now, because its
+// content file (content/dsc/esign-or-dsc.js) was written in full before the
+// pause and was never deleted, so nothing here is invented to restore it.
+//
+// ⚠️ **T11, not T5.** T5 resolves unconditionally to `DscBuyToken` now that
+// the DSC tree is two pages, so marking this T5 would have served the Buy
+// Token page under this URL — a silent wrong-page bug that renders fine and
+// prerenders fine. It has its own template branch and its own module.
+//
+// ⚠️ The OTHER eSign route — `/dsc/aadhaar-esign`, the T4 product page — is
+// deliberately NOT restored. Its content went with `content/dsc/products.js`
+// when the whole T4 family was deleted on 02-09-2026, so bringing it back is a
+// content-writing job plus a template decision, not an uncomment. See
+// MISSING-PAGES.md.
+export const dscEsignPage = {
+  slug: "esign-or-dsc",
+  path: "/dsc/esign-or-dsc",
+  label: "eSign or DSC — Which Do You Need?",
+  template: "T11",
+};
+
+// --- DSC mega panel -------------------------------------------------------
+// ⛔ 03-09-2026 (Clinton): "in digital signature it will be show and dropdown
+// option like previous… 4 category: DSC — (Digital Signature Certificate, DSC
+// Faqs), Token & Driver — (buy token, driver download), eSign — keep as
+// previous, partner with us card… do not make the main option clik[able] only
+// the sub option is clik[able]."
+//
+// So the DSC mega panel is BACK, one day after it was removed. It is not the
+// old panel restored: the DSC tree is still two routes (/dsc and
+// /dsc/buy-token), so every item here is a DEEP LINK into a section of one of
+// them, not a page of its own. That is exactly why the column headings are
+// groupings rather than routes — there is no page for "Token & Driver" to
+// point at — and it satisfies Clinton's "only the sub option is clickable"
+// directly: `PanelColumn` (MegaPanel.jsx) renders a heading as a <Link> only
+// when the column carries a `path`, and none of these do.
+//
+// ⚠️ Every `path` is BUILT from a page object or a section-id map, never typed
+// as a literal. A fragment that names a
+// section id which no longer exists scrolls nowhere and lights up never, and
+// the link-integrity scan cannot catch it — the PATH is real and only the
+// fragment is nonsense. That is precisely how `/dsc#undefined` shipped once
+// (02-09-2026); the build-time fragment check exists because of it.
+export const dscPanelColumns = [
+  {
+    label: "DSC",
+    items: [
+      {
+        // /dsc IS the certificates page. Not a fragment: the section
+        // this once pointed at no longer exists (see `dscSectionIds`).
+        path: "/dsc",
+        label: "Digital Signature Certificate",
+      },
+      // The FAQ set lives on the Buy Token page, not on /dsc — it mostly
+      // answers token, validity and renewal questions. Same destination the
+      // footer's DSC column has always used.
+      {
+        path: dscFaqsPage.path,
+        label: "DSC FAQs",
+      },
+    ],
+  },
+  {
+    label: "Token & Driver",
+    items: [
+      { path: dscResourcesPage.path, label: "Buy Token" },
+      {
+        path: dscDriversPage.path,
+        label: "Driver Downloads",
+      },
+    ],
+  },
+  // ⛔ UNPAUSED 03-09-2026. ONE item, not the two the paused version carried:
+  // `aadhaar-esign`'s product page has no content and no template since the T4
+  // family was deleted (02-09-2026), and a menu item pointing at a route that
+  // does not exist is a 404 in the main navigation. The page below is the one
+  // that answers the question a visitor actually arrives with — which of the
+  // two do I need — and it routes eSign enquiries to a human, so nothing is
+  // unreachable. Add the second item when that page exists again, not before.
+  {
+    label: "eSign",
+    items: [{ path: dscEsignPage.path, label: dscEsignPage.label }],
+  },
+];
+
 /**
  * Every retired DSC path, and the slug it used to answer to.
  *
@@ -297,11 +443,11 @@ export const dscResourcesPage = {
  * must stay dependency-free.
  */
 export const dscRetiredRoutes = [
-  { slug: "class-3-individual", path: "/dsc/class-3-individual", label: "Class 3 DSC — Individual", hash: dscSectionIds.certificates },
-  { slug: "class-3-organisation", path: "/dsc/class-3-organisation", label: "Class 3 DSC — Organisation", hash: dscSectionIds.certificates },
-  { slug: "combo-dsc", path: "/dsc/combo-dsc", label: "Combo DSC (Sign + Encrypt)", hash: dscSectionIds.certificates },
-  { slug: "dgft-iec", path: "/dsc/dgft-iec", label: "DGFT (IEC) DSC", hash: dscSectionIds.certificates },
-  { slug: "dsc-renewal-reissue", path: "/dsc/renewal-reissue", label: "DSC Renewal & Re-issue", hash: dscSectionIds.certificates },
+  { slug: "class-3-individual", path: "/dsc/class-3-individual", label: "Class 3 DSC — Individual", hash: dscSectionIds.finder },
+  { slug: "class-3-organisation", path: "/dsc/class-3-organisation", label: "Class 3 DSC — Organisation", hash: dscSectionIds.finder },
+  { slug: "combo-dsc", path: "/dsc/combo-dsc", label: "Combo DSC (Sign + Encrypt)", hash: dscSectionIds.finder },
+  { slug: "dgft-iec", path: "/dsc/dgft-iec", label: "DGFT (IEC) DSC", hash: dscSectionIds.finder },
+  { slug: "dsc-renewal-reissue", path: "/dsc/renewal-reissue", label: "DSC Renewal & Re-issue", hash: dscSectionIds.finder },
   // ⚠️ `buy-tokens` redirects to /dsc with NO hash. Its content was deleted,
   // so there is no section to land on — sending a reader to a fragment that
   // does not exist would leave them at the top of the page wondering what they
@@ -312,21 +458,27 @@ export const dscRetiredRoutes = [
   // to /dsc while the token offer was deleted; this is the better destination
   // and the reason the redirect table carries an explicit `to`.
   { slug: "buy-tokens", path: "/dsc/buy-tokens", label: "Buy DSC Tokens", to: "/dsc/buy-token" },
-  { slug: "documents-required", path: "/dsc/documents-required", label: "Documents Required for DSC", hash: dscSectionIds.documents },
-  { slug: "validity-renewal-faqs", path: "/dsc/validity-renewal-faqs", label: "Validity, Renewal & FAQs", hash: dscResourceSectionIds.renewal, resources: true },
-  { slug: "drivers", path: "/dsc/drivers", label: "Token Driver Downloads", hash: dscResourceSectionIds.drivers, resources: true },
-  { slug: "hyp2003", path: "/dsc/drivers/hyp2003", label: "HYP2003 Driver Downloads", hash: dscResourceSectionIds.drivers, resources: true },
-  { slug: "epass-2003", path: "/dsc/drivers/epass-2003", label: "ePass 2003 Driver Downloads", hash: dscResourceSectionIds.drivers, resources: true },
-  { slug: "watchdata-proxkey", path: "/dsc/drivers/watchdata-proxkey", label: "Watchdata Proxkey Driver Downloads", hash: dscResourceSectionIds.drivers, resources: true },
-  { slug: "mtoken", path: "/dsc/drivers/mtoken", label: "mToken Driver Downloads", hash: dscResourceSectionIds.drivers, resources: true },
+  // ⛔ 03-09-2026: retargeted from `documents` to `finder` — the documents
+  // section was removed from /dsc and the finder is where a checklist now comes
+  // from. The label still names what the old URL was about.
+  { slug: "documents-required", path: "/dsc/documents-required", label: "Documents Required for DSC", hash: dscSectionIds.finder },
+  { slug: "validity-renewal-faqs", path: "/dsc/validity-renewal-faqs", label: "Validity, Renewal & FAQs", to: `${dscFaqsPage.path}#${dscFaqSectionIds.renewal}` },
+  // ⛔ 03-09-2026: `/dsc/drivers` IS NO LONGER RETIRED. It is a real page now,
+  // so its stub had to be deleted here in the same edit — `writeRedirects()`
+  // runs after the route pass and would have overwritten the real page's
+  // index.html with a stub that redirects to itself.
+  // The four per-token driver URLs stay retired and now land on that page.
+  { slug: "hyp2003", path: "/dsc/drivers/hyp2003", label: "HYP2003 Driver Downloads", to: dscDriversPage.path },
+  { slug: "epass-2003", path: "/dsc/drivers/epass-2003", label: "ePass 2003 Driver Downloads", to: dscDriversPage.path },
+  { slug: "watchdata-proxkey", path: "/dsc/drivers/watchdata-proxkey", label: "Watchdata Proxkey Driver Downloads", to: dscDriversPage.path },
+  { slug: "mtoken", path: "/dsc/drivers/mtoken", label: "mToken Driver Downloads", to: dscDriversPage.path },
 ].map((route) => ({
   ...route,
-  redirectTo:
-    // ⚠️ Derived from `dscResourcesPage.path`, never a literal. That page has
-    // already been renamed once (/dsc/resources → /dsc/buy-token) and a
-    // hardcoded string here would have silently pointed eight redirect stubs
-    // at a 404.
-    route.to ?? `${route.resources ? dscResourcesPage.path : "/dsc"}#${route.hash}`,
+  // ⚠️ Every destination is DERIVED from a page object, never a literal. The
+  // Buy Token page has already been renamed once (/dsc/resources →
+  // /dsc/buy-token) and a hardcoded string here would have silently pointed
+  // eight redirect stubs at a 404.
+  redirectTo: route.to ?? `/dsc#${route.hash}`,
 }));
 
 // The DSC mega panel's fourth "column" — a promo CARD, not a link list, so
@@ -435,15 +587,27 @@ export const legalPages = [
 export const primaryNav = [
   { label: "Home", path: "/" },
   { label: "Services", panel: "services", hubPath: "/services", hubLabel: "View all services" },
-  // ⛔ 02-09-2026 (Clinton: "keep dsc and resources as a single tab like
-  // home"). No `panel` key, so `Header.jsx` renders it through the same plain
-  // <Link> branch as Home and About Us — there is one DSC page, and a dropdown
-  // over a single destination is a menu that asks a question with one answer.
-  { label: "Digital Signatures", path: "/dsc" },
-  // ⛔ 02-09-2026: "for [token] keep it in another tab like digital signature",
-  // then "change resou[rce] page to buy token". A second flat tab, not a
-  // dropdown — same reasoning as the DSC tab above.
-  { label: "Buy Token", path: dscResourcesPage.path },
+  // ⛔ 03-09-2026 (Clinton: "in digital signature it will be show and dropdown
+  // option like previous"). The flat DSC tab is a mega-panel trigger again —
+  // see `dscPanelColumns` above for the four-slot structure and why every
+  // column heading is deliberately unclickable.
+  //
+  // ⚠️ "Buy Token" is NO LONGER a top-level tab. It became a sub-option of
+  // this panel's "Token & Driver" column on the same instruction, and leaving
+  // it in both places would put one destination in the navbar twice. The page
+  // itself is unchanged and still reachable from the panel, the footer's DSC
+  // column, /dsc's own links and its route directly.
+  //
+  // ⛔ No `hubPath`/`hubLabel` (Clinton, 03-09-2026: "in dropdown remove vie[w]
+  // all d[s]c services button"). MegaPanel omits the utility rail's hub link
+  // when they are absent. Safe here and ONLY here: the panel's own "Digital
+  // Signature Certificate" item already points at /dsc, so nothing became
+  // unreachable — unlike Services, whose trigger is a <button> and whose rail
+  // link is the navbar's only route to /services.
+  {
+    label: "Digital Signatures",
+    panel: "dsc",
+  },
   { label: "About Us", path: "/about" },
 ];
 
@@ -463,9 +627,9 @@ export const allRoutes = [
   ]),
   { path: "/dsc", label: "Digital Signature Certificates", template: "T3" },
   { ...dscResourcesPage, parent: "/dsc" },
-  // ⛔ eSign PAUSED — 21-08-2026. Off the route table, so no file is prerendered
-  // for it and `sitemapPaths()` cannot list it.
-  // { ...dscEsignVsDscPage, parent: "/dsc" },
+  { ...dscDriversPage, parent: "/dsc" },
+  { ...dscFaqsPage, parent: "/dsc" },
+  { ...dscEsignPage, parent: "/dsc" },
   insightsIndexPage,
   ...insightArticlePages,
   ...standalonePages,
@@ -494,9 +658,10 @@ export const footerColumns = [
       { path: "/dsc", label: "Digital Signature Certificates" },
       { path: `/dsc#${dscSectionIds.finder}`, label: "Which DSC do I need?" },
       { path: dscResourcesPage.path, label: "Buy a DSC Token" },
-      { path: `/dsc#${dscSectionIds.documents}`, label: "Documents Required" },
-      { path: `${dscResourcesPage.path}#${dscResourceSectionIds.drivers}`, label: "Token Driver Downloads" },
-      { path: `${dscResourcesPage.path}#${dscResourceSectionIds.faqs}`, label: "DSC FAQs" },
+      { path: dscDriversPage.path, label: "Token Driver Downloads" },
+      { path: dscFaqsPage.path, label: "DSC FAQs" },
+      // ⛔ UNPAUSED 03-09-2026 — a live route again, so the footer lists it.
+      { path: dscEsignPage.path, label: "eSign or DSC?" },
     ],
   },
   {
@@ -618,8 +783,9 @@ const slugIndex = new Map([
   ...dscRetiredRoutes.map((r) => [r.slug, { ...r, path: r.redirectTo }]),
   ["dsc", { slug: "dsc", path: "/dsc", label: "Digital Signature Certificates" }],
   [dscResourcesPage.slug, dscResourcesPage],
-  // ⛔ eSign PAUSED — 21-08-2026.
-  // [dscEsignVsDscPage.slug, dscEsignVsDscPage],
+  [dscDriversPage.slug, dscDriversPage],
+  [dscFaqsPage.slug, dscFaqsPage],
+  [dscEsignPage.slug, dscEsignPage],
   [insightsIndexPage.slug, insightsIndexPage],
   ...insightArticlePages.map((a) => [a.slug, a]),
 ]);

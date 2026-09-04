@@ -8,6 +8,8 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { organizationJsonLd, localBusinessJsonLd } from "@/lib/jsonld";
 import { useIdleMount } from "@/hooks/useIdleMount";
 import { wasPrerendered } from "@/lib/prerendered";
+import { trackPageView } from "@/lib/analytics";
+import { useContactLinkTracking } from "@/hooks/useContactLinkTracking";
 import { site } from "@/content/nav";
 
 const ORIGIN = `https://${site.domain}`;
@@ -82,12 +84,54 @@ function upsertCanonical(href) {
 // CONTENT-PLAN.md §7-9). If a future template ever opens on a light surface,
 // the header needs a solid variant for that route, not a hack here.
 export function RootLayout() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   // Reset scroll on navigation. React Router does not do this for you, and
   // without it a deep service page opens halfway down.
+  //
+  // ⛔ 03-09-2026: this used to scroll to the top UNCONDITIONALLY, which
+  // silently broke every cross-page fragment link on the site — the footer's
+  // DSC column, the retired-DSC redirect stubs and, as of today, the whole
+  // Digital Signatures mega panel, whose items are all deep links into a
+  // section of /dsc or /dsc/buy-token. React Router changes the URL without a
+  // document load, so the browser never performs its own fragment scroll and
+  // this effect then scrolled the reader back to the top of a page they had
+  // asked to enter halfway down. A same-page anchor was unaffected, which is
+  // why it went unnoticed.
+  //
+  // ⚠️ The RETRY is not defensive padding. Every page template is
+  // `React.lazy`-loaded (Phase 7), so on a cross-page navigation the target
+  // section does not exist in the DOM on the frame this effect first runs —
+  // one `getElementById` would miss on exactly the case this exists for.
+  // `scroll-mt-*` on the targets supplies the fixed header's clearance, so
+  // `scrollIntoView` needs no offset of its own here.
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    const id = hash ? decodeURIComponent(hash.slice(1)) : "";
+    if (!id) {
+      window.scrollTo(0, 0);
+      return undefined;
+    }
+
+    let frame = 0;
+    let attempts = 0;
+    const seek = () => {
+      const target = document.getElementById(id);
+      if (target) {
+        target.scrollIntoView();
+        return;
+      }
+      // ~30 frames (about half a second) is comfortably longer than a lazy
+      // chunk takes to resolve locally and on a cold cache; after that the
+      // fragment genuinely does not exist and the top of the page is the
+      // honest fallback rather than an indefinite loop.
+      if (++attempts > 30) {
+        window.scrollTo(0, 0);
+        return;
+      }
+      frame = window.requestAnimationFrame(seek);
+    };
+    frame = window.requestAnimationFrame(seek);
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname, hash]);
 
   // Phase 9 — keeps <title>/<meta description>/canonical/OG in sync on every
   // CLIENT-side navigation. A prerendered page already has the correct tags
@@ -113,7 +157,11 @@ export function RootLayout() {
   // chunk is not fetched until a visitor actually navigates in-app.
   const isFirstPass = useRef(true);
   useEffect(() => {
-    const skip = isFirstPass.current && wasPrerendered;
+    // Read BEFORE the early return below, because the page_view gate needs
+    // "was this the very first render" independently of whether the page was
+    // prerendered — the <head> sync only cares about the latter.
+    const isInitialRender = isFirstPass.current;
+    const skip = isInitialRender && wasPrerendered;
     isFirstPass.current = false;
     if (skip) return;
 
@@ -122,6 +170,28 @@ export function RootLayout() {
       if (cancelled) return;
       const { title, description, canonical, robots, ogImage } = resolveSeo(pathname);
       document.title = title;
+
+      // GA4 page_view for the client-side navigation.
+      //
+      // ⛔ FIRED FROM INSIDE THIS EFFECT, AFTER `document.title` IS SET, AND
+      // BOTH HALVES OF THAT MATTER. `resolveSeo` arrives through a DYNAMIC
+      // import (see the note above), so a page_view sent from its own effect on
+      // the pathname change would carry the PREVIOUS page's `document.title` —
+      // every report row labelled one page behind. Sending it here means the
+      // title is already correct by construction.
+      //
+      // ⛔ AND THE FIRST RENDER IS ALWAYS SKIPPED, prerendered or not.
+      // index.html's `gtag('config', …)` sends a page_view on document load, so
+      // a call on mount double-counts the landing page. `isInitialRender` is
+      // captured above the `wasPrerendered` early return on purpose: gating on
+      // `skip` instead would skip the first real NAVIGATION on a prerendered
+      // page (the effect's first reaching this line), losing a genuine hit —
+      // and under `npm run dev`, where nothing is prerendered, it would let the
+      // mount through and double-count instead. The two gates answer different
+      // questions and cannot share one flag.
+      if (!isInitialRender) {
+        trackPageView({ path: pathname, title });
+      }
       upsertMeta("name", "description", description);
       upsertMeta("name", "robots", robots);
       upsertMeta("property", "og:type", "website");
@@ -139,6 +209,11 @@ export function RootLayout() {
       cancelled = true;
     };
   }, [pathname]);
+
+  // One delegated listener for every WhatsApp and phone link sitewide — see
+  // the hook for why this is not twenty onClick handlers, and why the link's
+  // href is deliberately never sent.
+  useContactLinkTracking(pathname);
 
   return (
     <>

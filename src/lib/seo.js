@@ -35,6 +35,9 @@ import { site, findRoute } from "../content/nav.js";
 import { getServiceContent } from "../content/services/index.js";
 import { getCategoryContent } from "../content/services/category-content.js";
 import { dscHubContent } from "../content/dsc/hub-content.js";
+import { esignOrDscContent } from "../content/dsc/esign-or-dsc.js";
+import { driversPage } from "../content/dsc/drivers.js";
+import { dscValidityRenewalContent } from "../content/dsc/validity-renewal-faqs.js";
 import { tokenProduct } from "../content/dsc/token.js";
 import { aboutContent } from "../content/about.js";
 import { partnerContent } from "../content/partner-with-us.js";
@@ -87,6 +90,24 @@ export function resolveSeo(path) {
     // tab, which keeps /dsc minimal.
     case "T5":
       m = tokenProduct.meta;
+      break;
+
+    // T11 — /dsc/esign-or-dsc (unpaused 03-09-2026). Its own case, matching
+    // its own template branch in routeComponents.js; falling through to T5
+    // would give the eSign page the Buy Token page's title and description.
+    case "T11":
+      m = esignOrDscContent.meta;
+      break;
+
+    // T12 / T13 — the two pages split off Buy Token on 03-09-2026. Their own
+    // cases, not a fall-through to T5: that would give both of them the order
+    // page's title and description.
+    case "T12":
+      m = driversPage.meta;
+      break;
+
+    case "T13":
+      m = dscValidityRenewalContent.meta;
       break;
 
 

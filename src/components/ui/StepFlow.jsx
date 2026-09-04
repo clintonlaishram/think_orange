@@ -115,7 +115,25 @@ export function StepFlow({
             step count stay with the list while the reader is inside it — which
             on a 6-step leaf is most of a screen. */}
         <div className="lg:col-span-4">
-          <div className="lg:sticky lg:top-[calc(var(--header-h)+32px)]">
+          {/* ⛔ DO NOT CHANGE THIS OFFSET — `lg:sticky
+              lg:top-[calc(var(--header-h)+52px)]` is FIXED BY INSTRUCTION
+              (Clinton, 04-09-2026: "StepFlow in this component, keep
+              'lg:sticky lg:top-[calc(var(--header-h)+52px)]' do not change in
+              next update"). It was +32px and he set it to +52px himself.
+
+              `FaqSection` was then moved to match it ("apply the same +52px
+              to FaqSection rail"), so ALL THREE sticky rails — this one,
+              `FaqSection` and `DscFinder` — now carry the same value, and a
+              future difference between them is drift rather than a decision.
+
+              The clearance exists because a rail sits under the fixed header
+              AND, on T2/T4 pages, under that page's own sticky sub-nav; at
+              +32px the eyebrow parked beneath that bar.
+
+              ⚠️ It must stay a `calc()` off `--header-h`, never a literal
+              `lg:top-*` step — the header height is a token and a hard number
+              here would drift the moment it changes. */}
+          <div className="lg:sticky lg:top-[calc(var(--header-h)+52px)]">
             <SectionHeading
               eyebrow={eyebrow}
               heading={heading}

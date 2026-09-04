@@ -32,7 +32,7 @@
 // copy is recoverable from git history if it is ever wanted back.
 //
 // ⚠️ WHAT DELIBERATELY SURVIVES: every certificate's `tokenNote`, and the
-// sentences saying a Class 3 certificate is issued on a FIPS-compliant USB
+// sentences saying a Class 3 certificate is issued on a FIPS 140-3 compliant USB
 // token and cannot be held as a file. That is not the token product — it is
 // how a Class 3 certificate works, and stripping it would leave the
 // certificates section quietly wrong about what a buyer receives.
@@ -44,12 +44,66 @@
 // identifier per certificate.
 
 /**
+ * THE TWO VERIFICATION ROUTES, and why the document list depends on which one
+ * you are on.
+ *
+ * ⛔ 03-09-2026 — from Clinton's `dsc-finder-preview.html`, which is the first
+ * thing on this site to model it. Every checklist here used to assume the
+ * Aadhaar route and simply listed "Aadhaar card" and "Passport-sized
+ * photograph" side by side, which is wrong in both directions: on the Aadhaar
+ * route the record supplies the photograph and the address, so neither is sent
+ * separately; on the PAN route there is no Aadhaar record at all, so both have
+ * to be.
+ *
+ * ⚠️ These extras are inserted BEFORE the final line of a `documentCore`,
+ * because that line is always the video-verification contact detail and it
+ * reads as the last thing you do. Keep it last in every core list.
+ */
+export const kycRoutes = [
+  {
+    key: "aadhaar",
+    label: "Aadhaar eKYC",
+    extra: ["Aadhaar card, with the mobile number currently linked to it"],
+    note:
+      "The Aadhaar record supplies both the photograph and the address, so neither needs to be sent separately.",
+  },
+  {
+    key: "pan",
+    label: "PAN based",
+    extra: [
+      "Passport-sized photograph",
+      "Address proof — driving licence, utility bill, or another government-issued proof",
+    ],
+    note:
+      "There is no Aadhaar record on this route, so the photograph and address proof both have to be supplied. The address proof should be recent and carry the same name as the PAN.",
+  },
+];
+
+export function kycRoute(key) {
+  return kycRoutes.find((route) => route.key === key) ?? kycRoutes[0];
+}
+
+/**
+ * A certificate's checklist for one verification route.
+ *
+ * ⚠️ THE ONE DEFINITION. `certificateVariants[].documents` below is this
+ * function applied with the Aadhaar route, so the documents section, the
+ * finder and any future consumer cannot drift — there is no second list to
+ * keep in step. Pass a route key to get the other one.
+ */
+export function documentsFor(core, kycKey = "aadhaar") {
+  if (!core?.length) return [];
+  const route = kycRoute(kycKey);
+  return [...core.slice(0, -1), ...route.extra, core[core.length - 1]];
+}
+
+/**
  * The five certificates, merged. `bestFor` is the one-line answer the finder
  * and the comparison row show; `usedFor`, `documents`, `validityOptions`,
  * `tokenNote` and `verificationNote` are carried over unchanged from each
  * retired product file.
  */
-export const certificateVariants = [
+const CERTIFICATE_VARIANTS = [
   {
     key: "class-3-individual",
     label: "Class 3 — Individual",
@@ -66,11 +120,9 @@ export const certificateVariants = [
     ],
     validityOptions: ["1 year", "2 years", "3 years"],
     tokenNote:
-      "Issued on a FIPS-compliant USB crypto token — the certificate cannot be used without it, and the token ships as part of the certificate, not separately.",
-    documents: [
+      "Issued on a FIPS 140-3 compliant USB crypto token — the certificate cannot be used without it, and the token ships as part of the certificate, not separately.",
+    documentCore: [
       "PAN card",
-      "Aadhaar card, with the mobile number currently linked to it",
-      "Passport-sized photograph",
       "Active mobile number and email for video verification",
     ],
     verificationNote:
@@ -94,12 +146,12 @@ export const certificateVariants = [
     ],
     validityOptions: ["1 year", "2 years", "3 years"],
     tokenNote:
-      "Issued on a FIPS-compliant USB crypto token, in the organisation's name with the named signatory as the certificate holder.",
-    documents: [
+      "Issued on a FIPS 140-3 compliant USB crypto token, in the organisation's name with the named signatory as the certificate holder.",
+    documentCore: [
       "Certificate of Incorporation or registration certificate",
       "PAN of the organisation",
       "Board resolution or authorisation letter naming the signatory",
-      "PAN, Aadhaar and photograph of the authorised signatory",
+      "PAN of the authorised signatory",
       "Active mobile number and email of the signatory, for video verification",
     ],
     verificationNote:
@@ -122,12 +174,12 @@ export const certificateVariants = [
     ],
     validityOptions: ["2 years", "3 years"],
     tokenNote:
-      "Issued as two certificates — one for signing, one for encryption — loaded onto the same FIPS-compliant USB token, so you carry one token rather than two.",
-    documents: [
+      "Issued as two certificates — one for signing, one for encryption — loaded onto the same FIPS 140-3 compliant USB token, so you carry one token rather than two.",
+    documentCore: [
       "Certificate of Incorporation or registration certificate, for an organisation applicant",
       "PAN of the organisation",
       "Board resolution or authorisation letter naming the signatory",
-      "PAN, Aadhaar and photograph of the authorised signatory",
+      "PAN of the authorised signatory",
       "Active mobile number and email of the signatory, for video verification",
     ],
     verificationNote:
@@ -148,8 +200,8 @@ export const certificateVariants = [
     ],
     validityOptions: ["1 year", "2 years", "3 years"],
     tokenNote:
-      "Issued on a FIPS-compliant USB crypto token, registered against your IEC on the DGFT portal after issuance.",
-    documents: [
+      "Issued on a FIPS 140-3 compliant USB crypto token, registered against your IEC on the DGFT portal after issuance.",
+    documentCore: [
       "Import Export Code (IEC) certificate",
       "PAN of the IEC holder — individual or organisation",
       "Organisation registration documents, where the IEC is held by a company or LLP",
@@ -176,9 +228,9 @@ export const certificateVariants = [
     ],
     validityOptions: ["1 year", "2 years", "3 years"],
     tokenNote:
-      "Renewing before expiry on a still-working token reuses that same token wherever the certifying authority allows it. A lost, damaged or already-expired case gets a fresh FIPS-compliant USB token.",
-    documents: [
-      "PAN and Aadhaar (individual), or organisation registration documents plus the authorised signatory's PAN and Aadhaar (organisation)",
+      "Renewing before expiry on a still-working token reuses that same token wherever the certifying authority allows it. A lost, damaged or already-expired case gets a fresh FIPS 140-3 compliant USB token.",
+    documentCore: [
+      "PAN of the applicant, plus the organisation's registration documents and PAN where the certificate is an organisation one",
       "Your existing certificate's details, if renewing before expiry on the same token",
       "A signed revocation request, if the token was lost, stolen or damaged",
       "Active mobile number and email for video verification",
@@ -187,6 +239,17 @@ export const certificateVariants = [
       "Indian certifying authorities don't technically \"renew\" a certificate in the sense of extending its expiry — a fresh certificate is issued either way. What changes with timing is how much of the process repeats: apply before expiry and it moves faster with a working token you can reuse; wait until after expiry and it's treated as a brand-new application, full verification included, with no grace period once the old one has lapsed.",
   },
 ];
+
+/**
+ * `documents` is DERIVED — the Aadhaar route applied to `documentCore` — so
+ * every existing consumer (the /dsc documents section, its counts) keeps
+ * reading an array and there is still exactly one checklist per certificate.
+ * Read `documentCore` + `documentsFor()` when the route matters.
+ */
+export const certificateVariants = CERTIFICATE_VARIANTS.map((variant) => ({
+  ...variant,
+  documents: documentsFor(variant.documentCore),
+}));
 
 export function certificateVariant(key) {
   return certificateVariants.find((variant) => variant.key === key);
@@ -302,7 +365,7 @@ export const dscProcess = [
     step: 3,
     title: "Receive the certificate",
     desc:
-      "The certificate is generated and loaded onto a FIPS-compliant USB token, which is delivered or collected and tested working before you rely on it.",
+      "The certificate is generated and loaded onto a FIPS 140-3 compliant USB token, which is delivered or collected and tested working before you rely on it.",
   },
   {
     step: 4,

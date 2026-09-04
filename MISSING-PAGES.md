@@ -230,3 +230,132 @@ now says "a licensed Certifying Authority".
 - If a CA is ever to be named again, it needs Clinton's explicit go-ahead — all
   three supplied reference documents name one, so a future copy-paste from them
   will reintroduce it silently.
+
+## Aadhaar eSign product page — no content, no template (03-09-2026)
+`/dsc/esign-or-dsc` was unpaused on 03-09-2026 and is live. Its sibling —
+`/dsc/aadhaar-esign`, the T4 product page — was **not**, and cannot be by
+uncommenting anything:
+
+- Its content lived in `src/content/dsc/products.js`, **deleted on 02-09-2026**
+  when the USB-token offer was removed and the whole T4 family retired.
+- `DscProduct.jsx` was deleted with it, so there is no template either.
+
+So restoring it is a content-writing job plus a template decision, not a pause
+flag. Until then the eSign menu column carries ONE item, and
+`DscEsign.jsx`'s "which one do you need" section routes eSign enquiries to
+WhatsApp rather than to a page that does not exist.
+
+⚠️ **Still open, and it is a claim rather than a route:** the paused clauses in
+`content/dsc/hub-content.js` ("…renewals, USB tokens and Aadhaar eSign — issued
+through…") were left paused deliberately. Restoring them asserts that
+ThinkOrange *delivers* Aadhaar eSign today, which this repo has already flagged
+as an unconfirmed inference from the DSC partnership existing. Confirm with
+Clinton before uncommenting them. Same for the `aadhaar-esign` entry in
+`content/dsc/icons.js` and the paused insights article.
+
+## ⛔ DSC content conflict: does one Class 3 Individual certificate cover EPFO and company GST? (03-09-2026)
+The finder was rebuilt on 03-09-2026 from Clinton's `dsc-finder-preview.html`.
+Its `filings` answer states — in the reference's own wording, now live on /dsc:
+
+> One certificate covers all of these, whether you are a proprietor, a company
+> or an LLP — these portals verify the signatory, not the entity, so no
+> organisation documents are needed.
+
+`portalGuide` (`content/dsc/certificates.js`), rendered **further down the same
+page**, says the opposite in two rows:
+
+- **GST portal** — "Individual for proprietors; Organisation for companies and
+  LLPs… Mandatory for companies and LLPs."
+- **EPFO / ESIC** — "Class 3 Organisation… A personal certificate will not work
+  — EPFO validates against the establishment record."
+
+Both cannot be true, and /dsc currently asserts both. The reference is newer and
+is Clinton's own, so it is what the finder implements; `portalGuide` was left
+untouched because reconciling them is a factual call, not a formatting one.
+
+**Decide which is right, then fix the loser.** If the reference is right,
+`portalGuide`'s GST and EPFO rows and `class-3-organisation`'s `usedFor` list
+need rewriting. If `portalGuide` is right, the `filings` card has to split by
+signer like `tender` and `exim` do (the machinery already supports it — remove
+`skipsSigner` and add `filings|individual` / `filings|company` / `filings|firm`
+answers).
+
+## Confirm the token's FIPS 140-3 certification (03-09-2026)
+The site now says "FIPS 140-3 compliant" in 20 rendered places, on Clinton's
+instruction (03-09-2026), where it previously said the vaguer "FIPS-compliant".
+
+**FIPS 140-3 is a specific NIST standard revision** — it superseded FIPS 140-2 —
+so this asserts the HYP2003 token validates against that particular revision,
+not merely that it is a compliant crypto token. That is a stronger and more
+checkable claim than the one it replaces.
+
+Nothing to fix today: it is the founder's own statement about his own stocked
+hardware. **Worth doing before launch:** get the vendor's certificate or CMVP
+number on file, so the claim can be backed if a client or a certifying authority
+asks. If it turns out the token is certified to 140-2 rather than 140-3, every
+occurrence has to change back together — they all resolve from
+`content/dsc/certificates.js`, `content/dsc/token.js`,
+`content/partner-with-us.js` and `home/sections/DscBand.jsx`.
+
+## Token Initialisation & Reset Tool — three things still needed (03-09-2026)
+Added to `/dsc/drivers` on 03-09-2026 as `initialisation-tool` in
+`content/dsc/drivers.js`. The page renders it honestly today, but three facts
+were deliberately left blank rather than guessed:
+
+1. **The exact vendor tool name.** It is listed as "Initialisation & Reset Tool",
+   which describes what it does. If the manufacturer's utility has a specific
+   name, use it — a reader searching for the real name should find this page.
+2. **Which operating systems it runs on.** `supportedOs` is an empty array, so
+   the row reads "Utility · sent on request" and the panel shows no
+   compatibility table. Most vendor initialisation utilities are Windows-only,
+   but that was not assumed here.
+3. **The file itself.** `downloads` is empty, like every driver `url` on the
+   site. Given that running this on the wrong token destroys a live certificate,
+   sending it person-to-person may be the right permanent answer rather than a
+   gap — that is Clinton's call.
+
+Fill any of the three and the page picks it up with no code change: the
+compatibility table, install steps and a real download button all render as soon
+as their arrays are non-empty.
+
+⚠️ Do not add `installSteps` unless the procedure has actually been confirmed
+for this utility. The panel currently shows "When it is used" (situations)
+precisely because a procedure was not available to state.
+
+
+## HYP2003 initialisation tool — hosted 04-09-2026
+
+Clinton supplied `public/software/HYP2003_Initialization_Tool.exe` (234,128
+bytes, PE32 GUI / Intel 80386 / MS Windows) and asked for it wired as a
+download. ⛔ **Corrected the same day** on Clinton's note "software link is for this": the
+file is listed under the **HYP2003** entry's Windows row, not the Initialisation
+& Reset Tool entry. That entry has no file again.
+
+⚠️ **Worth confirming, because the two are not the same thing:** the supplied
+binary is named "HYP2003 Initialization Tool", and initialising a token erases
+the certificate on it — but it is now the download behind HYP2003's driver
+button. If there is a separate plain DRIVER installer, send it and the two will
+be split; the page currently states what the file is at the point of download.
+
+⛔ **Needs a human answer, not a guess:**
+
+1. **Redistribution terms.** CONTENT-PLAN.md §9 says not to host a vendor binary
+   without checking them. The file is now hosted and served from our own domain.
+   Confirm we are permitted to redistribute it — this is the one item on this
+   list that is a legal question rather than a copy gap.
+
+Still outstanding on that entry, and rendering honestly meanwhile:
+
+2. **The exact vendor tool name.** The entry is labelled "Initialisation & Reset
+   Tool" (generic); the filename says "HYP2003 Initialization Tool". If the
+   manufacturer has a real product name, it belongs in `label`.
+3. **A version number and release date.** Both are still `null` — the filename
+   carries neither. Fill `downloads[0].version` / `.releaseDate` and the panel
+   renders them with no code change.
+4. **macOS / Linux builds**, if they exist. `supportedOs` currently states
+   Windows only, which is read off the binary rather than assumed.
+
+⚠️ **If the file is ever replaced, the SHA-256 in `drivers.js` must be
+recomputed** (`shasum -a 256 public/software/HYP2003_Initialization_Tool.exe`).
+A checksum that does not match the file it labels is worse than none — it tells
+a careful reader the download has been tampered with.

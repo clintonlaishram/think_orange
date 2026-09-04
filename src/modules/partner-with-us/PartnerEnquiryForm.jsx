@@ -3,25 +3,19 @@ import { toast } from "sonner";
 import { Send } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { practiceTypes } from "@/content/practice-types";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { sendEnquiry, emailjsConfigured } from "@/lib/emailjs";
+import { trackEvent } from "@/lib/analytics";
 import { honeypotTripped, isRateLimited, recordSubmission, submittedTooFast, useMountedAt } from "@/lib/spamGuard";
 import { site } from "@/content/nav";
 
-const PRACTICE_TYPES = [
-  { value: "chartered-accountant", label: "Chartered Accountant" },
-  { value: "company-secretary", label: "Company Secretary" },
-  { value: "cost-accountant", label: "Cost Accountant" },
-  { value: "tax-practitioner", label: "Tax Practitioner" },
-  { value: "advocate", label: "Advocate" },
-  { value: "consultant", label: "Business Consultant" },
-  { value: "it-service-provider", label: "IT Service Provider" },
-  { value: "existing-reseller", label: "Existing DSC reseller" },
-  { value: "token-dealer", label: "Token dealer" },
-  { value: "other", label: "Something else" },
-];
+// ⛔ 03-09-2026: the list MOVED to `content/practice-types.js` because the Buy
+// Token order form asks the same question. Aliased rather than renamed at every
+// use so this file's diff stays about the move.
+const PRACTICE_TYPES = practiceTypes;
 
 // "Do you issue today?" is the question that decides whether this is an
 // onboarding conversation or a switching one, and the reference page leads on
@@ -112,11 +106,22 @@ export function PartnerEnquiryForm({ tone = "light" }) {
         notes: form.notes,
       });
       recordSubmission(FORM_KEY);
+      trackEvent("lead_submitted", {
+        form_name: "partner_application",
+        practice_type: form.practiceType,
+        monthly_volume: form.monthlyVolume,
+      });
       setForm(initialForm);
       toast.success("Application sent", {
         description: "We'll be in touch to confirm the next steps.",
       });
     } catch (error) {
+      // Same reasoning as ContactForm's: while EmailJS is unconfigured every
+      // real application lands here, so the failure is the only hit there is.
+      trackEvent("lead_failed", {
+        form_name: "partner_application",
+        reason: emailjsConfigured ? "send_error" : "not_configured",
+      });
       toast.error("Couldn't send that", {
         description: emailjsConfigured
           ? "Something went wrong — please try again, or reach us on WhatsApp."

@@ -4,8 +4,9 @@ import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
 import { PageHero } from "@/components/layout/PageHero";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { Disclosure } from "@/components/ui/Disclosure";
 import { SubNav } from "@/components/layout/SubNav";
+import { NoticeBoard } from "@/components/ui/NoticeBoard";
+import { noticesFor } from "@/content/notices";
 import { ArcRings } from "@/components/ui/ArcRings";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/motion/Reveal";
@@ -17,14 +18,12 @@ import {
   dscResourcesPage,
   dscSectionIds,
 } from "@/content/nav";
-import {
-  afterIssue,
-  certificateCapabilities,
-  certificateVariants,
-  portalGuide,
-} from "@/content/dsc/certificates";
+// ⚠️ `certificateVariants` is still imported — the hero spec row counts them.
+// `portalGuide`, `certificateCapabilities` and `afterIssue` are NOT, since the
+// 03-09-2026 section removal; they remain exported and are the content those
+// sections would render again. See the ⛔ note where they used to sit.
+import { certificateVariants } from "@/content/dsc/certificates";
 import { dscHubContent } from "@/content/dsc/hub-content";
-import { dscIcon } from "@/content/dsc/icons";
 import { collectionPageJsonLd } from "@/lib/jsonld";
 import { t } from "@/content/turnaround";
 
@@ -72,6 +71,8 @@ import { t } from "@/content/turnaround";
 // off `section[data-surface]` in the live DOM; the footer is `deep`, so a bare
 // `[data-surface]` selector misreads the end.
 
+const dscNotices = noticesFor("dsc");
+
 export default function DscHub({ path }) {
   return (
     <>
@@ -108,13 +109,16 @@ export default function DscHub({ path }) {
           below two entries, so a future trim cannot leave a one-tab bar. */}
       <SubNav
         sections={[
+          ...(dscNotices.length > 0 ? [{ id: dscSectionIds.notices, label: "Notices" }] : []),
           { id: dscSectionIds.finder, label: "Which DSC?" },
-          { id: dscSectionIds.portals, label: "Portal guide" },
-          { id: dscSectionIds.documents, label: "Documents" },
-          { id: dscSectionIds.process, label: "After you get it" },
           { id: dscSectionIds.partner, label: "Partner" },
         ]}
       />
+
+      {/* Notice board — directly under the hero (Clinton, 04-09-2026). Renders
+          null when no confirmed notice is scoped here, which is why its tab
+          above is conditional on the same count. */}
+      <NoticeBoard id={dscSectionIds.notices} />
 
       {/* The finder is the first thing on the page, deliberately. It is the
           question every visitor arrives with, and putting prose in front of it
@@ -191,147 +195,25 @@ export default function DscHub({ path }) {
         <DscFinder />
       </Section>
 
-      {/* Portal guide. A TABLE, deliberately not collapsed: it is a scanning
-          reference, and a lookup table you have to open row by row is worse
-          than useless. Tables never animate (CLAUDE.md), and it scrolls inside
-          its own container rather than putting the page into overflow. */}
-      <Section id={dscSectionIds.portals} surface="light-alt">
-        <Container>
-          <SectionHeading
-            eyebrow="Portal guide"
-            heading="Which certificate each portal needs"
-            lede="If you file on more than one portal, one certificate usually covers several of them — which is the commonest way people avoid buying twice."
-          />
-          <div className="mt-10 overflow-x-auto">
-            <table className="w-full min-w-[720px] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-ink-200">
-                  {["Where you're filing", "Certificate needed", "In whose name", "Worth knowing"].map(
-                    (heading) => (
-                      <th
-                        key={heading}
-                        scope="col"
-                        className="py-3 pr-6 font-mono text-body-sm uppercase tracking-[0.1em] text-ink-400"
-                      >
-                        {heading}
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {portalGuide.map((row) => (
-                  <tr key={row.portal} className="border-b border-ink-100 align-top">
-                    <th scope="row" className="py-4 pr-6 text-body font-medium text-ink-600">
-                      {row.portal}
-                    </th>
-                    <td className="py-4 pr-6">
-                      {/* The one ember element per row. A tag rather than body
-                          text, because this column is the answer the reader is
-                          scanning for and everything else is qualification. */}
-                      <span className="inline-block rounded-full bg-ember-50 px-3 py-1 text-body-sm font-medium text-ember-700">
-                        {row.certificate}
-                      </span>
-                    </td>
-                    <td className="py-4 pr-6 text-body-sm text-ink-500">{row.name}</td>
-                    <td className="py-4 text-body-sm text-ink-500">{row.note}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {/* ⛔ 03-09-2026 (Clinton): "remove: Portal guide / Documents required /
+          After you get it — no need for that now." All three sections are gone
+          from this page, along with their sub-nav tabs and their ids in
+          `dscSectionIds` (nav.js) — deleting a section without deleting its id
+          is how `/dsc#certificates` shipped as a dead fragment twice; the
+          build-time fragment gate in prerender.mjs now catches it either way.
 
-          {/* Signature / encryption / combo — what a certificate DOES, as
-              distinct from whose name it is in. V4's own distinction, and the
-              one people get wrong when a tender rejects a signing-only
-              certificate. */}
-          <Reveal className="mt-12">
-            <h3 className="text-h3 text-ink-600">Signature, encryption or both</h3>
-            <dl className="mt-6 grid grid-cols-1 gap-x-10 gap-y-6 md:grid-cols-3">
-              {certificateCapabilities.map((capability) => (
-                <div key={capability.key} className="border-t border-ink-200 pt-4">
-                  <dt className="text-h4 text-ink-600">{capability.label}</dt>
-                  <dd className="mt-2 text-body-sm text-ink-500">{capability.desc}</dd>
-                </div>
-              ))}
-            </dl>
-          </Reveal>
-        </Container>
-      </Section>
+          ⚠️ THE CONTENT ITSELF IS NOT DELETED. `portalGuide`,
+          `certificateCapabilities` and `afterIssue` are all still exported
+          from content/dsc/certificates.js, unreferenced, so restoring any of
+          these sections is a render-only change. Do NOT prune them as dead
+          content on a later tidy-up pass.
 
-      {/* Documents — pick a certificate, get its checklist. */}
-      <Section
-        id={dscSectionIds.documents}
-        surface="dark"
-        className="surface-ambient"
-        texture="certificate"
-        textureId="dsc-documents-texture"
-      >
-        <Container>
-          <SectionHeading
-            eyebrow="Documents required"
-            heading="What to have ready before you apply"
-            lede="Open the certificate you are applying for. Everyone needs an active mobile number and email for the video verification step, whichever one it is."
-            dark
-          />
-          <Disclosure
-            dark
-            items={certificateVariants.map((variant) => ({
-              key: variant.key,
-              icon: dscIcon(variant.key),
-              label: variant.label,
-              meta: `${variant.documents.length} documents · ${variant.validityOptions.join(" · ")}`,
-              panel: <DocumentPanel variant={variant} />,
-            }))}
-          />
-        </Container>
-      </Section>
-
-      {/* "After you get it" — this REPLACED the four-step issuance flow
-          (instruction 4: "change how it work[s] in[to] after you get
-          section"). The issuance steps moved to /dsc/resources with the HowTo
-          schema that describes them, so nothing was lost. This is the better
-          section for a decision page anyway: the finder above already tells a
-          reader what to apply for, and what they do not know is what happens
-          once the token is in their hand. */}
-      <Section id={dscSectionIds.process} surface="light">
-        <Container>
-          <SectionHeading
-            eyebrow="After you get it"
-            heading="The part most people get stuck on"
-            lede="Having the certificate is not the same as being able to use it. We do both remaining steps with you rather than leaving you to work them out."
-          />
-          {/* A hairline timeline: a big quiet mono index, the stage label, and
-              the copy — the homepage's own oversized-numeral archetype
-              (DESIGN.md §11.4), not another card grid. */}
-          <ol className="mt-10 border-t border-ink-200">
-            {afterIssue.map((item, index) => (
-              <Reveal
-                as="li"
-                key={item.title}
-                delay={Math.min(index, 4) * 0.06}
-                className="grid grid-cols-1 gap-x-10 gap-y-3 border-b border-ink-200 py-7 md:grid-cols-12"
-              >
-                <div className="md:col-span-4 flex items-baseline gap-5">
-                  <span
-                    aria-hidden="true"
-                    className="font-mono text-stat font-black leading-none text-ember-500"
-                  >
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <span>
-                    <span className="block font-mono text-body-sm uppercase tracking-[0.1em] text-ink-400">
-                      {item.label}
-                    </span>
-                    <h3 className="mt-1 text-h4 text-ink-600">{item.title}</h3>
-                  </span>
-                </div>
-                <p className="md:col-span-8 max-w-[68ch] text-body text-ink-500">{item.desc}</p>
-              </Reveal>
-            ))}
-          </ol>
-        </Container>
-      </Section>
+          ⚠️ CONSEQUENCE WORTH KNOWING: the document checklists are now
+          reachable ONLY through the finder, which renders on demand in JS.
+          This file's own note above — and CLAUDE.md's — recorded that
+          on-demand results were safe precisely BECAUSE this page carried every
+          checklist as ordinary visible content. That is no longer true, so a
+          crawler or a no-JS reader now sees no checklist anywhere on /dsc. */}
 
       {/* Partner programme, as its own section (Clinton: "show become a
           partner in dsc page as a section"). It used to be a panel tucked
@@ -391,9 +273,15 @@ export default function DscHub({ path }) {
               /dsc stays short, and four resource cards here would start
               rebuilding the wall this page exists to avoid. */}
           <Reveal className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-ink-200 pt-6">
+            {/* ⛔ 03-09-2026: this line used to promise "document checklists,
+                the portal-by-portal guide, token drivers, renewal and the full
+                FAQ set". Two of those five were never on the Buy Token page —
+                the checklists and the portal guide were sections of THIS page —
+                and after today's removal the portal guide is not anywhere. A
+                pointer has to name what the destination actually holds, so it
+                now names only the three that are really there. */}
             <p className="max-w-[62ch] text-body text-ink-500">
-              Document checklists, the portal-by-portal guide, token drivers, renewal and the full
-              FAQ set are all in one place.
+              Token drivers, validity and renewal, and the full FAQ set are all in one place.
             </p>
             <Link
               to={dscResourcesPage.path}
@@ -438,33 +326,6 @@ const PARTNER_POINTS = [
   "Your clients stay yours. We do not contact them beyond the verification steps that require it.",
   "No joining fee, free onboarding and training, and tokens at partner rates.",
 ];
-
-function DocumentPanel({ variant }) {
-  return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
-      <div className="lg:col-span-7">
-        <ol className="space-y-3">
-          {variant.documents.map((item, index) => (
-            <li key={index} className="flex gap-3 text-body-sm text-ink-100">
-              {/* Visible ordinals, not decoration, so they carry the 4.5:1
-                  floor rather than a decorative tone. */}
-              <span className="shrink-0 font-mono tabular-nums text-ink-300">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
-      <div className="lg:col-span-5">
-        <h4 className="font-mono text-body-sm uppercase tracking-[0.1em] text-ink-300">
-          Before you apply
-        </h4>
-        <p className="mt-3 text-body-sm text-ink-100">{variant.verificationNote}</p>
-      </div>
-    </div>
-  );
-}
 
 /**
  * The hero's spec row.

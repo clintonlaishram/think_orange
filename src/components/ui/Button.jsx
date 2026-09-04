@@ -26,8 +26,23 @@ const VARIANTS = {
       "bg-transparent text-ink-600 border border-ink-100 hover:bg-ink-50 hover:border-ink-600",
       dark: "bg-transparent text-canvas border border-ink-700 hover:bg-ink-800 hover:border-ink-600",
     },
+    // The WhatsApp button. ⛔ 03-09-2026: this variant had THREE defects, all
+    // measured rather than spotted by eye, and all live on its existing call
+    // sites (ServiceLeaf's quote CTA, DscEsign's eSign enquiry):
+    //   1. It set `text-canvas` AND `text-ink-800`. `cn()` is twMerge, so the
+    //      second silently won — the first was dead the day it was written.
+    //   2. Its HOVER state measured **3.34:1** (ink-100 on `success`), under
+    //      the 4.5:1 floor. Both a light and a dark foreground fail on
+    //      `success`: ink-950 on it is only 4.49:1. So the background swap is
+    //      gone entirely — feedback is the lift plus the green shadow, which is
+    //      what `.whatsapp-fab` already uses.
+    //   3. ⚠️ Text on WhatsApp green must be DARK, not white. White measures
+    //      **1.98:1** on this hue; ink-950 is **9.82:1**. CLAUDE.md's FAB note
+    //      claims the opposite ("ink-950 would fail contrast on this hue") and
+    //      is simply wrong — that claim is about a 24px glyph, and it fails the
+    //      3:1 non-text floor too.
     tertiary:
-      "bg-whatsapp text-canvas text-ink-800 hover:text-ink-100 hover:bg-success hover:-translate-y-0.5 focus-visible:ring-ink-950",
+      "bg-whatsapp text-ink-950 hover:-translate-y-0.5 hover:shadow-[var(--shadow-whatsapp)] focus-visible:ring-ink-950",
   ghost: {
     light: "bg-transparent text-ember-600 hover:underline underline-offset-4",
     dark: "bg-transparent text-ember-200 hover:underline underline-offset-4",

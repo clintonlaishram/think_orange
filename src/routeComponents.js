@@ -18,6 +18,9 @@ export function resolveComponent(entry, components) {
     ServiceLeaf,
     DscHub,
     DscBuyToken,
+    DscEsign,
+    DscDrivers,
+    DscFaqs,
     About,
     PartnerWithUs,
     Contact,
@@ -42,6 +45,21 @@ export function resolveComponent(entry, components) {
     // one route: /dsc/resources, the technical tab that keeps /dsc minimal.
     case "T5":
       return DscBuyToken;
+    // T11 — /dsc/esign-or-dsc, unpaused 03-09-2026. Its own template rather
+    // than a T5 branch, because T5 resolves unconditionally to DscBuyToken now
+    // that the DSC tree is two pages: marking this T5 would have served the
+    // Buy Token page under the eSign URL, in both the client bundle AND the
+    // prerendered HTML, with nothing failing.
+    case "T11":
+      return DscEsign;
+    // T12 / T13 — /dsc/drivers and /dsc/faqs, split off Buy Token 03-09-2026.
+    // Their own branches for the same reason T11 has one: T5 resolves
+    // unconditionally to DscBuyToken, so reusing it would have served the order
+    // page under both URLs, in the bundle AND the prerendered HTML, silently.
+    case "T12":
+      return DscDrivers;
+    case "T13":
+      return DscFaqs;
     case "T6":
       return entry.path === "/about" ? About : PartnerWithUs;
     case "T7":

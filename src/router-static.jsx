@@ -24,6 +24,9 @@ import CategoryHub from "@/modules/services/CategoryHub";
 import ServiceLeaf from "@/modules/services/ServiceLeaf";
 import DscHub from "@/modules/dsc/DscHub";
 import DscBuyToken from "@/modules/dsc/DscBuyToken";
+import DscEsign from "@/modules/dsc/DscEsign";
+import DscDrivers from "@/modules/dsc/DscDrivers";
+import DscFaqs from "@/modules/dsc/DscFaqs";
 import About from "@/modules/about";
 import PartnerWithUs from "@/modules/partner-with-us";
 import Contact from "@/modules/contact";
@@ -42,6 +45,9 @@ const components = {
   ServiceLeaf,
   DscHub,
   DscBuyToken,
+  DscEsign,
+  DscDrivers,
+  DscFaqs,
   About,
   PartnerWithUs,
   Contact,

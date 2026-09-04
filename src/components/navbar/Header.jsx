@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { ChevronDown, Phone } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
+  dscPanelColumns,
+  dscPartnerPromo,
   hasLightTop,
   primaryNav,
   serviceCategories,
@@ -29,13 +31,22 @@ const PANELS = {
       items: category.children,
     })),
   },
-  // ⛔ 02-09-2026 (Clinton: "keep dsc and resources as a single tab like
-  // home"). The DSC panel is GONE. `primaryNav`'s DSC entry no longer carries
-  // a `panel` key, so it renders through the plain <Link> branch below and
-  // never looks this map up. Services is the only mega panel left — which is
-  // also why the switch-between-panels transition (documented at length below)
-  // now has nothing to switch between; it is left intact rather than unwound,
-  // since it is the enter/exit behaviour for the remaining panel too.
+  // ⛔ 03-09-2026 (Clinton: "in digital signature it will be show and dropdown
+  // option like previous"). The DSC panel is back — see `dscPanelColumns` in
+  // nav.js for its shape. There are two panels again, so the
+  // switch-between-panels transition below (which spent a day with nothing to
+  // switch between) is load-bearing once more; do not unwind it.
+  //
+  // ⚠️ These columns carry NO `path`, deliberately: "do not make the main
+  // option clik[able] only the sub option is clik[able]". `PanelColumn` reads
+  // `column.path` to decide whether its heading is a <Link>, so the absence is
+  // the whole mechanism. Adding a `path` to any of them silently makes the
+  // heading clickable again.
+  dsc: {
+    ariaLabel: "Digital Signatures",
+    columns: dscPanelColumns,
+    promo: dscPartnerPromo,
+  },
 };
 
 const PANEL_EASE = [0.22, 1, 0.36, 1];
@@ -232,7 +243,18 @@ export function Header() {
                     aria-haspopup="true"
                     onClick={() => toggle(item.panel)}
                     className={cn(
-                      "flex items-center gap-1.5 rounded-full px-4 py-2 text-body-sm font-medium transition-colors duration-[var(--dur-fast)]",
+                      // ⛔ 03-09-2026 (Clinton): "increase the font size of
+                      // navbar text means main option, not the dropdown."
+                      // `text-body` (16px), up from `text-body-sm` (14px).
+                      // ⚠️ THE PANEL'S OWN COLUMNS AND ITEMS ARE UNTOUCHED —
+                      // "not the dropdown" — and so are the phone link and the
+                      // CTA, which are utilities rather than nav options.
+                      // ⚠️ The nav row has a real width budget: at `lg` the bar
+                      // holds the logo, four options, the CTA and (from `xl`)
+                      // the phone number. Re-measure at 1024px before adding a
+                      // fifth option or lengthening a label — this change spent
+                      // some of the headroom that was there.
+                      "flex items-center gap-1.5 rounded-full px-4 py-2 text-body font-medium transition-colors duration-[var(--dur-fast)]",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950",
                       openKey === item.panel
                         ? "text-ember-200"
@@ -363,7 +385,10 @@ function NavLinkItem({ to, label }) {
       to={to}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative rounded-full px-4 py-2 text-body-sm font-medium transition-colors duration-[var(--dur-fast)]",
+        // `text-body` (16px) — see the ⛔ note on the panel trigger above. The
+        // two must stay in step, or a dropdown option and a plain option sit at
+        // different sizes on the same row.
+        "relative rounded-full px-4 py-2 text-body font-medium transition-colors duration-[var(--dur-fast)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950",
         active ? "text-ember-200" : "text-canvas hover:text-ember-200",
       )}
