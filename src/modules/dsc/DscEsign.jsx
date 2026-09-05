@@ -1,21 +1,21 @@
-// import { Link } from "react-router-dom";
-// import { ArrowRight } from "lucide-react";
-// import { Container } from "@/components/layout/Container";
-// import { Section } from "@/components/layout/Section";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { Container } from "@/components/layout/Container";
+import { Section } from "@/components/layout/Section";
 import { PageHero } from "@/components/layout/PageHero";
-// import { SubNav } from "@/components/layout/SubNav";
-// import { FaqSection } from "@/components/ui/FaqSection";
-// import { SectionHeading } from "@/components/ui/SectionHeading";
-// import { Button } from "@/components/ui/Button";
-// import { Reveal } from "@/components/motion/Reveal";
-// import { JsonLd } from "@/components/seo/JsonLd";
-// import { CtaBand } from "@/modules/home/sections/CtaBand";
+import { SubNav } from "@/components/layout/SubNav";
+import { FaqSection } from "@/components/ui/FaqSection";
+import { SectionHeading } from "@/components/ui/SectionHeading";
+import { Button } from "@/components/ui/Button";
+import { Reveal } from "@/components/motion/Reveal";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { CtaBand } from "@/modules/home/sections/CtaBand";
 import { ComingSoon } from "@/components/ui/ComingSoon";
 import { dscEsignPage } from "@/content/nav";
-// import { dscSectionIds } from "@/content/nav";
+import { dscSectionIds } from "@/content/nav";
 import { esignOrDscContent } from "@/content/dsc/esign-or-dsc";
-// import { faqPageJsonLd } from "@/lib/jsonld";
-// import { dscEnquiryHref } from "@/lib/whatsapp";
+import { faqPageJsonLd } from "@/lib/jsonld";
+import { dscEnquiryHref } from "@/lib/whatsapp";
 
 // /dsc/esign-or-dsc — eSign or DSC, which do you need.
 //
@@ -70,13 +70,12 @@ export function DscEsign({ path = dscEsignPage.path }) {
         textureId="dsc-esign-hero"
       />
 
-      <ComingSoon
+      {/* <ComingSoon
         heading="This comparison is being finalised"
         message="We're rewriting the eSign and Class 3 comparison so it reflects exactly what each portal accepts today. In the meantime, tell us the portal and what you need to sign and we'll tell you which of the two it takes."
-      />
+      /> */}
 
-      {/* --- COMMENTED OUT 04-09-2026 — restore with the imports above. ---
-
+    
       <SubNav
         sections={[
           { id: "comparison", label: "Side by side" },
@@ -91,9 +90,7 @@ export function DscEsign({ path = dscEsignPage.path }) {
             eyebrow="Side by side"
             heading="Where each one actually differs"
           />
-          // `overflow-x-auto` + a min width, the same pair the driver
-          // compatibility and validity matrices already use — the table
-          // scrolls inside its own frame so the PAGE never does.
+       
           <div className="mt-8 overflow-x-auto rounded-[var(--radius-md)] border border-ink-100">
             <table className="w-full min-w-[640px] border-collapse text-left">
               <thead className="bg-ink-50">
@@ -148,9 +145,7 @@ export function DscEsign({ path = dscEsignPage.path }) {
                 Find the right certificate
                 <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               </Button>
-              // eSign has no page of its own to link to (see the header note),
-              // so the eSign route is a person — the same "no page yet, route
-              // to a human" pattern the rest of the DSC tree uses.
+              
               <Button
                 as="a"
                 href={dscEnquiryHref("Aadhaar eSign")}
@@ -177,8 +172,7 @@ export function DscEsign({ path = dscEsignPage.path }) {
             answer: faq.a,
           }))}
         />
-        // Built from the same array the accordion renders, so the structured
-        // data can never assert a question the page does not show.
+       
         <JsonLd data={faqPageJsonLd(esignOrDscContent.faqs)} />
       </Section>
 
@@ -187,7 +181,7 @@ export function DscEsign({ path = dscEsignPage.path }) {
         lede="Tell us the portal or the counterparty and what you need to sign, and we will tell you which of the two it actually accepts — including when the answer is the cheaper one."
       />
 
-      --- end commented-out body --- */}
+    
     </>
   );
 }
