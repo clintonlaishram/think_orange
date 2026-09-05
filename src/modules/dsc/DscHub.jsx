@@ -5,8 +5,6 @@ import { Section } from "@/components/layout/Section";
 import { PageHero } from "@/components/layout/PageHero";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SubNav } from "@/components/layout/SubNav";
-import { NoticeBoard } from "@/components/ui/NoticeBoard";
-import { noticesFor } from "@/content/notices";
 import { ArcRings } from "@/components/ui/ArcRings";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/motion/Reveal";
@@ -71,8 +69,6 @@ import { t } from "@/content/turnaround";
 // off `section[data-surface]` in the live DOM; the footer is `deep`, so a bare
 // `[data-surface]` selector misreads the end.
 
-const dscNotices = noticesFor("dsc");
-
 export default function DscHub({ path }) {
   return (
     <>
@@ -109,16 +105,16 @@ export default function DscHub({ path }) {
           below two entries, so a future trim cannot leave a one-tab bar. */}
       <SubNav
         sections={[
-          ...(dscNotices.length > 0 ? [{ id: dscSectionIds.notices, label: "Notices" }] : []),
           { id: dscSectionIds.finder, label: "Which DSC?" },
           { id: dscSectionIds.partner, label: "Partner" },
         ]}
       />
 
-      {/* Notice board — directly under the hero (Clinton, 04-09-2026). Renders
-          null when no confirmed notice is scoped here, which is why its tab
-          above is conditional on the same count. */}
-      <NoticeBoard id={dscSectionIds.notices} />
+      {/* ⛔ 05-09-2026 (Clinton): "shift the notice board section of dsc page
+          to dsc faq page." The board and its `notices` id both moved to
+          /dsc/faqs — the id went with it in the same commit, because a
+          fragment that names nothing is how `/dsc#certificates` shipped dead
+          twice. Nothing on this page points at it any more. */}
 
       {/* The finder is the first thing on the page, deliberately. It is the
           question every visitor arrives with, and putting prose in front of it

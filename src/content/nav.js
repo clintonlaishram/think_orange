@@ -240,12 +240,12 @@ export const dscSectionIds = {
   // renders each one's validity, documents and caveats.
   // ⚠️ Deleting a section from a template means deleting its id here too, and
   // grepping for the key. The two cannot be done separately.
-  // 04-09-2026: the notice board, directly under the hero. ⚠️ Its section
-  // renders NOTHING when `notices.js` has no confirmed notice scoped to /dsc,
-  // so its sub-nav tab is rendered conditionally on the same count — a tab
-  // whose target does not exist scrolls nowhere and never lights the
-  // scroll-spy, which is the failure this file already records twice.
-  notices: "notices",
+  // ⛔ 05-09-2026 (Clinton): "shift the notice board section of dsc page to
+  // dsc faq page." `notices` MOVED to `dscFaqSectionIds` below rather than
+  // being duplicated — an id that lives in the wrong object silently produces
+  // a sub-nav tab that scrolls nowhere, which is the failure this file already
+  // records twice. /dsc no longer has a notices section, so it no longer has
+  // the id.
   partner: "partner",
 };
 
@@ -292,6 +292,13 @@ export const dscFaqsPage = {
 // replacing" alt link and the retired `/dsc/validity-renewal-faqs` stub both
 // resolve through this object, so moving the section moved both of them.
 export const dscFaqSectionIds = {
+  // 04-09-2026: the notice board. Moved here from `dscSectionIds` on
+  // 05-09-2026 (Clinton) — it now sits directly under this page's hero.
+  // ⚠️ Its section renders NOTHING when `notices.js` has no confirmed notice
+  // scoped to the board, so its sub-nav tab is rendered conditionally on the
+  // same count — a tab whose target does not exist scrolls nowhere and never
+  // lights the scroll-spy.
+  notices: "notices",
   process: "process",
   renewal: "renewal",
   faqs: "faqs",

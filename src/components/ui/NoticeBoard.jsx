@@ -7,7 +7,12 @@ import { ArcRings } from "@/components/ui/ArcRings";
 import { Reveal } from "@/components/motion/Reveal";
 import { noticesFor } from "@/content/notices";
 
-// The `/dsc` notice board (Clinton, 04-09-2026), directly under the hero.
+// The DSC notice board (Clinton, 04-09-2026), directly under the hero.
+//
+// ⛔ 05-09-2026 (Clinton): "shift the notice board section of dsc page to dsc
+// faq page." It renders on /dsc/faqs now, NOT on /dsc. `noticesFor("dsc")` is
+// unchanged — "dsc" is the SCOPE a notice is written for, not the route it
+// renders on, so nothing in notices.js had to move with it.
 //
 // ⚠️ ONE PANEL OF HAIRLINE-DIVIDED ROWS, NOT A GRID OF CARDS. A board is a
 // single object with things pinned to it, and four identical cards is the
@@ -17,10 +22,10 @@ import { noticesFor } from "@/content/notices";
 //
 // ⚠️ SURFACE IS `light-alt` and that is a cadence constraint. The hero above is
 // `deep`; a dark board under it would be two adjacent dark-family surfaces,
-// which read as one slab with no fold (the fault Clinton reported on this page
-// on 02-09-2026) — and a cadence check comparing adjacent TOKENS passes it,
-// because `deep` and `dark` are different strings. The finder below is `light`,
-// so `light-alt` also avoids a repeat.
+// which read as one slab with no fold (the fault Clinton reported on /dsc on
+// 02-09-2026) — and a cadence check comparing adjacent TOKENS passes it,
+// because `deep` and `dark` are different strings. The section below it is
+// `light`, so `light-alt` also avoids a repeat.
 //
 // Renders nothing when no confirmed notice targets this surface, so the page is
 // unaffected if `notices.js` is ever emptied — same behaviour as `Testimonial`

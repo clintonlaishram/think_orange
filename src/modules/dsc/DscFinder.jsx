@@ -25,7 +25,6 @@ import {
 import {
   certificateVariant,
   documentsFor,
-  kycRoute,
   kycRoutes,
 } from "@/content/dsc/certificates";
 import {
@@ -80,7 +79,7 @@ const EASE = [0.22, 1, 0.36, 1];
 export function DscFinder() {
   const [useKey, setUseKey] = useState(null);
   const [signer, setSigner] = useState(null);
-  // Which way a panel slides: forward when answering, backward on Start over.
+  // Which way a panel slides: forward when answering, backward on Back.
   // Without it, going back animates like going forward and the gesture
   // contradicts what just happened.
   const [direction, setDirection] = useState(1);
@@ -105,19 +104,39 @@ export function DscFinder() {
   // A ref's argument is only read on the first render, so this is stable.
   const stepRef = useRef(step);
 
-  // The verification route resets with the question, so a reader who went back
-  // and chose a different purpose is not silently still on the PAN route they
-  // picked for the previous answer.
   function advance(fn) {
     setDirection(1);
     fn();
   }
 
-  function reset() {
+  // ⛔ 05-09-2026 (Clinton): "here instead of start over show back button, in 3
+  // step it start from starting no need to do process from starting." The
+  // control used to be `reset()` on every step — from the answer it threw away
+  // BOTH answers and sent the reader back to question one, so changing just
+  // the signer meant re-picking the purpose as well.
+  //
+  // It now steps back exactly one screen.
+  //
+  // ⚠️ "ONE SCREEN BACK" IS NOT ALWAYS "ONE ANSWER BACK", and that is the whole
+  // subtlety here. A `skipsSigner` use (statutory filings) never showed
+  // question two — dropping only `signer` there would land the reader on a
+  // question they were never asked, which reads as the finder inventing a step.
+  // So a skipping answer goes back to the purpose cards, which IS its previous
+  // screen. The rail already shows 2 steps for those routes for the same
+  // reason; this keeps the two consistent.
+  //
+  // ⚠️ The verification route resets on every step back, so a reader who
+  // changes their purpose or signer is not silently still on the PAN route
+  // they picked for the answer they just left.
+  function back() {
     setDirection(-1);
+    setKyc(kycRoutes[0].key);
+    if (answer && !skips) {
+      setSigner(null);
+      return;
+    }
     setUseKey(null);
     setSigner(null);
-    setKyc(kycRoutes[0].key);
   }
 
   // ⛔ 03-09-2026 (Clinton): "in the phone or tab view optimise the focus and
@@ -140,8 +159,8 @@ export function DscFinder() {
   // reading it back means the keyboard path and this path cannot drift — and
   // changing the header or the sub-nav height is still a one-place edit.
   //
-  // ⚠️ Runs on STEP change, not on `useKey`/`signer`, so "Start over" scrolls
-  // back to the choices too — on a phone that used to leave the reader stranded
+  // ⚠️ Runs on STEP change, not on `useKey`/`signer`, so Back scrolls
+  // to the step it lands on too — on a phone that used to leave the reader stranded
   // where the old answer's foot had been. `stepRef` seeds with the first step so
   // nothing fires on mount; the finder is above the fold on /dsc and moving a
   // reader who has not touched it would be its own bug.
@@ -293,7 +312,7 @@ export function DscFinder() {
 
               {step === "signer" && (
                 <motion.div key="signer" {...panelMotion}>
-                  <BackButton onClick={reset} />
+                  <BackButton onClick={back} />
                   <p className="mt-5 font-mono text-eyebrow uppercase tracking-[0.12em] text-ember-600">
                     {activeUse.label}
                   </p>
@@ -327,7 +346,7 @@ export function DscFinder() {
                     }
                     kyc={kyc}
                     onKyc={setKyc}
-                    onReset={reset}
+                    onBack={back}
                     reduceMotion={reduceMotion}
                   />
                 </motion.div>
@@ -494,7 +513,10 @@ function BackButton({ onClick, onDark = false }) {
         className="h-4 w-4 transition-transform duration-[var(--dur-fast)] group-hover:-translate-x-0.5"
         aria-hidden="true"
       />
-      Start over
+      {/* ⛔ 05-09-2026: was "Start over" on both steps, which was only ever
+          accurate on question two — from the answer it discarded both choices.
+          It steps back one screen now, so it says so. */}
+      Back
     </button>
   );
 }
@@ -509,7 +531,7 @@ function BackButton({ onClick, onDark = false }) {
  * route is not one of the five certificates and there is nothing to resolve
  * it against.
  */
-function FinderResult({ answer, use, signerLabel, kyc, onKyc, onReset, reduceMotion }) {
+function FinderResult({ answer, use, signerLabel, kyc, onKyc, onBack, reduceMotion }) {
   const variant = answer.certificate ? certificateVariant(answer.certificate) : null;
   const related = answer.link ? findBySlug(answer.link.slug) : null;
 
@@ -517,7 +539,6 @@ function FinderResult({ answer, use, signerLabel, kyc, onKyc, onReset, reduceMot
   // — a control with one option is a control that lies about being a choice.
   const noKyc = Boolean(use.noKyc) || Boolean(answer.documents);
   const documents = answer.documents ?? documentsFor(variant?.documentCore, kyc);
-  const routeNote = noKyc ? null : kycRoute(kyc).note;
 
   // The answer's own internal cascade, so it assembles rather than arriving as
   // one slab. Short, and only after the panel itself has landed.
@@ -547,7 +568,7 @@ function FinderResult({ answer, use, signerLabel, kyc, onKyc, onReset, reduceMot
     // `DriverPanel`. `BackButton` and `PanelLink` are shared with the dark
     // steps and take a tone rather than assuming one.
     <div>
-      <BackButton onClick={onReset} />
+      <BackButton onClick={onBack} />
 
       <motion.p
         {...beat(0)}
@@ -606,7 +627,6 @@ function FinderResult({ answer, use, signerLabel, kyc, onKyc, onReset, reduceMot
           noKyc={noKyc}
           kyc={kyc}
           onKyc={onKyc}
-          routeNote={routeNote}
           verificationNote={variant?.verificationNote}
         />
       </motion.div>
@@ -690,7 +710,7 @@ function FinderResult({ answer, use, signerLabel, kyc, onKyc, onReset, reduceMot
  * Aadhaar, 4 on PAN for an individual), and proportional digits make the
  * header shift under the reader's eye when it does.
  */
-function DocumentPanel({ documents, notes, noKyc, kyc, onKyc, routeNote, verificationNote }) {
+function DocumentPanel({ documents, notes, noKyc, kyc, onKyc, verificationNote }) {
   return (
     <section aria-label="What to have ready" className="mt-10 border-t border-ink-200 pt-7">
       {/* ⛔ 03-09-2026: was a mono uppercase label. It is a real heading — the
@@ -728,16 +748,21 @@ function DocumentPanel({ documents, notes, noKyc, kyc, onKyc, routeNote, verific
         ))}
       </ul>
 
-      {/* ⛔ 03-09-2026: these three ran together as undifferentiated grey
-          paragraphs directly under the checklist — "it look confusion to read".
-          They answer different questions, so each is now a labelled block on
-          its own hairline: what the chosen route means, what the format rules
-          are, and what to know before applying. A reader can skip the two that
-          are not theirs. */}
-      {routeNote && (
-        <NoteBlock label="On this route">{routeNote}</NoteBlock>
-      )}
+      {/* ⛔ 05-09-2026 (Clinton): "from finder remove On this route all this
+          section." The "On this route" block — the one that explained what the
+          selected verification route changes — is GONE. The two remaining
+          blocks answer different questions and each stays a labelled block on
+          its own hairline, so a reader can skip the one that is not theirs.
 
+          ⚠️ `kycRoutes[].note` is STILL WRITTEN in certificates.js and is now
+          unrendered, the same discipline `portalGuide` / `afterIssue` /
+          `answer.warn` already carry in this tree. Do not prune it on a later
+          tidy-up — restoring this block is render-only.
+
+          ⚠️ CONSEQUENCE, flagged rather than worked around: the KYC toggle is
+          still here, so a reader can switch route and see the checklist and
+          count change with no sentence saying WHY. That is the one thing this
+          block was doing. */}
       {notes?.length > 0 && (
         <NoteBlock label="How to send them">
           <ul className="space-y-2">

@@ -63,7 +63,7 @@ export function Footer() {
         rings={FOOTER_ARC_RINGS}
         gradientId="footer-arc-fade"
         color="var(--color-canvas)"
-        svgClassName="-right-34 rotate-40 bottom-1/8 h-[560px] w-[560px] translate-y-1/2"
+        svgClassName="-right-34 rotate-40 bottom-1/8 h-[420px] w-[420px] sm:h-[560px] sm:w-[560px] translate-y-1/2"
       />
 
       {/* Quiet corner echo, top-left — brackets the block against the main
@@ -82,7 +82,7 @@ export function Footer() {
           brand column; `overflow-hidden` on the footer clips the bleed. */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute -bottom-16 -left-6 select-none font-sans text-[13rem] font-black leading-none tracking-tight text-canvas/[0.035] md:text-[16rem]"
+        className="pointer-events-none absolute -bottom-16 -left-6 select-none font-sans text-[10rem] sm:text-[13rem] font-black leading-none tracking-tight text-canvas/[0.035] md:text-[16rem]"
       >
         TO
       </span>
@@ -133,7 +133,7 @@ export function Footer() {
             ))}
 
             {/* Contact + deadline widget */}
-            <div>
+            <div className="col-span-2 md:col-span-1 lg:col-span-1 2xl:col-span-1">
               <h2 className="font-mono text-eyebrow uppercase text-canvas">Get in touch</h2>
               <span
                 aria-hidden="true"

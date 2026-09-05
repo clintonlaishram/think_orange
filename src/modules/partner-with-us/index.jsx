@@ -6,11 +6,14 @@ import {
   KeyRound,
   RefreshCw,
   Scale,
+  Send,
   Server,
   TrendingUp,
+  Upload,
   Usb,
   Zap,
 } from "lucide-react";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
 import { PageHero } from "@/components/layout/PageHero";
@@ -22,6 +25,8 @@ import { StepFlow } from "@/components/ui/StepFlow";
 import { Reveal } from "@/components/motion/Reveal";
 import { CtaBand } from "@/modules/home/sections/CtaBand";
 import { partnerContent } from "@/content/partner-with-us";
+import { site } from "@/content/nav";
+import { whatsappHref } from "@/lib/whatsapp";
 import { t } from "@/content/turnaround";
 import { PartnerEnquiryForm } from "@/modules/partner-with-us/PartnerEnquiryForm";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -209,7 +214,24 @@ export default function PartnerWithUs({ path }) {
             ))}
           </ul>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button as="a" href="#apply" variant="primary">
+            {/* ⛔ 05-09-2026 (Clinton): "in partner with us page in apply to
+                become a partner program button link to this link… when click
+                to it redirect to this link in new tab." It was an in-page
+                `#apply` anchor; it now opens the certifying authority's own
+                registration form. The URL is in `partner-with-us.js`, never
+                inline here — see the ⚠️ notes on it.
+
+                ⚠️ `rel="noopener noreferrer"` is not boilerplate on a
+                `target="_blank"`: without `noopener` the opened page gets a
+                handle on this one through `window.opener` and can navigate it
+                anywhere. */}
+            <Button
+              as="a"
+              href={partnerContent.registrationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="primary"
+            >
               Apply to become a partner
             </Button>
             <Button as={Link} to="/contact" variant="secondary" tone="dark">
@@ -453,8 +475,19 @@ export default function PartnerWithUs({ path }) {
         </Container>
       </Section>
 
-      {/* ONBOARDING — the site's one step treatment. */}
-      <Section surface="light-alt">
+      {/* ONBOARDING — the site's one step treatment.
+
+          ⚠️ This section is `light`, not the `light-alt` it carried until
+          05-09-2026, and the swap is a CADENCE decision rather than a look.
+          Clinton added the Documents section directly below it and said "later
+          i will remove the onboard, for now keep that also" — so Documents
+          takes `light-alt`, this one moves to `light`, and the day this block
+          is deleted the page falls straight back to its original
+          deep → light → dark → light-alt → light → light-alt → ember with
+          nothing else to touch. The other way round (Documents on `light`)
+          leaves a light/light pair against the apply section the moment
+          onboarding goes. */}
+      {/* <Section surface="light">
         <StepFlow
           eyebrow="How onboarding works"
           heading="From application to your first issued certificate"
@@ -462,24 +495,35 @@ export default function PartnerWithUs({ path }) {
           surface="light"
           steps={partnerContent.onboarding}
         />
+      </Section> */}
+
+      {/* DOCUMENTS REQUIRED — 05-09-2026. See the ⛔ notes on
+          `partnerContent.documentsRequired` for why the portal's own screens
+          are not described and why no turnaround is stated on the assisted
+          route. */}
+      <Section id="documents" surface="light-alt" className="scroll-mt-32">
+        <DocumentsRequired />
       </Section>
 
       {/* APPLY */}
       <Section id="apply" surface="light" className="scroll-mt-32">
         <Container>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
-            {/* `flex flex-col` + `flex-1` on the panel below: the column is a
-                grid item and STRETCHES to the row height, but its contents do
-                not, so the dark panel used to stop ~15px short of the form
-                card's bottom edge for no reason a reader could see. The extra
-                height lands as padding inside the panel, which is invisible. */}
+            {/* ⛔ `flex-1` CAME OFF THE PANEL ON 05-09-2026 AND MUST STAY OFF
+                while the panel is short. It was added when the panel carried
+                all five documents and stretching it to the form's height only
+                cost invisible padding. The panel is now a three-line pointer,
+                so stretching it to a ~700px form rendered a mostly-empty navy
+                slab — a worse fault than the ~15px bottom misalignment the
+                stretch was there to fix. If the full checklist ever comes back
+                here, put `flex-1` back with it. */}
             <div className="flex flex-col lg:col-span-5">
               <SectionHeading
                 eyebrow="Apply"
                 heading="Tell us about your practice"
                 lede="We read every application and come back to you — including when the answer is that the programme is not the right fit yet. If you already issue certificates elsewhere, say so; we will tell you plainly whether our terms beat what you have."
               />
-              <RegistrationDocuments documents={partnerContent.registrationDocuments} />
+              <RegistrationDocuments />
             </div>
             {/* ⚠️ THE FORM IS IN A CARD, and that is a deliberate difference
                 from /contact, which runs the same primitives borderless
@@ -523,33 +567,210 @@ export default function PartnerWithUs({ path }) {
 }
 
 /**
- * The documents required at registration, exactly as Clinton listed
- * them (PAN, Aadhaar, MSME or latest bank statement, Aadhaar-linked phone,
- * mail ID).
+ * DOCUMENTS REQUIRED — 05-09-2026 (Clinton). What to send, and how to send it.
  *
- * ⛔ THIS IS A CHECKLIST, NOT FORM FIELDS, AND THAT IS DELIBERATE. Three of
- * the five are DOCUMENTS — scans handed over during onboarding — and
- * two of them are PAN and Aadhaar. Putting identity numbers into a public
- * web form that relays them through a third-party email service is not
- * something to do casually anywhere, and certainly not while all five legal
- * pages, the privacy policy included, are still `sections: null`. Aadhaar in
- * particular carries its own statutory restrictions on collection and
- * storage.
+ * ⚠️ THE LAYOUT IS DELIBERATELY `StepFlow`'s, not a new one: the same 4/8
+ * grid, the same sticky rail at the same `+52px` offset, the same
+ * `SectionHeading` with `reveal={false}` inside it. Clinton asked for it "with
+ * the same theme as onboarding work" and it sits immediately below that
+ * section, so anything else would read as two unrelated blocks. It is NOT
+ * `StepFlow` itself, because this is not a sequence — the five documents are a
+ * checklist and the two routes are alternatives, and numbering either would
+ * tell the reader to do them in order.
  *
- * So the form collects only what is genuinely DATA — the Aadhaar-linked phone
- * number and the mail ID that becomes the login — and this panel tells an
- * applicant what to have ready. The documents are collected in the onboarding
- * conversation, which is also where they are actually needed.
+ * ⛔ DO NOT CHANGE THE RAIL OFFSET. `lg:top-[calc(var(--header-h)+52px)]` is
+ * fixed by instruction (Clinton, 04-09-2026) and is shared by StepFlow,
+ * FaqSection and DscFinder. A different value here is drift, not a decision.
  *
- * ⚠️ If this is ever changed to collect PAN or Aadhaar numbers directly, the
- * privacy policy has to be written first, and the transport has to be
+ * ⚠️ The checklist reads `partnerContent.registrationDocuments` — the SAME
+ * array the panel beside the application form renders — so the two can never
+ * disagree about what is required.
+ */
+function DocumentsRequired() {
+  const { eyebrow, heading, intro, routes, note } = partnerContent.documentsRequired;
+  const documents = partnerContent.registrationDocuments;
+  const [selfRoute, assistedRoute] = routes;
+
+  return (
+    <Container>
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
+        <div className="lg:col-span-4">
+          <div className="lg:sticky lg:top-[calc(var(--header-h)+52px)]">
+            <SectionHeading
+              eyebrow={eyebrow}
+              heading={heading}
+              lede={intro}
+              headingClassName="max-w-[18ch]"
+              ledeClassName="max-w-[42ch] text-body sm:text-body"
+            />
+          </div>
+        </div>
+
+        <div className="lg:col-span-8">
+          {/* ⚠️ ONE Reveal around the whole list, never one per row. Five lines
+              resolving one after another while somebody is reading them off to
+              collect their papers is exactly what "body copy never animates"
+              protects against. */}
+          <Reveal>
+            <ol className="border-t border-ink-100">
+              {documents.map((doc, index) => (
+                <li
+                  key={doc.label}
+                  className="flex gap-5 border-b border-ink-100 py-5 md:gap-7"
+                >
+                  {/* `tabular-nums` so the two-digit case would still line the
+                      labels up; `aria-hidden` because the <ol> already conveys
+                      the position to assistive tech and reading "01" aloud
+                      before every item is noise. */}
+                  <span
+                    aria-hidden="true"
+                    className="mt-0.5 shrink-0 font-mono text-body-sm tabular-nums text-ember-600"
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <p className="text-body font-medium text-ink-600">{doc.label}</p>
+                    <p className="mt-1 text-body-sm text-ink-500">{doc.detail}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </Reveal>
+
+          {/* THE TWO ROUTES. Equal weight on purpose — the assisted one is not
+              a fallback for people who cannot manage the form, it is the route
+              Clinton expects most practices to take. */}
+          <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <Reveal className="h-full">
+              <div className="card-premium flex h-full flex-col rounded-[var(--radius-lg)] border border-ink-100 bg-white p-6 shadow-sm md:p-7">
+                <RouteIcon icon={Upload} />
+                <h3 className="mt-5 text-h4 text-ink-600">{selfRoute.title}</h3>
+                <p className="mt-2 text-body-sm text-ink-500">{selfRoute.body}</p>
+                {/* `mt-auto` on the action block, `h-full` + `flex-col` on the
+                    card: the pair's BOTTOM edges align whatever the body copy
+                    does (measured 437px / 437px at 1440), which is what stops a
+                    two-card row looking untended. The buttons themselves sit at
+                    different heights on purpose — the other card carries a
+                    response-time line beneath its own. */}
+                <div className="mt-auto pt-6">
+                  {/* ⚠️ Same URL, same target and the same `rel` as the hero's
+                      button, and for the same reason: without `noopener` the
+                      opened page gets a handle on this one through
+                      `window.opener`. The URL lives in the content file. */}
+                  <Button
+                    as="a"
+                    href={partnerContent.registrationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="primary"
+                  >
+                    {selfRoute.actionLabel}
+                  </Button>
+                </div>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.1} className="h-full">
+              <div className="card-premium flex h-full flex-col rounded-[var(--radius-lg)] border border-ink-100 bg-white p-6 shadow-sm md:p-7">
+                <RouteIcon icon={Send} />
+                <h3 className="mt-5 text-h4 text-ink-600">{assistedRoute.title}</h3>
+                <p className="mt-2 text-body-sm text-ink-500">{assistedRoute.body}</p>
+                <div className="mt-auto pt-6">
+                  {/* The site's WhatsApp button — `tertiary` plus tabler's brand
+                      mark, the same pair the DSC and services CTAs already use,
+                      rather than a fourth hand-rolled green. */}
+                  <Button
+                    as="a"
+                    href={whatsappHref(
+                      "Hi ThinkOrange, I'd like to become a DSC partner. I'm sending my registration documents.",
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="tertiary"
+                  >
+                    <IconBrandWhatsapp className="h-4 w-4" aria-hidden="true" />
+                    Send on WhatsApp
+                  </Button>
+                  {/* ⚠️ The email is a text link, NOT a second Button. Two pills
+                      side by side do not fit this card's measure — the address
+                      is long enough that they wrapped onto separate rows, which
+                      read as one button that had failed to fit. It also keeps
+                      the address itself visible, which matters when somebody is
+                      going to send the documents from their own mail client.
+
+                      ⚠️ AND NOT "we set it up within 24 hours". The offer is
+                      Clinton's own; the timeframe is not confirmed, so it comes
+                      from turnaround.js like every other one on this site. */}
+                  <p className="mt-4 text-body-sm text-ink-500">
+                    Or email{" "}
+                    <a
+                      href={site.emailHref}
+                      className="font-medium text-ink-600 underline decoration-ink-200 underline-offset-4 transition-colors duration-[var(--dur-fast)] hover:text-ember-600 hover:decoration-ember-400"
+                    >
+                      {site.email}
+                    </a>
+                    . {t("enquiryResponseTime")}.
+                  </p>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+
+          <Reveal>
+            <p className="mt-8 border-t border-ink-100 pt-5 text-body-sm text-ink-500">{note}</p>
+          </Reveal>
+        </div>
+      </div>
+    </Container>
+  );
+}
+
+/**
+ * ⚠️ FILLED disc, no ring — the light half of the filled-on-light /
+ * ringed-on-dark pairing the DSC group cards established. A ring plus a tint on
+ * a white card is two treatments doing one job.
+ */
+function RouteIcon({ icon: Icon }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-11 w-11 items-center justify-center rounded-full bg-ember-50"
+    >
+      <Icon className="h-5 w-5 text-ember-600" strokeWidth={1.75} />
+    </span>
+  );
+}
+
+/**
+ * A POINTER to the Documents section above, not a second copy of the list.
+ *
+ * ⛔ IT USED TO RENDER ALL FIVE ITEMS, and stopped on 05-09-2026 when Clinton
+ * asked for a Documents section of its own. That section sits immediately
+ * above this one, so the full checklist here would have been the same five
+ * lines twice within one scroll — the thing that makes a page read as
+ * unedited. The list moved up; the one sentence that is load-bearing did not.
+ *
+ * ⛔ THAT SENTENCE IS THE POINT OF THIS PANEL, AND MUST SURVIVE ANY REWRITE.
+ * Three of the five items are DOCUMENTS — scans handed over during
+ * onboarding — and two of them are PAN and Aadhaar. Putting identity numbers
+ * into a public web form that relays them through a third-party email service
+ * is not something to do casually anywhere, and certainly not while all five
+ * legal pages, the privacy policy included, are still `sections: null`.
+ * Aadhaar in particular carries its own statutory restrictions on collection
+ * and storage. So the form beside this panel collects only what is genuinely
+ * DATA — the Aadhaar-linked phone number and the mail ID that becomes the
+ * login — and a reader looking at a form on a page headed "Documents required"
+ * needs telling, right here, that nothing is uploaded on it.
+ *
+ * ⚠️ If the form is ever changed to collect PAN or Aadhaar numbers directly,
+ * the privacy policy has to be written first, and the transport has to be
  * something better than a client-side email relay.
  */
-function RegistrationDocuments({ documents }) {
+function RegistrationDocuments() {
   return (
     <Reveal
       data-surface="dark"
-      className="panel-dark grain relative mt-10 flex-1 overflow-hidden rounded-[var(--radius-lg)] p-6 md:p-7"
+      className="panel-dark grain relative mt-10 overflow-hidden rounded-[var(--radius-lg)] p-6 md:p-7"
     >
       <ArcRings
         rings={PANEL_RINGS}
@@ -558,27 +779,20 @@ function RegistrationDocuments({ documents }) {
         svgClassName="-right-20 -top-24 h-[320px] w-[320px]"
       />
       <div className="relative">
-        <h3 className="text-h4 text-canvas">What to have ready</h3>
+        <h3 className="text-h4 text-canvas">Nothing is uploaded here</h3>
         <p className="mt-2 text-body-sm text-ink-200">
-          These are asked for at registration. Nothing here is uploaded on this page — we collect
-          them with you once your application is through.
+          This form asks for your practice and how to reach you — no PAN, no Aadhaar, no scans.
+          The five registration documents are listed above, with both ways of sending them.
         </p>
-        <dl className="mt-5 space-y-4">
-          {documents.map((doc) => (
-            <div key={doc.label} className="flex gap-3 border-t border-ink-700 pt-3">
-              <ArcGlyph
-                variant="corner"
-                aria-hidden="true"
-                className="mt-1 h-4 w-4 shrink-0"
-                style={{ color: "var(--color-ember-300)" }}
-              />
-              <div>
-                <dt className="text-body-sm font-medium text-canvas">{doc.label}</dt>
-                <dd className="mt-0.5 text-body-sm text-ink-200">{doc.detail}</dd>
-              </div>
-            </div>
-          ))}
-        </dl>
+        {/* A plain <a href="#…">, not a <Link>: react-router must not treat a
+            fragment on the current route as a navigation. */}
+        <a
+          href="#documents"
+          className="mt-5 inline-flex items-center gap-2 text-body-sm font-medium text-ember-300 underline-offset-4 transition-colors duration-[var(--dur-fast)] hover:text-ember-200 hover:underline"
+        >
+          <ArcGlyph variant="corner" aria-hidden="true" className="h-4 w-4 shrink-0" />
+          See the documents required
+        </a>
       </div>
     </Reveal>
   );

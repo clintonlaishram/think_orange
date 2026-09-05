@@ -44,7 +44,7 @@ export const finderUses = [
   {
     key: "filings",
     label: "Statutory filings",
-    desc: "GST, income tax, MCA and ROC, EPFO and ESIC, trademark",
+    desc: "GST, Income Tax, MCA and ROC, EPFO and ESIC, Trademark, IEC",
     pill: "Class 3 signature",
     icon: "file",
     // Skips question two: the answer is the same for every signer, which is
@@ -54,15 +54,15 @@ export const finderUses = [
   {
     key: "tender",
     label: "Tenders and procurement",
-    desc: "GeM, CPPP, railways, state tender portals",
+    desc: "GeM, CPPP, Railways, State Tender Portals",
     pill: "Class 3 combo — sign and encrypt",
     icon: "gavel",
   },
   {
     key: "exim",
     label: "Import and export",
-    desc: "IEC, DGFT licences, ICEGATE, RCMC, EPCG",
-    pill: "Class 3 organisation — matched to your IEC",
+    desc: "DGFT Licences, ICEGATE, RCMC, EPCG",
+    pill: "Class 3 organisation — Mapped to your IEC",
     icon: "ship",
   },
   // ⛔ 03-09-2026 (Clinton): "remove this show as 4 card no need to sperate."
@@ -104,7 +104,7 @@ export const finderAnswers = {
     certificate: "class-3-individual",
     heading: "Class 3 Signature — Individual",
     name: "The authorised signatory, in their own name",
-    covers: "GST, income tax, MCA and ROC, EPFO and ESIC, trademark",
+    covers: "GST, Income Tax, MCA and ROC, EPFO and ESIC, Trademark, IEC",
     warn:
       "One certificate covers all of these, whether you are a proprietor, a company or an LLP — these portals verify the signatory, not the entity, so no organisation documents are needed. The PAN on the certificate must match the PAN registered as signatory on each portal.",
   },
@@ -113,7 +113,7 @@ export const finderAnswers = {
     heading: "Class 3 Signature — Individual",
     name: "The applicant, exactly as the name appears on the passport",
     covers:
-      "The same portals a domestic certificate covers — GST, income tax, MCA and ROC, tenders, DGFT",
+      "The same portals a domestic certificate covers — GST, Income Tax, MCA and ROC, Tenders, DGFT",
     warn:
       "Identity is verified against the passport, so this route takes longer than a domestic certificate. Send us the documents before you order — attestation requirements differ depending on whether the applicant is in India at the time of application.",
     // The one answer that carries its own checklist: a passport route is not
@@ -136,7 +136,7 @@ export const finderAnswers = {
     certificate: "combo-dsc",
     heading: "Class 3 Combo — sign and encrypt",
     name: "Whoever submits the bid",
-    covers: "GeM, CPPP, railways, state tender portals",
+    covers: "GeM, CPPP, Railways, State Tender Portals",
     warn:
       "Encryption cannot be added to a signing-only certificate afterwards. If you buy signature-only now, a rejected bid means buying again from scratch.",
   },
@@ -144,7 +144,7 @@ export const finderAnswers = {
     certificate: "combo-dsc",
     heading: "Class 3 Combo — sign and encrypt",
     name: "The authorised signatory, with the organisation name on the certificate",
-    covers: "GeM, CPPP, railways, state tender portals",
+    covers: "GeM, CPPP, Railways, State Tender Portals",
     warn:
       "Encryption cannot be added to a signing-only certificate afterwards. Check the specific tender document too — a few portals still name the signatory rather than the entity.",
   },
@@ -152,7 +152,7 @@ export const finderAnswers = {
     certificate: "combo-dsc",
     heading: "Class 3 Combo — sign and encrypt",
     name: "The authorised partner or trustee, with the entity name on the certificate",
-    covers: "GeM, CPPP, railways, state tender portals",
+    covers: "GeM, CPPP, Railways, State Tender Portals",
     warn: "Encryption cannot be added to a signing-only certificate afterwards.",
   },
   "exim|individual": {

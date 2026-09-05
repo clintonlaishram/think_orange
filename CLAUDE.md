@@ -7609,3 +7609,110 @@ then "software link is for this" pointing at the HYP2003 row.
   real pairs are button ink-950 on ember-400 **6.18:1**, meta ink-500
   **9.77:1**, checksum ink-400 **6.48:1**. Lint 0 problems, `content:check`
   clean, build + prerender 57 routes.
+
+## Partner page: "Documents required" section — 05-09-2026
+Clinton: "create document require section with the same theme as onboarding
+work, keep below it. later i will remove the onboard, for now keep that also."
+The brief he gave first, verbatim: what documents are required, "unko link
+open karke kaise upload karna hai", and that a partner can "either… directly
+upload their documents or Mail/WhatsApp to us and we will create their
+account". So the section answers two things the onboarding timeline never did
+— WHAT to send and HOW to send it — and it offers both routes at equal weight.
+
+- **`partnerContent.documentsRequired` (new)** carries only the framing and the
+  two routes. ⚠️ **THE FIVE DOCUMENTS ARE NOT RESTATED THERE.**
+  `DocumentsRequired` renders `partnerContent.registrationDocuments` — the same
+  array the apply panel used — by reference, the "select, do not fork"
+  discipline the homepage FAQ row already follows. A second copy is how one
+  gets edited and the other keeps asserting the superseded version.
+- **The layout is deliberately `StepFlow`'s** — same 4/8 grid, same sticky rail
+  at the same `+52px` offset, same `SectionHeading` — because it sits directly
+  under that section and Clinton asked for "the same theme". It is NOT StepFlow
+  itself: five documents are a checklist and the two routes are alternatives,
+  and numbering either would tell the reader to do them in order.
+  ⛔ The rail offset is fixed by instruction (04-09-2026) and shared with
+  FaqSection and DscFinder — a different value here is drift.
+
+### Two things the section deliberately does NOT say
+- ⛔ **NOTHING DESCRIBES THE REGISTRATION PORTAL'S OWN SCREENS.** Clinton's
+  brief asked for "how to upload after opening the link", but that form belongs
+  to the certifying authority — we control neither its fields nor its upload
+  widget, so a walkthrough goes silently stale on their next redesign. The
+  self-serve route states what is durably true (the form opens, it asks for
+  these documents, the mail ID becomes the username) and stops. **If the real
+  screens are wanted they must come from Clinton, and the comment must record
+  the portal as their source.**
+- ⛔ **NO TURNAROUND ON THE ASSISTED ROUTE.** "Send them to us and we will raise
+  the registration" is Clinton's own offer, so the mechanism is stated — but
+  how long it takes is unconfirmed and a turnaround guarantee is on
+  CONTENT-PLAN.md §1.1's hold list. It renders `t("enquiryResponseTime")`
+  (value null -> "We respond fast") like every other response-time claim here.
+
+### ⛔ The apply panel is now a POINTER, not a second copy of the list
+`RegistrationDocuments` rendered all five items in the `.panel-dark` beside the
+application form. The new section sits immediately above it, so keeping both
+put the same five lines twice inside one scroll. The list moved up; **the one
+load-bearing sentence did not** — that panel exists to tell a reader looking at
+a form on a page headed "Documents required" that nothing is uploaded on it,
+because three of the five items are scans and two are PAN and Aadhaar, and this
+site collects neither while all five legal pages are still `sections: null`.
+- ⛔ **`flex-1` CAME OFF THE PANEL AND MUST STAY OFF while it is short.** It was
+  added when the panel was tall, so stretching it to the form's height only
+  cost invisible padding; against a ~700px form a three-line panel rendered a
+  mostly-empty navy slab — a worse fault than the ~15px bottom misalignment the
+  stretch was fixing. Put it back only if the full checklist returns here.
+
+### Surface cadence — the reason onboarding's own surface moved
+Documents took `light-alt` and the ONBOARDING section was moved `light-alt` ->
+`light`, so that the day onboarding is deleted the page falls straight back to
+its original `deep → light → dark → light-alt → light → light-alt → ember` with
+nothing else to touch. The other way round (Documents on `light`) leaves a
+light/light pair against the apply section the moment onboarding goes.
+⚠️ **Onboarding was in fact commented out in the working tree during this
+session, by an edit outside it** — left as found. Measured both ways: with it,
+`deep → light → dark → light → light-alt → light → light-alt → ember`; without
+it, the original seven. Zero consecutive repeats and zero adjacent dark-family
+pairs in both.
+
+### Smaller decisions
+- **The email is a text link, not a second Button.** Two pills side by side did
+  not fit the card's measure — "Email office@thinkorange.in" wrapped onto its
+  own row and read as a button that had failed to fit. The text link also keeps
+  the address visible, which matters when somebody is going to send the
+  documents from their own mail client. WhatsApp stays `variant="tertiary"` +
+  tabler's brand mark, the site's one WhatsApp button.
+- **Card bottoms align (437 -> 367px, equal), the buttons do not**, because the
+  assisted card carries a line beneath its own. `h-full` + `flex-col` +
+  `mt-auto`; equal heights are what stop a two-card row looking untended.
+- ⚠️ **ONE `Reveal` around the checklist, never one per row.** Five lines
+  resolving one after another while somebody is reading them off to collect
+  their papers is what "body copy never animates" protects against.
+- Route discs are FILLED `ember-50`, no ring — the light half of the
+  filled-on-light / ringed-on-dark pairing.
+
+### Verified
+`npm run lint` 0 problems, `content:check` clean apart from the three standing
+unconfirmed-content warnings, `build` + prerender 57 routes + 12 redirects with
+the dangling-fragment gate passing. Then real Chrome over CDP against
+`npx serve dist` (no `-s`), asserting `innerWidth`/`visibilityState`/`pathname`
+first:
+- **Pixel-sampled contrast 0 failures** — 33 samples at 1440px and 34 at 375px
+  over the documents and apply sections, foreground read BEFORE injecting
+  `color: transparent`.
+- Cadence and repeat counts above; one `<h1>`; 5 checklist rows resolving to
+  the real labels; 2 route cards at equal height; all three links carrying the
+  right href, and both external ones `target="_blank"` with
+  `rel="noopener noreferrer"`.
+- **`dupDocList: 1`** — the checklist text appears exactly once on the page,
+  which is the assertion the panel change exists to satisfy.
+- 0 stuck reveals, `scrollWidth === innerWidth` at 1440 and 375, 0 console
+  errors, and the apply panel's `#documents` anchor landing the section at
+  top 128 (its `scroll-mt-32` clearance).
+- Reduced motion via `Emulation.setEmulatedMedia`: 0 running animations, 0
+  elements stuck mid-opacity.
+
+⚠️ Verification note: `primeReveals` needs SLOW awaited steps — a 500px/110ms
+sweep left 12 wrappers reporting opacity 0 and looked exactly like broken
+reveals; at 400px/180ms over two passes it reports 0. IntersectionObserver
+delivers asynchronously, and this is the third time that trap has been
+recorded.

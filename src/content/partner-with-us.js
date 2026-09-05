@@ -45,6 +45,26 @@ export const partnerContent = {
   heroLede:
     "Partner with ThinkOrange and process certificates yourself — your own login, your own verification, your own margin. Whether you already issue DSCs and want better terms, or you are a practice tired of sending clients elsewhere mid-engagement.",
 
+  // ⛔ 05-09-2026 (Clinton), given directly: the hero's "Apply to become a
+  // partner" button opens the certifying authority's own partner-registration
+  // form in a new tab, rather than scrolling to the enquiry form below.
+  //
+  // ⚠️ IT LIVES HERE, NOT AS A LITERAL IN THE COMPONENT. The two path segments
+  // are base64 and identify ThinkOrange as the enrolling partner — if that
+  // link is ever reissued, this is the one line to change, and a hardcoded
+  // string in the JSX is how a dead enrolment URL survives a redesign.
+  //
+  // ⚠️ THIS IS A DESTINATION, NOT A CLAIM. CLAUDE.md records that no
+  // certifying authority is named anywhere on this site (Clinton, 02-09-2026:
+  // "do not use signx… remove eMudhra also"). Nothing rendered here names one
+  // — but the reader does see the domain once the tab opens, so do not put the
+  // host in visible copy, a title attribute or a tooltip.
+  //
+  // ⚠️ The on-site enquiry form at #apply is UNCHANGED and still the route for
+  // anyone who would rather talk first — see the ⛔ note on why it collects no
+  // PAN or Aadhaar.
+  registrationUrl: "https://signx.club/create-partner/MTgwMA==/OQ==",
+
   // Unmarked assertions from the reference — Clinton's own claims, no numbers.
   heroTicks: [
     "No joining fee",
@@ -271,6 +291,64 @@ export const partnerContent = {
     { label: "Mail ID", detail: "This becomes your login username, so use one you will keep." },
   ],
 
+  // ⛔ 05-09-2026 (Clinton): "create document require section with the same
+  // theme as onboarding work, keep below it. later i will remove the onboard,
+  // for now keep that also." The brief he gave first:
+  //
+  //   "Like what will be the documents required, unko link open karke kaise
+  //    upload karna hai etc. Like either clients can directly upload their
+  //    documents or Mail/WhatsApp to us and we will create their account."
+  //
+  // So this section answers two questions the onboarding timeline never did —
+  // WHAT to have, and HOW to actually send it — and it offers both routes.
+  //
+  // ⚠️ THE DOCUMENT LIST IS NOT RESTATED HERE. `DocumentsRequired` renders
+  // `registrationDocuments` above by reference, the same "select, do not fork"
+  // discipline the homepage FAQ row and the DSC validity page already follow.
+  // Copying the five items into a second array is how one of them gets edited
+  // and the other quietly keeps asserting the superseded version.
+  //
+  // ⛔ NOTHING HERE DESCRIBES THE REGISTRATION PORTAL'S OWN SCREENS. That form
+  // belongs to the certifying authority, not to us — we do not control its
+  // fields, its order or its upload widget, so a step-by-step walkthrough of
+  // it is a claim that goes silently stale the next time they redesign. The
+  // self-serve route therefore says what is durably true (the form opens, it
+  // asks for these documents, the mail ID becomes the username) and stops
+  // there. If Clinton wants the real screens described, they need to come from
+  // him and this comment needs to record the portal as their source.
+  //
+  // ⛔ NO TURNAROUND ON THE ASSISTED ROUTE. "Send it to us and we will set up
+  // your account" is Clinton's own offer, given in the brief above, so the
+  // mechanism is stated — but how long it takes is not confirmed, and a
+  // turnaround guarantee is on CONTENT-PLAN.md §1.1's hold list. The component
+  // renders `t("enquiryResponseTime")` (value null -> "We respond fast") like
+  // every other response-time claim on this site.
+  documentsRequired: {
+    eyebrow: "Documents required",
+    heading: "What to send, and how to send it",
+    intro:
+      "The same five documents either way. Upload them yourself on the registration form, or send them to us and we will raise the registration for you.",
+    routes: [
+      {
+        key: "self",
+        title: "Upload them yourself",
+        body: "Open the partner registration form and upload each document where it asks for one. Use the mail ID you want as your login username and the phone number Aadhaar holds, because the verification one-time passwords go there.",
+        actionLabel: "Open the registration form",
+      },
+      {
+        key: "assisted",
+        title: "Or send them to us",
+        body: "WhatsApp or email the documents instead and we will raise the registration on your behalf, then come back to you with the login. Useful if you would rather not work through the form yourself.",
+      },
+    ],
+    // ⚠️ Load-bearing, not a disclaimer. This site collects no PAN or Aadhaar
+    // anywhere — see PartnerApplicationForm.jsx — and a section headed
+    // "Documents required" is exactly where a reader would otherwise expect an
+    // upload box on the page itself.
+    note:
+      "Nothing is uploaded on this website. Either route sends your documents to the registration form or directly to us — never through a form on this page.",
+  },
+
   faqs: [
     {
       q: "Can I switch from another certifying authority?",
@@ -299,10 +377,6 @@ export const partnerContent = {
     {
       q: "What if an application is rejected?",
       a: "We help you work out what was missing and resubmit. Whether any resubmission charge applies is confirmed with you during onboarding rather than stated generically here.",
-    },
-    {
-      q: "Can I issue for clients outside Tamil Nadu?",
-      a: "Yes. Verification is done by video and tokens are couriered, so your client's location does not limit you.",
     },
     {
       q: "What commission will I earn?",

@@ -177,6 +177,64 @@
 }
 
 /* ============================================================
+   XL TYPE STEP-UP — the scale keeps growing past 1280px.
+   ⛔ 05-09-2026 (Clinton): "some font are small… increase the font size of
+   overall project after xl screen."
+
+   ⚠️ THE PROBLEM WAS NOT THAT THE SCALE IS SMALL — IT IS THAT IT STOPS.
+   Measured on the live DOM before changing anything: every clamp above
+   reaches its own max between 1100px and 1200px, so from 1200px up the
+   ENTIRE scale is frozen — display-xl 88, h2 40, body 16, body-sm 14 —
+   while `Container` keeps growing from 1185px to its 1800px cap. A 52%
+   wider measure with not one character of growth to go with it, which is
+   what reads as "small" on a large screen. Censused across the homepage, a
+   T2 leaf and /dsc: 767 text elements, 61% of them under 16px, and 14px
+   alone is 416 of them — `text-body-sm`, not `text-body`, is what most of
+   this site is actually set in.
+
+   So this block RESUMES the growth rather than jumping the sizes.
+
+   ⚠️ EACH CLAMP'S LOWER BOUND IS EXACTLY THE VALUE THE TOKEN ALREADY HAS AT
+   1280px, and its upper bound is reached at 1800px — the container's own
+   max-width. So there is NO STEP at the breakpoint (a resize past 1280 does
+   not snap), nothing below xl changes at all, and the scale stops growing
+   at precisely the width the layout stops growing. Recompute both ends
+   together if `Container`'s 1800px cap ever moves, or the type will keep
+   growing past the point the measure does.
+
+   ⚠️ THE INCREASE IS TAPERED ON PURPOSE, not a uniform multiplier: body and
+   small text take the largest share (+10.7% to +12.5%) because that is
+   where the deficit was measured, and the display sizes take the least
+   (+6.8% on display-xl) because 88px is already large and the homepage H1
+   is width-constrained — it is `white-space: nowrap` on three pre-broken
+   lines, so it cannot absorb much before it starts bleeding into the
+   gutter. Measured after the change: 88px of headroom left on the widest
+   line at 1440px. A uniform bump would have spent that.
+
+   ⚠️ This is a TOKEN-level change and reaches every `text-*` utility on the
+   site — Tailwind v4 emits `font-size: var(--text-body)`, so overriding the
+   variable here flows through all ~47 call sites with no component edits.
+   That is the point, and it is also the risk: re-measure horizontal
+   overflow and the nav row, not just the page you were looking at.
+   ============================================================ */
+@media (min-width: 1280px) {
+  :root {
+    --text-display-xl: clamp(5.5rem, 4.57692rem + 1.1538vw, 5.875rem);
+    --text-display-lg: clamp(4rem, 3.07692rem + 1.1538vw, 4.375rem);
+    --text-h1: clamp(3.25rem, 2.48077rem + 0.9615vw, 3.5625rem);
+    --text-h2: clamp(2.5rem, 1.88462rem + 0.7692vw, 2.75rem);
+    --text-h3: clamp(1.625rem, 1.16346rem + 0.5769vw, 1.8125rem);
+    --text-h4: clamp(1.125rem, 0.81731rem + 0.3846vw, 1.25rem);
+    --text-body-lg: clamp(1.125rem, 0.81731rem + 0.3846vw, 1.25rem);
+    --text-body: clamp(1rem, 0.69231rem + 0.3846vw, 1.125rem);
+    --text-body-sm: clamp(0.875rem, 0.64423rem + 0.2885vw, 0.96875rem);
+    --text-eyebrow: clamp(0.75rem, 0.59615rem + 0.1923vw, 0.8125rem);
+    --text-stat: clamp(3.75rem, 2.82692rem + 1.1538vw, 4.125rem);
+    --text-quote: clamp(2.125rem, 1.66346rem + 0.5769vw, 2.3125rem);
+  }
+}
+
+/* ============================================================
    Supplementary tokens sourced from DESIGN.md §7.1, §7.2 and §9.1.
    Kept out of @theme deliberately: durations and gradients aren't
    meant to spawn free-use utility classes (DESIGN.md §16 — scarcity

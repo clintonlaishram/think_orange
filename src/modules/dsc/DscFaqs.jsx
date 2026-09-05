@@ -10,6 +10,7 @@ import { ArcGlyph } from "@/components/ui/ArcGlyph";
 import { ArcRings } from "@/components/ui/ArcRings";
 import { Button } from "@/components/ui/Button";
 import { StepFlow } from "@/components/ui/StepFlow";
+import { NoticeBoard } from "@/components/ui/NoticeBoard";
 import { SubNav } from "@/components/layout/SubNav";
 import { Reveal } from "@/components/motion/Reveal";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -18,6 +19,7 @@ import { dscFaqSectionIds, dscFaqsPage, dscSectionIds } from "@/content/nav";
 import { certificateFaqs, dscProcess } from "@/content/dsc/certificates";
 import { dscValidityRenewalContent } from "@/content/dsc/validity-renewal-faqs";
 import { collectionPageJsonLd, faqPageJsonLd, howToJsonLd } from "@/lib/jsonld";
+import { noticesFor } from "@/content/notices";
 import { dscEnquiryHref } from "@/lib/whatsapp";
 
 // /dsc/faqs — EVERY DSC QUESTION, IN ONE PLACE.
@@ -48,6 +50,14 @@ const CARD_RINGS = [
   { r: 150, width: 1, opacity: 0.16 },
   { r: 108, width: 1, opacity: 0.1 },
 ];
+
+// ⛔ 05-09-2026 (Clinton): "shift the notice board section of dsc page to dsc
+// faq page." Board and its `notices` id both moved off /dsc in one commit.
+// The count is read here so the sub-nav tab and the section itself can never
+// disagree — `NoticeBoard` renders null when no confirmed notice is scoped to
+// it, and a tab pointing at a section that did not render scrolls nowhere and
+// never lights the scroll-spy.
+const boardNotices = noticesFor("dsc");
 
 export default function DscFaqs({ path = dscFaqsPage.path }) {
   const faqs = [...certificateFaqs, ...dscValidityRenewalContent.faqs];
@@ -84,11 +94,23 @@ export default function DscFaqs({ path = dscFaqsPage.path }) {
 
       <SubNav
         sections={[
+          ...(boardNotices.length > 0
+            ? [{ id: dscFaqSectionIds.notices, label: "Notices" }]
+            : []),
           { id: dscFaqSectionIds.process, label: "How issuance works" },
           { id: dscFaqSectionIds.renewal, label: "Validity & renewal" },
           { id: dscFaqSectionIds.faqs, label: "FAQs" },
         ]}
       />
+
+      {/* Notice board — directly under the hero. ⚠️ SURFACE STAYS `light-alt`
+          (set inside NoticeBoard): the hero above is `deep`, so a dark board
+          would be two adjacent dark-family surfaces reading as one slab with
+          no fold — which a cadence check comparing adjacent TOKENS passes,
+          because `deep` and `dark` are different strings. The process section
+          below is `light`, so `light-alt` also avoids a repeat here, exactly
+          as it did on /dsc. */}
+      <NoticeBoard id={dscFaqSectionIds.notices} />
 
       {/* StepFlow renders its own Container and heading, not a <section>, so
           the surface and the id belong to this wrapper. */}

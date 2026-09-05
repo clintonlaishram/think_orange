@@ -256,6 +256,45 @@ Fluid, `clamp()`-based. Values are `size / line-height / letter-spacing`.
 | `stat` | `clamp(2.5rem, 1.5rem + 3vw, 3.75rem)` | 1.0 | −0.03em | Satoshi 900 | Metrics, `tabular-nums` |
 | `quote` | `clamp(1.5rem, 1.1rem + 1.5vw, 2.125rem)` | 1.4 | −0.01em | Instrument Serif 400i | Testimonials |
 
+#### The xl step-up (≥1280px)
+
+Every clamp above reaches its own maximum between **1100px and 1200px**, so from
+1200px up the whole scale is frozen — while `Container` (§6.2) keeps growing to
+its **1800px** cap. Measured on the live site before this was added: 1440px and
+1920px rendered a byte-identical set of sizes across every route, so a 52% wider
+measure carried not one character of extra type. That, not the scale itself, is
+what reads as "small text" on a large monitor.
+
+`theme.css` therefore carries a `@media (min-width: 1280px)` block that **resumes**
+each token's growth to a second cap reached at 1800px:
+
+| | 1280px | 1800px | Δ |
+|---|---|---|---|
+| `display-xl` | 88 | 94 | +6.8% |
+| `display-lg` | 64 | 70 | +9.4% |
+| `h1` | 52 | 57 | +9.6% |
+| `h2` | 40 | 44 | +10.0% |
+| `h3` | 26 | 29 | +11.5% |
+| `h4` / `body-lg` | 18 | 20 | +11.1% |
+| `body` | 16 | 18 | +12.5% |
+| `body-sm` | 14 | 15.5 | +10.7% |
+| `eyebrow` | 12 | 13 | +8.3% |
+| `stat` | 60 | 66 | +10.0% |
+| `quote` | 34 | 37 | +8.8% |
+
+- **Each clamp's lower bound is exactly the value the token already had at
+  1280px**, so there is no step at the breakpoint and nothing below xl changes.
+- **The upper bound is reached at 1800px because that is where the container
+  stops.** If §6.2's cap ever moves, move these together or the type keeps
+  growing after the measure does.
+- **The increase is tapered deliberately.** Body and small text take the largest
+  share, because that is where the deficit is: a census of 767 text elements
+  across the homepage, a T2 leaf and `/dsc` found **61% under 16px**, with 14px
+  (`body-sm`) alone accounting for 416 of them. Display sizes take the least —
+  the homepage H1 is `white-space: nowrap` on three pre-broken lines and can only
+  absorb so much before it bleeds into the gutter.
+
+
 ⛔ **Semantic font-size names and `tailwind-merge` do not mix by default, and the failure is silent.** `tailwind-merge` classifies a `text-*` utility by guessing from its value; a name it does not recognise as a size falls through to the *text-colour* group. Every token in this scale is a semantic name, so `text-h1` was being treated as a colour, conflicting with `text-canvas`, and **the size was deleted**. `twMerge("text-h1 text-canvas")` returned `"text-canvas"`.
 
 Measured consequence before the fix: the `<h1>` of every T2 / T3 / T4 / T5 page — 60-odd routes — rendered at the inherited **16px / weight 400** instead of ~52px / 700, because `PageHero` passes its heading classes through `cn()`. `src/lib/cn.js` now declares this scale to `extendTailwindMerge`. **A font-size token added to `theme.css` without being added to that list reintroduces the bug, and nothing errors.**
